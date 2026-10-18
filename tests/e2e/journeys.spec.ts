@@ -196,9 +196,26 @@ test("neutral reading cover is the default on every entry and after closing tool
     0,
   );
   expect(calls).toEqual([]);
+  await page
+    .getByRole("button", { name: "Personal space", exact: true })
+    .first()
+    .click();
+  await expect(
+    page.getByRole("dialog", { name: "Choose what you need.", exact: true }),
+  ).toBeVisible();
+  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+  await expect(
+    page.getByRole("dialog", { name: "Choose what you need.", exact: true }),
+  ).not.toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-covering",
+    "true",
+  );
   await page.getByRole("button", { name: "At home", exact: true }).click();
   await expect(page.locator(".story-card")).toHaveCount(1);
-  await page.getByRole("button", { name: /At home.*A little green/ }).click();
+  await page.locator(".story-card").click();
   await expect(
     page.getByRole("heading", {
       name: "A little green goes a long way.",

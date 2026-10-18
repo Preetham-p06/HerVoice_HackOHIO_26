@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   ArrowLeft,
@@ -190,6 +190,11 @@ export default function CoverSite({ onOpen }: { onOpen: () => void }) {
   const [query, Query] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const close = () => dialog.current?.close();
+    window.addEventListener("hervoice-exit", close);
+    return () => window.removeEventListener("hervoice-exit", close);
+  }, []);
   const article = stories.find((s) => s.id === selected);
   const filtered = stories.filter(
     (s) =>
