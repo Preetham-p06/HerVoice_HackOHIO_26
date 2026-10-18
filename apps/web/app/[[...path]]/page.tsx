@@ -49,6 +49,7 @@ type Case = {
   status: string;
   priority: string;
   created: string;
+  updated?: string;
   narrative: string;
   original: string;
   contact: {
@@ -58,6 +59,12 @@ type Case = {
     voicemail: boolean;
   };
   location: string;
+  details?: {
+    duration?: string;
+    frequency?: string;
+    personDescription?: string;
+    visibleInjuries?: string;
+  };
   version: number;
   assignment: string;
   delivery: string;
@@ -487,7 +494,7 @@ function Home() {
           <strong>A little room to breathe.</strong>
           <p>
             Talk things through with an AI companion, with optional voice and a
-            3D presence.
+            illustrated companion.
           </p>
           <Link href="/support">
             Enter your support space <ArrowUpRight size={16} />
@@ -1756,7 +1763,7 @@ function Chat() {
             : "Allow 24-hour conversation memory"}
         </Button>
         <Button secondary onClick={() => A(!avatar)}>
-          {avatar ? "Text only" : "Enable 3D companion"}
+          {avatar ? "Text only" : "Show Maya"}
         </Button>
         <Button
           secondary
@@ -2298,6 +2305,15 @@ function Queue({ overview }: { overview: boolean }) {
   const [status, S] = useState("");
   const [priority, P] = useState("");
   const [page, G] = useState(1);
+  const [columns, Columns] = useState([
+    "Location",
+    "Severity",
+    "Issue",
+    "Status",
+  ]);
+  const [descending, Descending] = useState(true);
+  const [copied, Copied] = useState("");
+  const visible = (name: string) => columns.includes(name);
   const [error, E] = useState("");
   function load() {
     api(
@@ -2317,6 +2333,9 @@ function Queue({ overview }: { overview: boolean }) {
       <div className="sectionHeading">
         <div>
           <h1>{overview ? "Live dashboard" : "Support requests"}</h1>
+          <div className="live-label">
+            <span /> Live Updates
+          </div>
           <p>
             {overview
               ? "New posts and case changes refresh automatically every 5 seconds."
@@ -2384,54 +2403,129 @@ function Queue({ overview }: { overview: boolean }) {
           </Field>
         </div>
         {error && <p className="error">{error}</p>}
-        <div className="tablewrap">
+        <div className="queue-toolbar">
+          <p role="status">{copied}</p>
+          <details className="column-picker">
+            <summary>Columns</summary>
+            {["Location", "Severity", "Issue", "Status"].map((name) => (
+              <label key={name}>
+                <input
+                  type="checkbox"
+                  checked={visible(name)}
+                  onChange={() =>
+                    Columns((values) =>
+                      visible(name)
+                        ? values.filter((v) => v !== name)
+                        : [...values, name],
+                    )
+                  }
+                />
+                {name}
+              </label>
+            ))}
+          </details>
+        </div>
+        <div className="tablewrap live-table">
           <table>
             <thead>
               <tr>
-                <th>Request</th>
-                <th>Support type</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Received</th>
-                <th />
+                <th>S.No</th>
+                <th>Name</th>
+                {visible("Location") && <th>Location</th>}
+                {visible("Severity") && (
+                  <th>
+                    <button
+                      className="sort-priority"
+                      onClick={() => Descending(!descending)}
+                    >
+                      Severity {descending ? "↓" : "↑"}
+                    </button>
+                  </th>
+                )}
+                {visible("Issue") && <th>Issue</th>}
+                {visible("Status") && <th>Status</th>}
+                <th>
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {data?.items.map((c: Case) => (
-                <tr key={c.id}>
-                  <td>
-                    <Link href={"/responder/cases/" + c.id}>
-                      <strong>{c.alias || "Guest request"}</strong>
-                      <small>{c.id.slice(0, 8)}</small>
-                    </Link>
-                  </td>
-                  <td>{c.category}</td>
-                  <td>
-                    <span
-                      className={
-                        "badge " + (c.priority === "high" ? "urgent" : "")
-                      }
-                    >
-                      {c.priority}
-                    </span>
-                  </td>
-                  <td>
-                    <Badge>{c.status.replaceAll("_", " ")}</Badge>
-                  </td>
-                  <td>{new Date(c.created).toLocaleDateString()}</td>
-                  <td>
-                    <Link
-                      aria-label={"Open " + (c.alias || "request")}
-                      href={"/responder/cases/" + c.id}
-                    >
-                      <ArrowUpRight size={18} />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {[...(data?.items || [])]
+                .sort(
+                  (a: Case, b: Case) =>
+                    (Number(b.priority === "high") -
+                      Number(a.priority === "high")) *
+                    (descending ? 1 : -1),
+                )
+                .map((c: Case, index: number) => (
+                  <tr key={c.id}>
+                    <td>{(page - 1) * 6 + index + 1}</td>
+                    <td>
+                      <Link href={"/responder/cases/" + c.id}>
+                        <strong>{c.alias || "Guest request"}</strong>
+                        <small>{c.id.slice(0, 8)}</small>
+                      </Link>
+                    </td>
+                    {visible("Location") && (
+                      <td>{c.location || "Not shared"}</td>
+                    )}
+                    {visible("Severity") && (
+                      <td>
+                        <span
+                          className={
+                            "severity-pill " +
+                            (c.priority === "high" ? "high" : "normal")
+                          }
+                        >
+                          {c.priority === "high" ? "High · reported" : "Normal"}
+                        </span>
+                      </td>
+                    )}
+                    {visible("Issue") && <td>{c.category}</td>}
+                    {visible("Status") && (
+                      <td>
+                        <Badge>{c.status.replaceAll("_", " ")}</Badge>
+                      </td>
+                    )}
+                    <td>
+                      <details className="row-actions">
+                        <summary
+                          aria-label={"Actions for " + (c.alias || "request")}
+                        >
+                          •••
+                        </summary>
+                        <div>
+                          <strong>Actions</strong>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(c.id);
+                                Copied("Request ID copied.");
+                              } catch {
+                                Copied("Unable to copy. Request ID: " + c.id);
+                              }
+                            }}
+                          >
+                            Copy ID
+                          </button>
+                          <Link
+                            aria-label={"Open " + (c.alias || "request")}
+                            href={"/responder/cases/" + c.id}
+                          >
+                            View Details
+                          </Link>
+                        </div>
+                      </details>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
+        <small>
+          Severity reflects the person’s immediate-danger selection, not an AI
+          assessment.
+        </small>
         {data && !data.items.length && <p>No matching requests.</p>}
         <div className="pagination">
           <small>
@@ -2457,6 +2551,7 @@ function Queue({ overview }: { overview: boolean }) {
   );
 }
 function CaseDetail({ id }: { id: string }) {
+  const matches = useRef<HTMLDialogElement>(null);
   const [c, C] = useState<Case | null>(null);
   const [error, E] = useState("");
   const [note, N] = useState("");
@@ -2500,13 +2595,192 @@ function CaseDetail({ id }: { id: string }) {
       {c && (
         <>
           <div className="eyebrow">CASE {c.id.slice(0, 8)}</div>
-          <h1>{c.alias || "Guest request"}</h1>
+          <div className="sectionHeading">
+            <h1>{c.alias || "Guest request"}</h1>
+            <div className="actions">
+              <Button secondary onClick={() => matches.current?.showModal()}>
+                Find Match
+              </Button>
+              <Button
+                onClick={() => {
+                  S("closed");
+                  document
+                    .getElementById("manage-case")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                Close Issue
+              </Button>
+            </div>
+          </div>
           <div className="chips">
             <Badge>{c.status}</Badge>
             <Badge>
               {c.priority} priority · {c.urgent ? "person reported" : "default"}
             </Badge>
           </div>
+          <div className="case-summary-grid">
+            <article className="panel">
+              <Phone size={20} />
+              <h2>Preferred way of contact</h2>
+              <p>
+                {c.contact.method === "none"
+                  ? "Do not contact"
+                  : c.contact.method}
+              </p>
+              {c.contact.method !== "none" && (
+                <p>{c.contact.value || "Not provided"}</p>
+              )}
+              <small>Safe time: {c.contact.safeTime || "Not shared"}</small>
+            </article>
+            <article className="panel">
+              <RefreshCw size={20} />
+              <h2>Frequency and duration</h2>
+              <p>{c.details?.frequency || "Frequency not shared"}</p>
+              <p>{c.details?.duration || "Duration not shared"}</p>
+            </article>
+            <article className="panel">
+              <ShieldCheck size={20} />
+              <h2>Nature of the situation</h2>
+              <p>{c.category}</p>
+              <span
+                className={"severity-pill " + (c.urgent ? "high" : "normal")}
+              >
+                {c.urgent ? "Immediate danger reported" : "No urgency selected"}
+              </span>
+            </article>
+            <article className="panel">
+              <Search size={20} />
+              <h2>Person description</h2>
+              <p>{c.details?.personDescription || "Not shared"}</p>
+              <small>Reported description; identity is not verified.</small>
+            </article>
+            <article className="panel">
+              <FolderOpen size={20} />
+              <h2>Location</h2>
+              <p>{c.location || "Not shared"}</p>
+              {c.location && (
+                <a
+                  href={
+                    "https://www.google.com/maps/search/?api=1&query=" +
+                    encodeURIComponent(c.location)
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open location in Google Maps ↗
+                </a>
+              )}
+              <small>External map opens only when selected.</small>
+            </article>
+            <article className="panel">
+              <LayoutDashboard size={20} />
+              <h2>Current Status</h2>
+              <p>{c.status.replaceAll("_", " ")}</p>
+              <p>{c.assignment || "No responder assigned"}</p>
+              <small>Updated {date(c.updated || c.created)}</small>
+            </article>
+          </div>
+          <dialog
+            ref={matches}
+            className="match-dialog"
+            aria-labelledby="match-title"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) matches.current?.close();
+            }}
+          >
+            <div className="sectionHeading">
+              <div>
+                <div className="eyebrow">COMPARE REPORTED DETAILS</div>
+                <h2 id="match-title">Related report information</h2>
+              </div>
+              <Button secondary onClick={() => matches.current?.close()}>
+                Close
+              </Button>
+            </div>{" "}
+            <div className="panel">
+              <h2>Related reports</h2>
+              <Field label="Maximum related reports">
+                <select
+                  value={matchLimit}
+                  onChange={(e) => MatchLimit(Number(e.target.value))}
+                >
+                  {[4, 8, 12, 20].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Minimum cosine similarity">
+                <select
+                  value={matchThreshold}
+                  onChange={(e) => MatchThreshold(Number(e.target.value))}
+                >
+                  {[0.08, 0.25, 0.5, 0.75, 0.9].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <p>
+                Cosine similarity compares the optional person description, or
+                the reviewed narrative when no description is supplied. Results
+                support human review; they do not establish identity or a shared
+                incident.
+              </p>
+              <Button
+                secondary
+                onClick={async () => {
+                  try {
+                    D(
+                      await api("/cases/" + id + "/related", {
+                        limit: matchLimit,
+                        threshold: matchThreshold,
+                      }),
+                    );
+                  } catch (e) {
+                    E((e as Error).message);
+                  }
+                }}
+              >
+                Find related reports
+              </Button>
+              {related.map((r) => (
+                <div className="related" key={r.id}>
+                  <Link href={"/responder/cases/" + r.id}>{r.alias}</Link>
+                  <small>
+                    {r.method} · score {r.score}
+                  </small>
+                  <div className="actions">
+                    {["link", "reject"].map((decision) => (
+                      <Button
+                        secondary
+                        key={decision}
+                        onClick={async () => {
+                          const why = prompt("Reason for this review decision");
+                          if (why)
+                            try {
+                              await api("/cases/" + id + "/related/decision", {
+                                target: r.id,
+                                decision,
+                                reason: why,
+                              });
+                              I("Related report decision saved.");
+                            } catch (e) {
+                              E((e as Error).message);
+                            }
+                        }}
+                      >
+                        {decision === "link" ? "Link" : "Reject"}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </dialog>
           <div className="detailgrid">
             <div>
               <div className="panel">
@@ -2587,93 +2861,12 @@ function CaseDetail({ id }: { id: string }) {
                 )}
                 <p>Location: {c.location || "Not shared"}</p>
               </div>
-              <div className="panel">
-                <h2>Related reports</h2>
-                <Field label="Maximum related reports">
-                  <select
-                    value={matchLimit}
-                    onChange={(e) => MatchLimit(Number(e.target.value))}
-                  >
-                    {[4, 8, 12, 20].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Minimum cosine similarity">
-                  <select
-                    value={matchThreshold}
-                    onChange={(e) => MatchThreshold(Number(e.target.value))}
-                  >
-                    {[0.08, 0.25, 0.5, 0.75, 0.9].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <p>
-                  Cosine similarity compares the optional person description, or
-                  the reviewed narrative when no description is supplied.
-                  Results support human review; they do not establish identity
-                  or a shared incident.
-                </p>
-                <Button
-                  secondary
-                  onClick={async () => {
-                    try {
-                      D(
-                        await api("/cases/" + id + "/related", {
-                          limit: matchLimit,
-                          threshold: matchThreshold,
-                        }),
-                      );
-                    } catch (e) {
-                      E((e as Error).message);
-                    }
-                  }}
-                >
-                  Find related reports
-                </Button>
-                {related.map((r) => (
-                  <div className="related" key={r.id}>
-                    <Link href={"/responder/cases/" + r.id}>{r.alias}</Link>
-                    <small>
-                      {r.method} · score {r.score}
-                    </small>
-                    <div className="actions">
-                      {["link", "reject"].map((decision) => (
-                        <Button
-                          secondary
-                          key={decision}
-                          onClick={async () => {
-                            const why = prompt(
-                              "Reason for this review decision",
-                            );
-                            if (why)
-                              try {
-                                await api(
-                                  "/cases/" + id + "/related/decision",
-                                  { target: r.id, decision, reason: why },
-                                );
-                                I("Related report decision saved.");
-                              } catch (e) {
-                                E((e as Error).message);
-                              }
-                          }}
-                        >
-                          {decision === "link" ? "Link" : "Reject"}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
             <div>
               <div className="panel">
-                <h2>Manage case</h2>
+                <h2 id="manage-case" tabIndex={-1}>
+                  Manage case
+                </h2>
                 <Field label="Status">
                   <select value={status} onChange={(e) => S(e.target.value)}>
                     {["received", "in_review", "closed"].map((x) => (
@@ -2712,7 +2905,7 @@ function CaseDetail({ id }: { id: string }) {
                 )}
               </div>
               <div className="panel">
-                <h2>Activity history</h2>
+                <h2>Recent Activities</h2>
                 {[...c.events].reverse().map((e) => (
                   <div className="event" key={e.id}>
                     <span className="dot" />

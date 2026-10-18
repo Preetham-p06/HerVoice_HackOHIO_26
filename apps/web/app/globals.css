@@ -3640,56 +3640,6 @@ html[data-covering="true"] body::after {
 .therapy-scene {
   margin-bottom: 18px;
 }
-.therapy-scene.with-avatar {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 18px;
-  align-items: stretch;
-}
-.therapy-scene.with-avatar .companion {
-  grid-column: 1;
-  grid-row: 1;
-  min-height: 410px;
-  margin: 0;
-  background: linear-gradient(140deg, #f2d7b1, #e5e0ef 85%);
-  border: 1px solid #d7d3d8;
-}
-.therapy-scene.with-avatar .companion > div {
-  height: 360px !important;
-}
-.therapy-scene.with-avatar .companion small {
-  color: #344b56 !important;
-  display: block;
-  padding: 10px 18px;
-}
-.therapy-scene.with-avatar .chatbody {
-  grid-column: 2;
-  grid-row: 1;
-  max-height: 440px;
-  overflow: auto;
-  min-height: 340px;
-  border-radius: 20px;
-  padding: 20px;
-}
-@media (max-width: 760px) {
-  .therapy-scene.with-avatar {
-    grid-template-columns: 1fr;
-  }
-  .therapy-scene.with-avatar .companion {
-    grid-column: 1;
-    grid-row: 1;
-    min-height: 285px;
-  }
-  .therapy-scene.with-avatar .companion > div {
-    height: 240px !important;
-  }
-  .therapy-scene.with-avatar .chatbody {
-    grid-column: 1;
-    grid-row: 2;
-    min-height: 250px;
-    max-height: 350px;
-  }
-}
 @media (max-width: 760px) {
   .private-shell > header {
     height: auto;
@@ -3809,4 +3759,350 @@ html[data-covering="true"] body::after {
     font-size: 20px;
     padding: 22px;
   }
+}
+
+/* Live responder workspace */
+.live-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  margin: 12px 0;
+}
+.live-label span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #cb4650;
+  box-shadow: 0 0 0 5px #fce8e9;
+}
+.queue-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 18px;
+}
+.column-picker {
+  position: relative;
+  min-width: 160px;
+  padding: 12px 18px;
+  border: 1px solid #cfdce3;
+  border-radius: 10px;
+}
+.column-picker label {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+}
+.column-picker input {
+  width: 18px;
+  min-height: 18px;
+}
+.live-table {
+  overflow: visible;
+}
+.live-table table {
+  width: 100%;
+}
+.live-table td {
+  padding: 25px 18px;
+}
+.sort-priority {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+}
+.severity-pill {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.severity-pill.high {
+  color: #9a2434;
+  background: #fde7e9;
+}
+.severity-pill.normal {
+  color: #1e548b;
+  background: #e3effd;
+}
+.row-actions {
+  position: relative;
+}
+.row-actions summary {
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  list-style: none;
+  font-weight: 700;
+}
+.row-actions > div {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  z-index: 5;
+  width: 170px;
+  display: grid;
+  background: white;
+  border: 1px solid #dce4ea;
+  box-shadow: 0 8px 30px #1a33451f;
+  border-radius: 12px;
+  padding: 10px;
+}
+.row-actions button,
+.row-actions a {
+  text-align: left;
+  border: 0;
+  background: white;
+  color: #214d6b;
+  padding: 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.row-actions strong {
+  padding: 10px 12px;
+}
+.case-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 24px 0;
+}
+.case-summary-grid .panel {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.case-summary-grid h2 {
+  font-size: 18px;
+  margin: 14px 0;
+}
+.case-summary-grid svg {
+  color: #367294;
+}
+.case-summary-grid small {
+  display: block;
+  line-height: 1.6;
+}
+.match-dialog {
+  width: min(720px, 92vw);
+  max-height: 85vh;
+  overflow: auto;
+  border: 1px solid #d5dfe5;
+  border-radius: 22px;
+  padding: 28px;
+  color: #243e4d;
+}
+.match-dialog::backdrop {
+  background: #142b3c80;
+  backdrop-filter: blur(4px);
+}
+.match-dialog .panel {
+  box-shadow: none;
+  padding: 0;
+  border: 0;
+}
+@media (max-width: 900px) {
+  .case-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .live-table {
+    overflow-x: auto;
+    padding-bottom: 100px;
+  }
+  .live-table table {
+    min-width: 760px;
+  }
+}
+@media (max-width: 550px) {
+  .case-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Immersive companion stage */
+.chatpage {
+  max-width: 1320px;
+}
+.therapy-scene.with-avatar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr);
+  min-height: 650px;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid #e7dfe4;
+  background: linear-gradient(125deg, #ffdfa7, #f1dfe8 58%, #e5e0fb);
+}
+.therapy-scene.with-avatar .chatbody {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 24px;
+  padding: 22px;
+  max-height: 600px;
+  background: #ffffffed;
+  border: 1px solid #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px #856c7310;
+}
+.therapy-scene .portrait-companion {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  height: 650px;
+  min-height: 650px;
+  background: transparent;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+}
+.companion-name {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  z-index: 2;
+  padding: 16px 20px;
+  background: #fffaf2e8;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px #6650440a;
+}
+.companion-name strong {
+  display: block;
+  font-size: 25px;
+  color: #513b45;
+  margin: 5px 0;
+}
+.companion-name small {
+  color: #66545c;
+}
+.portrait-halo {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: #fff6d08a;
+  filter: blur(35px);
+  top: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.portrait {
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 90%;
+  object-fit: contain;
+  object-position: center bottom;
+  bottom: 0;
+  left: 0;
+  transform-origin: bottom center;
+  transition: transform 0.5s;
+}
+.portrait.close {
+  transform: scale(1.2);
+}
+.portrait-zoom {
+  position: absolute;
+  right: 18px;
+  top: 25px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #e4cfa9;
+  border-radius: 12px;
+  background: #fff6df;
+  color: #5d4b33;
+  cursor: pointer;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+}
+.companion-caption {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fffaf3ed;
+  color: #4f4651;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #ffffff;
+  border-radius: 30px;
+  padding: 12px 20px;
+  white-space: nowrap;
+}
+.portrait-note {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: #4d414b;
+  font-size: 12px;
+  background: #fff8efdb;
+  padding: 4px;
+}
+.voice-bars {
+  display: flex;
+  gap: 3px;
+  height: 16px;
+  align-items: center;
+}
+.voice-bars i {
+  display: block;
+  width: 3px;
+  height: 6px;
+  background: #897198;
+  border-radius: 3px;
+}
+.is-speaking .voice-bars i {
+  animation: voice-wave 0.6s ease-in-out infinite alternate;
+}
+.is-speaking .voice-bars i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.is-speaking .voice-bars i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes voice-wave {
+  to {
+    height: 16px;
+  }
+}
+@media (max-width: 800px) {
+  .therapy-scene.with-avatar {
+    grid-template-columns: 1fr;
+  }
+  .therapy-scene .portrait-companion {
+    grid-column: 1;
+    grid-row: 1;
+    height: 500px;
+    min-height: 500px;
+  }
+  .therapy-scene.with-avatar .chatbody {
+    grid-column: 1;
+    grid-row: 2;
+    max-height: 460px;
+    margin: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-speaking .voice-bars i {
+    animation: none;
+  }
+  .portrait {
+    transition: none;
+  }
+}
+
+.portrait-companion .companion-name small,
+.portrait-companion .portrait-note {
+  color: #4d414b !important;
 }

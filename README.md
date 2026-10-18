@@ -2,7 +2,7 @@
 
 A U.S.-first support platform behind **Everyday Notes**, a neutral reading website. The public page, tab title, and navigation paths look like an everyday editorial site. The six highlighted words read **Click the button below for help**. Press the prominent **Open personal space** button to enter HerVoice directly. The header’s Personal space dialog remains an alternative. Returning to reading, switching tabs, pressing Escape twice, or reloading covers the tools and clears unsaved page state. This does not hide browser/network history, downloaded files, a recognizable deployment domain, or device monitoring.
 
-HerVoice provides support workflows with a complete local **synthetic demo**: guest request → saved receipt → encrypted PNG → authorized intake → responder case updates. Includes text support chat, opt-in voice and an original 3D companion, source-backed U.S. support and legal-resource summaries, resource browsing, and organization-scoped case work.
+HerVoice provides support workflows with a complete local **synthetic demo**: guest request → saved receipt → encrypted PNG → authorized intake → responder case updates. Includes text support chat, opt-in voice and an original illustrated companion, source-backed U.S. support and legal-resource summaries, resource browsing, and organization-scoped case work.
 
 **Use synthetic information only.** This is development software, not an emergency service or a monitored assistance channel. The demo sends no real reports or messages. Live adapters are included but have not been exercised with live credentials. See [feature parity and remaining work](docs/feature-parity.md).
 
@@ -31,7 +31,7 @@ Compose binds both exposed ports to localhost and persists demo data in a named 
 3. Open **Responder portal**. Select practice organization A and open its server-established demo session. Organization B has a separate queue and cannot decode A’s PNGs.
 4. Open **Image intake**, upload the original PNG, verify the message, and confirm intake. The original request is linked once; repeated intake does not duplicate it.
 5. Change status, assignment or notes. Activity comes from stored events. Closing requires a reason; stale updates are rejected.
-6. Explore support chat, opt-in voice and the original 3D companion. Nothing starts playing automatically. **Know your rights** defaults to United States; try “protection order forms” and optionally choose Ohio. Unsupported questions and jurisdictions abstain.
+6. Explore support chat, opt-in voice and the original illustrated companion. Nothing starts playing automatically. **Know your rights** defaults to United States; try “protection order forms” and optionally choose Ohio. Unsupported questions and jurisdictions abstain.
 
 The initial dataset contains 16 synthetic cases across two organizations. No source-repository personal data, avatars, secrets or history were copied.
 
@@ -96,4 +96,4 @@ The care-service interface uses high-contrast help buttons, a persistent Quick e
 The application is named **HerVoice**. The repository retains the user-provided GitHub name **HerWay**.
 
 
-The main demo navigation is **Home · Create a post · Law bot · Therapy bot · Dashboard**. The dashboard opens the server-established synthetic organization workspace automatically in demo mode and polls case changes every five seconds. Live mode still requires verified responder authorization. Therapy bot starts with the original 3D companion visible, without automatically playing speech; Text only remains available.
+The main demo navigation is **Home · Create a post · Law bot · Therapy bot · Dashboard**. The dashboard opens the server-established synthetic organization workspace automatically in demo mode and polls case changes every five seconds. Live mode still requires verified responder authorization. Therapy bot starts with the original illustrated companion visible, without automatically playing speech; Text only remains available.

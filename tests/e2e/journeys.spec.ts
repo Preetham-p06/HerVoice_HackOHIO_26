@@ -320,3 +320,43 @@ test("highlighted note opens the five-page hackathon demo directly", async ({
   await expect(page.getByText("5 sec", { exact: true })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-app-ready", "true");
 });
+
+test("dashboard columns, row actions, related dialog and companion zoom", async ({
+  page,
+}) => {
+  await visit(page, "/workspace");
+  await expect(
+    page.getByRole("heading", { name: "Live dashboard" }),
+  ).toBeVisible();
+  await page.locator(".column-picker summary").click();
+  await page.getByLabel("Location", { exact: true }).uncheck();
+  await expect(
+    page.getByRole("columnheader", { name: "Location", exact: true }),
+  ).toHaveCount(0);
+  await page.getByLabel("Location", { exact: true }).check();
+  await expect(
+    page.getByRole("columnheader", { name: "Location", exact: true }),
+  ).toBeVisible();
+  await page.locator(".row-actions summary").first().click();
+  await page.locator(".row-actions[open]").getByRole("link").click();
+  await expect(
+    page.getByRole("heading", { name: "Preferred way of contact" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Find Match", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Related report information" }),
+  ).toBeVisible();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Close", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("link", { name: "Therapy bot", exact: true }).click();
+  await expect(
+    page.getByRole("img", { name: /Maya, an original/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Zoom in companion" }).click();
+  await expect(
+    page.getByRole("button", { name: "Zoom out companion" }),
+  ).toBeVisible();
+});
