@@ -14,7 +14,9 @@ export default defineConfig({
       env: { APP_MODE: "demo", DATA_DIR: ".data/e2e" },
     },
     {
-      command: "npm run dev",
+      command: process.env.CI
+        ? "npm run start --workspace apps/web"
+        : "npm run dev",
       url: "http://127.0.0.1:3000",
       reuseExistingServer: !process.env.CI,
     },

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useId } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -117,12 +117,22 @@ function Field({
   children: React.ReactNode;
   hint?: string;
 }) {
+  const id = useId();
+  const control = React.isValidElement(children)
+    ? React.cloneElement(
+        children as React.ReactElement<{
+          id?: string;
+          "aria-describedby"?: string;
+        }>,
+        { id, "aria-describedby": hint ? id + "-hint" : undefined },
+      )
+    : children;
   return (
-    <label className="field">
-      <span>{label}</span>
-      {children}
-      {hint && <small>{hint}</small>}
-    </label>
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      {control}
+      {hint && <small id={id + "-hint"}>{hint}</small>}
+    </div>
   );
 }
 function date(s: string) {
@@ -140,6 +150,10 @@ export default function App() {
   const [error, setError] = useState("");
   useEffect(() => {
     setError("");
+    document.documentElement.dataset.appReady = "true";
+    return () => {
+      delete document.documentElement.dataset.appReady;
+    };
   }, [path]);
   function exit() {
     window.speechSynthesis?.cancel();

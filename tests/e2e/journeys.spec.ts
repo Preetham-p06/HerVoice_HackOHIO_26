@@ -1,10 +1,15 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+
+async function visit(page: Page, path: string) {
+  await page.goto(path);
+  await expect(page.locator('html[data-app-ready="true"]')).toBeAttached();
+}
 
 test("guest image request → verified intake → real case event", async ({
   page,
 }) => {
-  await page.goto("/help");
+  await visit(page, "/help");
   await page
     .getByLabel("What’s on your mind?")
     .fill("Synthetic test: I would like to explore housing support. नमस्ते ❤️");
@@ -38,10 +43,10 @@ test("guest image request → verified intake → real case event", async ({
   ]);
   const path = await download.path();
   expect(path).toBeTruthy();
-  await page.goto("/sign-in");
+  await visit(page, "/sign-in");
   await page.getByRole("button", { name: "Open demo workspace" }).click();
   await expect(page).toHaveURL(/\/responder$/);
-  await page.goto("/responder/intake");
+  await visit(page, "/responder/intake");
   await page.getByLabel("Choose image (max 8 MB)").setInputFiles(path!);
   await page.getByRole("button", { name: "Verify & preview" }).click();
   await expect(page.getByText(approved, { exact: true })).toBeVisible();
@@ -66,7 +71,7 @@ test("public pages fit viewport and basic accessibility", async ({ page }) => {
     "/privacy-safety",
     "/sign-in",
   ]) {
-    await page.goto(route);
+    await visit(page, route);
     await expect(page.locator("h1")).toBeVisible();
     const size = await page.evaluate(() => ({
       scroll: document.documentElement.scrollWidth,
@@ -84,7 +89,7 @@ test("public pages fit viewport and basic accessibility", async ({ page }) => {
 test("visible help panel is keyboard accessible and preserves a draft", async ({
   page,
 }) => {
-  await page.goto("/help");
+  await visit(page, "/help");
   const draft = "Synthetic test: please preserve these words.";
   await page.getByLabel("What’s on your mind?").fill(draft);
   await page
@@ -108,7 +113,7 @@ test("visible help panel is keyboard accessible and preserves a draft", async ({
 });
 
 test("U.S. resources and legal defaults", async ({ page }) => {
-  await page.goto("/rights");
+  await visit(page, "/rights");
   await expect(page.getByLabel("Jurisdiction", { exact: true })).toHaveValue(
     "United States",
   );
@@ -122,7 +127,7 @@ test("U.S. resources and legal defaults", async ({ page }) => {
       exact: true,
     }),
   ).toBeVisible();
-  await page.goto("/resources");
+  await visit(page, "/resources");
   await expect(page.getByLabel("Location", { exact: true })).toHaveValue(
     "United States",
   );
