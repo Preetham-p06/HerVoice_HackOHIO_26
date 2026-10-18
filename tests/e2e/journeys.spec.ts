@@ -12,12 +12,13 @@ async function visit(page: Page, path: string) {
     .getByRole("button", { name: "Open support tools", exact: true })
     .click();
   await expect(page.locator(".private-shell")).toBeVisible();
+  await expect(page).toHaveTitle("Everyday Notes — Ideas for everyday living");
 }
 
 test("guest image request → verified intake → real case event", async ({
   page,
 }) => {
-  await visit(page, "/help");
+  await visit(page, "/studio");
   await page
     .getByLabel("What’s on your mind?")
     .fill("Synthetic test: I would like to explore housing support. नमस्ते ❤️");
@@ -51,10 +52,10 @@ test("guest image request → verified intake → real case event", async ({
   ]);
   const path = await download.path();
   expect(path).toBeTruthy();
-  await visit(page, "/sign-in");
+  await visit(page, "/account");
   await page.getByRole("button", { name: "Open demo workspace" }).click();
   await expect(page).toHaveURL(/\/workspace$/);
-  await visit(page, "/responder/intake");
+  await visit(page, "/workspace/intake");
   await page.getByLabel("Choose image (max 8 MB)").setInputFiles(path!);
   await page.getByRole("button", { name: "Verify & preview" }).click();
   await expect(page.getByText(approved, { exact: true })).toBeVisible();
@@ -72,12 +73,12 @@ test("guest image request → verified intake → real case event", async ({
 test("public pages fit viewport and basic accessibility", async ({ page }) => {
   for (const route of [
     "/",
-    "/help",
-    "/support",
-    "/rights",
-    "/resources",
-    "/privacy-safety",
-    "/sign-in",
+    "/studio",
+    "/journal",
+    "/library",
+    "/collections",
+    "/about",
+    "/account",
   ]) {
     await visit(page, route);
     await expect(page.locator("h1")).toBeVisible();
@@ -97,7 +98,7 @@ test("public pages fit viewport and basic accessibility", async ({ page }) => {
 test("visible help panel is keyboard accessible and preserves a draft", async ({
   page,
 }) => {
-  await visit(page, "/help");
+  await visit(page, "/studio");
   const draft = "Synthetic test: please preserve these words.";
   await page.getByLabel("What’s on your mind?").fill(draft);
   await page
@@ -121,7 +122,7 @@ test("visible help panel is keyboard accessible and preserves a draft", async ({
 });
 
 test("U.S. resources and legal defaults", async ({ page }) => {
-  await visit(page, "/rights");
+  await visit(page, "/library");
   await expect(page.getByLabel("Jurisdiction", { exact: true })).toHaveValue(
     "United States",
   );
@@ -135,7 +136,7 @@ test("U.S. resources and legal defaults", async ({ page }) => {
       exact: true,
     }),
   ).toBeVisible();
-  await visit(page, "/resources");
+  await visit(page, "/collections");
   await expect(page.getByLabel("Location", { exact: true })).toHaveValue(
     "United States",
   );
@@ -145,7 +146,7 @@ test("U.S. resources and legal defaults", async ({ page }) => {
 test("consented chat memory survives navigation and can be turned off", async ({
   page,
 }) => {
-  await visit(page, "/support");
+  await visit(page, "/journal");
   await page
     .getByRole("button", {
       name: "Allow 24-hour conversation memory",
@@ -160,8 +161,8 @@ test("consented chat memory survives navigation and can be turned off", async ({
     .fill("Synthetic test: I want a small next step.");
   await page.getByRole("button", { name: "Send message", exact: true }).click();
   await expect(page.locator(".message.assistant")).toHaveCount(1);
-  await visit(page, "/resources");
-  await visit(page, "/support");
+  await visit(page, "/collections");
+  await visit(page, "/journal");
   await expect(
     page.getByText("Synthetic test: I want a small next step.", {
       exact: true,
@@ -174,8 +175,8 @@ test("consented chat memory survives navigation and can be turned off", async ({
     })
     .click();
   await expect(page.getByText("Memory off", { exact: true })).toBeVisible();
-  await visit(page, "/resources");
-  await visit(page, "/support");
+  await visit(page, "/collections");
+  await visit(page, "/journal");
   await expect(page.locator(".message")).toHaveCount(0);
 });
 
