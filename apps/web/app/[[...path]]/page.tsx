@@ -1060,6 +1060,7 @@ function Requests({
   id?: string;
   complete?: boolean;
 }) {
+  const router = useRouter();
   const [data, D] = useState<any>(null);
   const [error, E] = useState("");
   const [style, S] = useState(0);
@@ -1166,7 +1167,7 @@ function Requests({
                 ) {
                   try {
                     await api("/requests/" + id, undefined, "DELETE");
-                    location.href = "/requests";
+                    router.push("/requests");
                   } catch (e) {
                     E((e as Error).message);
                   }
@@ -2691,6 +2692,7 @@ function FeedMonitor() {
   );
 }
 function Intake() {
+  const router = useRouter();
   const [file, F] = useState<File | null>(null);
   const [preview, P] = useState<any>(null);
   const [error, E] = useState("");
@@ -2768,7 +2770,7 @@ function Intake() {
                   id: preview.id,
                   verification: preview.verification,
                 });
-                location.href = "/responder/cases/" + preview.id;
+                router.push("/responder/cases/" + preview.id);
               } catch (e) {
                 E((e as Error).message);
               }
