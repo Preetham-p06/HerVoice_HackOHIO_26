@@ -40,3 +40,11 @@ No Lighthouse score, clinical outcome, emergency response time or production thr
 - Live MongoDB, Clerk, Gemini, Bedrock, S3, ElevenLabs and Rhubarb paths were not called with live service credentials. Signature/membership/encryption logic has deterministic local tests, which do not replace live smoke tests.
 - Legal PDF ingestion uses a real parser. Downloaded government copies were scanned; selected source passages were visually transcribed and reviewed against rendered pages. Current law/case-law completeness is not verified.
 - Full 320px, tablet, keyboard-only, reduced-motion, WebGL-failure, screen-reader and all-screen contrast checks remain broader manual QA work. No complete accessibility conformance claim is made.
+
+## U.S.-first care-interface update
+
+The initial GitHub run failed before browser tests because `.data/e2e` had no parent directory. Startup now uses `mkdir(parents=True)` and a subprocess regression test verifies a fresh nested data directory. GitHub Actions use Node-24-compatible action versions and a pinned Ubuntu 24.04 runner to avoid the announced runner migration.
+
+Backend checks now total 17 tests, including U.S. defaults, explicit state scoping, unsupported-country abstention, and clean CI startup. The active corpus replaces the original India paragraphs with reviewed summaries of U.S. DOJ/HHS and Ohio Supreme Court sources. Playwright regression coverage now includes the help dialog, Escape/focus return, draft preservation, national defaults, and Ohio retrieval. Initial local typecheck, lint, backend tests and production build pass; the updated CI run is tracked on GitHub.
+
+The redesigned home returned zero axe violations for the audited WCAG tags. At 375px, the browser reported `scrollWidth == innerWidth == 375`; primary help buttons and the fixed launcher remained visible. The help dialog was opened and dismissed with Escape; focus returned to the launcher and the exact draft text remained. The Ohio selector returned the official Ohio court source in the browser. New home and mobile help-panel screenshots are stored in `docs/screenshots`.

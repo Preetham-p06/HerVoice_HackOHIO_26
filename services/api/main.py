@@ -22,7 +22,7 @@ if (
 ):
     raise RuntimeError("Demo authentication is blocked in production")
 DATA = Path(os.getenv("DATA_DIR", ".data"))
-DATA.mkdir(exist_ok=True)
+DATA.mkdir(parents=True, exist_ok=True)
 keyfile = DATA / "demo.key"
 if MODE == "demo" and not keyfile.exists():
     keyfile.write_bytes(secrets.token_bytes(32))
@@ -757,36 +757,13 @@ def support(b: Chat):
 
 class Legal(BaseModel):
     question: str = Field(min_length=1, max_length=4000)
-    jurisdiction: str = "India"
-
-
-SOURCES = [
-    {
-        "id": "india-act",
-        "title": "Protection of Women from Domestic Violence Act, 2005",
-        "url": "https://www.indiacode.nic.in/handle/123456789/2021",
-        "jurisdiction": "India",
-        "section": "Official Act directory",
-        "reviewed": "2026-10-18",
-        "text": "Official source browsing for domestic violence protection and available remedies. Full legal text ingestion and current-law review are required before generating legal answers.",
-    }
-]
+    jurisdiction: str = "United States"
+    state: str | None = Field(default=None, max_length=70)
 
 
 @app.post("/v1/legal")
 def legal(b: Legal):
-    result = legal_engine.answer(b.question, b.jurisdiction)
-    if (
-        not result["sources"]
-        and b.jurisdiction == "India"
-        and any(
-            w in b.question.lower()
-            for w in ["protect", "violence", "home", "abuse", "right", "order"]
-        )
-    ):
-        result["sources"] = SOURCES
-        result["mode"] = "source browsing — reviewed corpus unavailable"
-    return result
+    return legal_engine.answer(b.question, b.jurisdiction, b.state)
 
 
 @app.get("/v1/settings")

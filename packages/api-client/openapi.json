@@ -165,7 +165,7 @@
       "Legal": {
         "properties": {
           "jurisdiction": {
-            "default": "India",
+            "default": "United States",
             "title": "Jurisdiction",
             "type": "string"
           },
@@ -174,6 +174,18 @@
             "minLength": 1,
             "title": "Question",
             "type": "string"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "maxLength": 70,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
           }
         },
         "required": [

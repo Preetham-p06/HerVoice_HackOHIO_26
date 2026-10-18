@@ -299,7 +299,7 @@ def test_legal_retrieval_filters_and_provenance():
 
     doc = {
         "id": "test",
-        "jurisdiction": "India",
+        "jurisdiction": "United States",
         "status": "active",
         "reviewUntil": "2099-01-01",
         "chunks": [
@@ -311,13 +311,15 @@ def test_legal_retrieval_filters_and_provenance():
             }
         ],
     }
-    assert retrieve("housing support", "India", [doc])[0][2]["id"] == "test-1"
+    assert retrieve("housing support", "United States", [doc])[0][2]["id"] == "test-1"
     assert not retrieve("housing support", "Mars", [doc])
-    assert not retrieve("housing support", "India", [doc | {"status": "superseded"}])
     assert not retrieve(
-        "housing support", "India", [doc | {"reviewUntil": "2000-01-01"}]
+        "housing support", "United States", [doc | {"status": "superseded"}]
     )
-    assert not retrieve("unrelated astronomy", "India", [doc])
+    assert not retrieve(
+        "housing support", "United States", [doc | {"reviewUntil": "2000-01-01"}]
+    )
+    assert not retrieve("unrelated astronomy", "United States", [doc])
 
 
 def test_cover_job_owner_and_result(client):
@@ -335,3 +337,47 @@ def test_cover_job_owner_and_result(client):
     assert len(status["results"]) == 3
     result = client.post(f"/v1/requests/{cid}/jobs/{j['id']}/encode/1")
     assert result.status_code == 200 and result.headers["content-type"] == "image/png"
+
+
+def test_us_default_and_state_scope(client):
+    from services.api.legal import retrieve
+
+    response = client.post(
+        "/v1/legal", json={"question": "domestic violence protection support"}
+    )
+    assert response.status_code == 200
+    assert response.json()["sources"]
+    assert all(s["jurisdiction"] == "United States" for s in response.json()["sources"])
+    assert all(s.get("state") is None for s in response.json()["sources"])
+    ohio = retrieve("protection order forms", "United States", state="Ohio")
+    assert any(doc.get("state") == "Ohio" for _, doc, _ in ohio)
+    california = client.post(
+        "/v1/legal", json={"question": "protection order forms", "state": "California"}
+    ).json()
+    assert all(s.get("state") != "Ohio" for s in california["sources"])
+    if california["sources"]:
+        assert (
+            "do not have reviewed state-law guidance for California"
+            in california["answer"]
+        )
+    assert (
+        client.post(
+            "/v1/legal", json={"question": "protection order", "jurisdiction": "India"}
+        ).json()["sources"]
+        == []
+    )
+
+
+def test_nested_data_directory_startup(tmp_path):
+    import subprocess, sys
+
+    target = tmp_path / "new" / "nested" / "data"
+    result = subprocess.run(
+        [sys.executable, "-c", "import services.api.main"],
+        env=dict(os.environ, APP_MODE="demo", DATA_DIR=str(target)),
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (target / "demo.sqlite").exists()

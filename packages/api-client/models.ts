@@ -42,6 +42,7 @@ export type Intake = {
 export type Legal = {
   "question": string;
   "jurisdiction"?: string;
+  "state"?: string | null;
 };
 
 export type NewRequest = {

@@ -40,6 +40,7 @@ test("guest image request → verified intake → real case event", async ({
   expect(path).toBeTruthy();
   await page.goto("/sign-in");
   await page.getByRole("button", { name: "Open demo workspace" }).click();
+  await expect(page).toHaveURL(/\/responder$/);
   await page.goto("/responder/intake");
   await page.getByLabel("Choose image (max 8 MB)").setInputFiles(path!);
   await page.getByRole("button", { name: "Verify & preview" }).click();
@@ -78,4 +79,52 @@ test("public pages fit viewport and basic accessibility", async ({ page }) => {
       .analyze();
     expect(results.violations).toEqual([]);
   }
+});
+
+test("visible help panel is keyboard accessible and preserves a draft", async ({
+  page,
+}) => {
+  await page.goto("/help");
+  const draft = "Synthetic test: please preserve these words.";
+  await page.getByLabel("What’s on your mind?").fill(draft);
+  await page
+    .getByRole("button", {
+      name: /Help optionsChoose your next step|Help options/,
+    })
+    .click();
+  const dialog = page.getByRole("dialog", {
+    name: "What would help right now?",
+  });
+  await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByRole("link", { name: /Call a real advocate/ }),
+  ).toHaveAttribute("href", "tel:18007997233");
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByLabel("What’s on your mind?")).toHaveValue(draft);
+  await expect(
+    page.getByRole("button", { name: /Help options/ }),
+  ).toBeFocused();
+});
+
+test("U.S. resources and legal defaults", async ({ page }) => {
+  await page.goto("/rights");
+  await expect(page.getByLabel("Jurisdiction", { exact: true })).toHaveValue(
+    "United States",
+  );
+  await page.getByLabel("State or territory (optional)").selectOption("Ohio");
+  await page
+    .getByLabel("What would you like to understand?")
+    .fill("protection order forms");
+  await page.getByRole("button", { name: "Explore sources" }).click();
+  await expect(
+    page.getByText("Supreme Court of Ohio — Domestic Violence Program", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.goto("/resources");
+  await expect(page.getByLabel("Location", { exact: true })).toHaveValue(
+    "United States",
+  );
+  await expect(page.getByText("India Code", { exact: true })).toHaveCount(0);
 });

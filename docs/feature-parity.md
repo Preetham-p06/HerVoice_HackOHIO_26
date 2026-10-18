@@ -16,7 +16,7 @@ This is a working end-to-end local system with explicit demo behavior and config
 | Emotional support conversation | Working demo + live adapter | Deterministic context-aware demo; optional Gemini system instruction; no clinical validation |
 | Voice and 3D companion | Improved equivalent | Opt-in browser speech; original R3F idle/blink/mouth animation; mouth follows playback state, not timed visemes |
 | Server TTS/FFmpeg/Rhubarb | Optional adapter | Unique directories/timeouts, ElevenLabs and cues in scoped jobs; not end-to-end connected to the visible player or tested with live audio |
-| Legal information | Improved equivalent, narrow source set | Actual local numeric retrieval of 3 government-source excerpts with citations; current-law status not verified; no generative legal advice |
+| Legal information | Improved equivalent, narrow source set | U.S.-first local numeric retrieval of reviewed DOJ, HHS, and Ohio court source summaries; national vs. state filtering; no determination of legal rights |
 | Corpus ingestion | Working offline admin utility | Pypdf extracts native text, rejects scanned/no-text PDFs; source allowlist/hash/pages. Full OCR/admin web ingestion is not implemented |
 | Social monitoring/Slack/Instagram | Unavailable | Reference README-only or inactive behavior; no partner connector configuration or authorization supplied |
 | Live dispatch/human response guarantee | Unavailable | No operational organization integration; never implied |

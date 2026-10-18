@@ -3,12 +3,15 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import HelpOptions from "../../components/HelpOptions";
+import { US_REGIONS } from "../../components/us-regions";
 const DevAudit = dynamic(() => import("../../components/DevAudit"), {
   ssr: false,
 });
 import { SignIn as ClerkSignIn, OrganizationSwitcher } from "@clerk/nextjs";
 const DEMO = process.env.NEXT_PUBLIC_APP_MODE !== "live";
 import {
+  Phone,
   ArrowUpRight,
   ArrowRight,
   ArrowLeft,
@@ -133,7 +136,6 @@ const nav = [
 ];
 export default function App() {
   const path = usePathname();
-  const router = useRouter();
   const staff = path.startsWith("/responder");
   const [error, setError] = useState("");
   useEffect(() => {
@@ -162,7 +164,7 @@ export default function App() {
       <header>
         <Link className="brand" href="/">
           <span className="brandmark">
-            <Leaf size={23} />
+            <HeartHandshake size={25} />
           </span>
           HerVoice<span className="branddot">.</span>
         </Link>
@@ -177,6 +179,16 @@ export default function App() {
             </Link>
           ))}
         </nav>
+        {!staff && (
+          <button
+            className="header-help"
+            onClick={() =>
+              window.dispatchEvent(new Event("hervoice-open-help"))
+            }
+          >
+            Get help now <ArrowUpRight size={17} />
+          </button>
+        )}
         <Link className="portal" href="/sign-in">
           Responder portal <ArrowUpRight size={15} />
         </Link>
@@ -186,7 +198,7 @@ export default function App() {
         {DEMO ? "DEMONSTRATION" : "PRIVATE SUPPORT SPACE"}{" "}
         <span>
           {DEMO
-            ? "A safe place to explore. All organizations and case data are synthetic. No real assistance is sent."
+            ? "Demo: support requests and case data are synthetic. National hotline and resource links connect to real external services."
             : "Requests are saved to your selected organization. This service does not provide emergency dispatch."}
         </span>
       </div>
@@ -227,6 +239,7 @@ export default function App() {
           )}
         </main>
       )}
+      {!staff && <HelpOptions />}
       <footer>
         <Link className="brand" href="/">
           HerVoice.
@@ -235,6 +248,7 @@ export default function App() {
         <div>
           <Link href="/privacy-safety">Privacy & safety</Link>
           <Link href="/requests">My requests</Link>
+          <Link href="/sign-in">Responder sign-in</Link>
           <span>Built with care. Designed around you.</span>
         </div>
       </footer>
@@ -244,90 +258,120 @@ export default function App() {
 function Home() {
   return (
     <>
-      <section className="hero">
-        <div className="heroText">
+      <section className="care-intro">
+        <div className="care-intro-main">
           <div className="eyebrow">
-            <span /> HERE, YOU HAVE A VOICE
+            <ShieldCheck size={16} /> SUPPORT FOR WOMEN IN THE UNITED STATES
           </div>
           <h1>
-            Support,
+            Find the support
             <br />
-            at your <em>pace.</em>
+            you need.
           </h1>
           <p>
-            You don’t have to have it all figured out.
-            <br />
-            Find a little clarity, explore your options, or ask for
-            <br className="desktop" /> support. You choose the next step.
+            You deserve to feel safe and heard. Talk to an advocate, explore
+            your options, or write down what’s happening. We’ll help you find a
+            place to start.
           </p>
-          <Link className="btn" href="/help">
-            Find support <ArrowRight size={17} />
-          </Link>
-          <span className="heroNote">
-            <LockKeyhole size={13} /> No account needed. No pressure.
-          </span>
-        </div>
-        <div className="art" aria-hidden="true">
-          <div className="artSun" />
-          <div className="arch">
-            <div className="stem s1" />
-            <div className="stem s2" />
-            <div className="stem s3" />
-            <span className="petal p1" />
-            <span className="petal p2" />
-            <span className="petal p3" />
-            <span className="petal p4" />
-            <span className="petal p5" />
-            <span className="petal p6" />
-            <div className="vase" />
+          <div className="care-actions">
+            <button
+              className="btn"
+              onClick={() =>
+                window.dispatchEvent(new Event("hervoice-open-help"))
+              }
+            >
+              <HeartHandshake size={21} /> Get help now <ArrowRight size={20} />
+            </button>
+            <Link className="btn secondary" href="/resources">
+              Find U.S. resources <ArrowUpRight size={19} />
+            </Link>
           </div>
-          <span className="artCaption">
-            Room to breathe.
+          <div className="care-assurance">
+            <span>
+              <Check size={17} /> No account needed
+            </span>
+            <span>
+              <LockKeyhole size={16} /> You choose what to share
+            </span>
+          </div>
+        </div>
+        <div className="advocate-card">
+          <div className="advocate-card-top">
+            <span className="care-symbol">
+              <Phone size={25} />
+            </span>
+            <span className="badge">REAL U.S. SUPPORT · 24/7</span>
+          </div>
+          <h2>
+            You don’t have to
             <br />
-            Space to be heard.
-          </span>
-          <span className="artLine" />
+            figure this out alone.
+          </h2>
+          <p>
+            The National Domestic Violence Hotline can help you talk through
+            options and find support near you.
+          </p>
+          <a className="btn hotline-call" href="tel:18007997233">
+            <Phone size={21} />
+            <span>
+              Call 800-799-7233<small>National Domestic Violence Hotline</small>
+            </span>
+            <ArrowUpRight size={20} />
+          </a>
+          <a
+            className="advocate-chat"
+            href="https://www.thehotline.org/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MessageCircle size={20} /> Prefer to type? Open advocate chat{" "}
+            <ArrowUpRight size={18} />
+          </a>
+          <small>
+            External service. Call or open chat only when it’s safe. HerVoice
+            does not monitor or receive these conversations.
+          </small>
         </div>
       </section>
-      <section className="choices">
+      <section className="choices care-choices">
         <div className="sectionHeading">
           <div>
-            <div className="eyebrow">A SMALL STEP IS STILL A STEP</div>
-            <h2>What would feel helpful today?</h2>
+            <div className="eyebrow">YOUR NEXT STEP</div>
+            <h2>How can we help you today?</h2>
           </div>
-          <p>There’s no right place to start.</p>
+          <p>You’re in control of where to start.</p>
         </div>
         <div className="cardgrid">
           {[
             {
               icon: HeartHandshake,
               n: "01",
-              title: "Ask for support",
-              text: "Put what’s on your mind into words. Decide what to share and how to reach out.",
+              title: "Request support",
+              text: "Share your situation in your own words. Choose a safe way to be contacted.",
               link: "/help",
-              cta: "Create a support request",
+              cta: DEMO ? "Open practice request" : "Start a support request",
             },
             {
               icon: MessageCircle,
               n: "02",
               title: "Talk things through",
-              text: "A quiet space to reflect, without judgment. Start a conversation at your own pace.",
+              text: "A quiet space to reflect with an AI companion. Text first, at your pace.",
               link: "/support",
-              cta: "Open support chat",
+              cta: "Open AI support chat",
             },
             {
               icon: BookOpen,
               n: "03",
               title: "Understand your options",
-              text: "Explore trusted resources and legal information, one question at a time.",
+              text: "Find U.S. information, state resources, and a starting point for legal help.",
               link: "/rights",
-              cta: "Know your rights",
+              cta: "Explore your rights",
             },
           ].map((c) => (
             <Link className="choice" key={c.n} href={c.link}>
               <div className="choiceTop">
                 <span className="iconbox">
-                  <c.icon size={23} />
+                  <c.icon size={25} />
                 </span>
                 <span>{c.n}</span>
               </div>
@@ -335,33 +379,50 @@ function Home() {
               <p>{c.text}</p>
               <span className="cardlink">
                 {c.cta}
-                <ArrowUpRight size={17} />
+                <ArrowRight size={19} />
               </span>
             </Link>
           ))}
         </div>
       </section>
+      <section className="care-emergency">
+        <ShieldCheck size={25} />
+        <div>
+          <h3>Need immediate help?</h3>
+          <p>
+            For immediate danger or a medical emergency in the U.S., call{" "}
+            <a href="tel:911">911</a> if it’s safe. HerVoice cannot dispatch
+            emergency help.
+          </p>
+        </div>
+        <a
+          className="btn secondary"
+          href="https://womenshealth.gov/relationships-and-safety/get-help"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Support information <ArrowUpRight size={17} />
+        </a>
+      </section>
       <section className="reassure">
         <span className="iconbox">
-          <ShieldCheck size={27} />
+          <LockKeyhole size={25} />
         </span>
         <div>
-          <h3>Your choices come first.</h3>
+          <h3>Your safety. Your choices.</h3>
           <p>
-            Share as much or as little as you want. You can leave at any time.
+            Share as much or as little as you want. Quick exit is always at the
+            top.
             <br />
-            Learn how this space handles your information before you begin.
+            Learn what this site saves and what leaving can’t erase.
           </p>
         </div>
         <Link href="/privacy-safety">
-          Privacy & safety <ArrowRight size={16} />
+          Privacy & safety <ArrowRight size={18} />
         </Link>
       </section>
       <section className="softnote">
-        <span className="thinLine" />
-        <Leaf size={20} />
-        <p>However you got here, you deserve to be heard.</p>
-        <span className="thinLine" />
+        <p>You deserve care, respect, and a choice in what comes next.</p>
       </section>
     </>
   );
@@ -1246,7 +1307,8 @@ function Chat() {
 }
 function Rights() {
   const [q, Q] = useState("");
-  const [j, J] = useState("India");
+  const [j, J] = useState("United States");
+  const [state, SetState] = useState("");
   const [answer, A] = useState<any>(null);
   const [busy, B] = useState(false);
   const [error, E] = useState("");
@@ -1261,18 +1323,36 @@ function Rights() {
       <div className="panel">
         <Field label="Jurisdiction">
           <select value={j} onChange={(e) => J(e.target.value)}>
-            <option>India</option>
             <option>United States</option>
             <option>Other</option>
           </select>
         </Field>
+        {j === "United States" && (
+          <Field
+            label="State or territory (optional)"
+            hint="National information is available without a location. State laws vary; coverage is limited to the sources shown."
+          >
+            <select value={state} onChange={(e) => SetState(e.target.value)}>
+              <option value="">National information / prefer not to say</option>
+              {US_REGIONS.map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </Field>
+        )}
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             B(true);
             E("");
             try {
-              A(await api("/legal", { question: q, jurisdiction: j }));
+              A(
+                await api("/legal", {
+                  question: q,
+                  jurisdiction: j,
+                  state: state || null,
+                }),
+              );
             } catch (e) {
               E((e as Error).message);
             } finally {
@@ -1313,11 +1393,10 @@ function Rights() {
               <span>
                 <strong>{s.title}</strong>
                 <small>
-                  {s.jurisdiction} · {s.section} · Directory reviewed{" "}
-                  {s.reviewed}
+                  {s.jurisdiction} · {s.section} · Source reviewed {s.reviewed}
                   <br />
-                  Selected source excerpts only; current consolidated law and
-                  case law are not verified.
+                  Source-backed guidance and directories; not legal advice.
+                  State-specific coverage is shown explicitly.
                 </small>
               </span>
               <ArrowUpRight size={16} />
@@ -1334,44 +1413,57 @@ function Rights() {
 }
 const resources = [
   {
-    name: "National Commission for Women",
-    category: "Support directory",
-    region: "India",
-    url: "https://ncw.gov.in/",
-    text: "Official information and support routes for women in India.",
-  },
-  {
-    name: "India Code",
-    category: "Legal information",
-    region: "India",
-    url: "https://www.indiacode.nic.in/",
-    text: "Official source for central laws. Check the current text and seek qualified advice.",
-  },
-  {
-    name: "National Legal Services Authority",
-    category: "Legal assistance",
-    region: "India",
-    url: "https://nalsa.gov.in/",
-    text: "Explore official legal aid information and state legal service authorities.",
-  },
-  {
-    name: "The National Domestic Violence Hotline",
-    category: "Support directory",
+    name: "National Domestic Violence Hotline",
+    category: "Talk to an advocate",
     region: "United States",
+    state: "National",
     url: "https://www.thehotline.org/",
-    text: "A directory and information resource. Opening an external site can leave browser traces.",
+    text: "Call 800-799-7233, text START to 88788, or open the official website for advocate chat. Use a safe device when possible.",
+  },
+  {
+    name: "Find support in your state or territory",
+    category: "Local support",
+    region: "United States",
+    state: "National",
+    url: "https://www.justice.gov/ovw/resources-victims-and-survivors",
+    text: "The U.S. Department of Justice directory lists state, territory, and Tribal coalitions that can connect you to local providers.",
+  },
+  {
+    name: "Office on Women’s Health — Get help",
+    category: "Health & safety",
+    region: "United States",
+    state: "National",
+    url: "https://womenshealth.gov/relationships-and-safety/get-help",
+    text: "Federal guidance on domestic violence support, safety planning, and services. For a medical emergency, call 911 if safe.",
+  },
+  {
+    name: "Supreme Court of Ohio — Domestic Violence Program",
+    category: "Legal information",
+    region: "United States",
+    state: "Ohio",
+    url: "https://www.supremecourt.ohio.gov/courts/services-to-courts/domestic-violence-program/",
+    text: "Official Ohio protection-order forms and legal resources. A court or qualified local advocate can explain the steps for your situation.",
+  },
+  {
+    name: "Ohio Domestic Violence Network",
+    category: "Local support",
+    region: "United States",
+    state: "Ohio",
+    url: "https://www.odvn.org/",
+    text: "Ohio’s domestic violence coalition, listed in the U.S. Department of Justice survivor resource directory.",
   },
 ];
 function Resources() {
   const [q, Q] = useState("");
-  const [region, R] = useState("All");
+  const [region, R] = useState("United States");
+  const [state, SetState] = useState("");
   return (
     <section className="page">
       <div className="eyebrow">RESOURCES</div>
       <h1>A little more support.</h1>
       <p className="intro">
-        Explore official directories at your own pace. External sites have their
-        own privacy policies.
+        U.S. support, health, and legal directories. Choose a state if you want.
+        External sites have their own privacy policies.
       </p>
       <div className="filters">
         <Field label="Search resources">
@@ -1383,17 +1475,33 @@ function Resources() {
         </Field>
         <Field label="Location">
           <select value={region} onChange={(e) => R(e.target.value)}>
-            {["All", "India", "United States"].map((x) => (
+            {["United States"].map((x) => (
               <option key={x}>{x}</option>
             ))}
           </select>
         </Field>
       </div>
+      <Field label="State or territory">
+        <select value={state} onChange={(e) => SetState(e.target.value)}>
+          <option value="">All U.S. resources</option>
+          {US_REGIONS.map((x) => (
+            <option key={x}>{x}</option>
+          ))}
+        </select>
+      </Field>
+      {state && state !== "Ohio" && (
+        <p className="notice">
+          Showing national services for {state}. Open the Department of Justice
+          directory to find local coalitions; we do not claim a verified local
+          provider list for this state.
+        </p>
+      )}
       <div className="resourcegrid">
         {resources
           .filter(
             (r) =>
               (region === "All" || region === r.region) &&
+              (!state || r.state === "National" || r.state === state) &&
               (r.name + " " + r.text + " " + r.category)
                 .toLowerCase()
                 .includes(q.toLowerCase()),
@@ -1407,7 +1515,8 @@ function Resources() {
               rel="noreferrer"
             >
               <Badge>
-                {r.region} · {r.category}
+                {r.state === "National" ? "U.S. national" : r.state} ·{" "}
+                {r.category}
               </Badge>
               <h2>
                 {r.name}

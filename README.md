@@ -1,6 +1,6 @@
 # HerVoice
 
-A discreet support platform with a complete local **synthetic demo**: guest request → saved receipt → encrypted PNG → authorized intake → responder case updates. Includes text support chat, opt-in voice and an original 3D companion, source-backed legal extracts, resource browsing, and organization-scoped case work.
+A U.S.-first, help-oriented support platform with a complete local **synthetic demo**: guest request → saved receipt → encrypted PNG → authorized intake → responder case updates. Includes text support chat, opt-in voice and an original 3D companion, source-backed U.S. support and legal-resource summaries, resource browsing, and organization-scoped case work.
 
 **Use synthetic information only.** This is development software, not an emergency service or a monitored assistance channel. The demo sends no real reports or messages. Live adapters are included but have not been exercised with live credentials. See [feature parity and remaining work](docs/feature-parity.md).
 
@@ -29,7 +29,7 @@ Compose binds both exposed ports to localhost and persists demo data in a named 
 3. Open **Responder portal**. Select practice organization A and open its server-established demo session. Organization B has a separate queue and cannot decode A’s PNGs.
 4. Open **Image intake**, upload the original PNG, verify the message, and confirm intake. The original request is linked once; repeated intake does not duplicate it.
 5. Change status, assignment or notes. Activity comes from stored events. Closing requires a reason; stale updates are rejected.
-6. Explore support chat, opt-in voice and the original 3D companion. Nothing starts playing automatically. **Know your rights** retrieves selected government-source passages; try “shared household residence” or “protection order”. Unsupported questions and jurisdictions abstain.
+6. Explore support chat, opt-in voice and the original 3D companion. Nothing starts playing automatically. **Know your rights** defaults to United States; try “protection order forms” and optionally choose Ohio. Unsupported questions and jurisdictions abstain.
 
 The initial dataset contains 16 synthetic cases across two organizations. No source-repository personal data, avatars, secrets or history were copied.
 
@@ -88,5 +88,7 @@ This also changes the demo encryption key; old downloads will no longer decode. 
 - [Design system](docs/design-system.md)
 - [Feature parity and remaining work](docs/feature-parity.md)
 - [Verification](docs/verification.md)
+
+The care-service interface uses high-contrast help buttons, a persistent Quick exit, and a user-opened **Help options** dialog with real national advocate links. It does not imply that HerVoice is a hospital or provides medical care. The active source set covers U.S. national support and selected Ohio court resources; state-specific advice is never inferred for other states.
 
 The application is named **HerVoice**. The repository retains the user-provided GitHub name **HerWay**.

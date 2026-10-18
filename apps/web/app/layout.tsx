@@ -1,7 +1,7 @@
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 export const metadata = {
-  title: "HerVoice — Support, at your pace",
+  title: "HerVoice — Find support in the United States",
   description:
     "A discreet place to request support, talk things through, and explore your options.",
 };

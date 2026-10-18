@@ -36,10 +36,13 @@ def ingest_pdf(data, metadata):
             "cdnbbsr.s3waas.gov.in",
             "wcd.gov.in",
             "legislative.assam.gov.in",
+            "justice.gov",
+            "womenshealth.gov",
+            "supremecourt.ohio.gov",
         ]
     ):
         raise ValueError("Source is not allowlisted")
-    if metadata.get("jurisdiction") != "India":
+    if metadata.get("jurisdiction") != "United States":
         raise ValueError("Unsupported jurisdiction")
     if metadata.get("reviewed", "") < date.today().isoformat():
         raise ValueError("New ingestion must be reviewed today")
@@ -71,8 +74,8 @@ def ingest_pdf(data, metadata):
     return doc
 
 
-def retrieve(question, jurisdiction, documents=None):
-    if jurisdiction != "India":
+def retrieve(question, jurisdiction, documents=None, state=None):
+    if jurisdiction != "United States":
         return []
     words = set(re.findall(r"\w+", question.lower())) - {
         "what",
@@ -95,6 +98,7 @@ def retrieve(question, jurisdiction, documents=None):
         if (
             d.get("status") != "active"
             or d.get("jurisdiction") != jurisdiction
+            or (d.get("state") is not None and d.get("state") != state)
             or d.get("reviewUntil", "9999") < date.today().isoformat()
         ):
             continue
@@ -110,8 +114,8 @@ def retrieve(question, jurisdiction, documents=None):
     return sorted(rows, key=lambda r: -r[0])[:3]
 
 
-def answer(question, jurisdiction):
-    found = retrieve(question, jurisdiction)
+def answer(question, jurisdiction, state=None):
+    found = retrieve(question, jurisdiction, state=state)
     if not found:
         return {
             "answer": "I cannot verify a legal answer from the current source collection. Please consult an official legal assistance directory.",
@@ -125,15 +129,22 @@ def answer(question, jurisdiction):
             {k: d.get(k, "") for k in ["title", "url", "jurisdiction", "reviewed"]}
             | {
                 "id": c["id"],
-                "section": c.get("section", f"Page {c['page']}"),
+                "section": c.get("section", "Source page"),
+                "state": d.get("state"),
                 "hash": d["sha256"],
                 "effective": d.get("effective", "Unknown"),
             }
         )
-        passages.append(f"Source {c['id']}, page {c['page']}:\n{c['text']}")
+        passages.append(
+            f"{d['title']} — {c.get('section', 'Source summary')}:\n{c['text']}"
+        )
+    state_notice = ""
+    if state and not any(d.get("state") == state for _, d, _ in found):
+        state_notice = f"We do not have reviewed state-law guidance for {state}. The information below is national; use the official state/territory directory for local help.\n\n"
     return {
-        "answer": "These selected passages from a government-hosted copy may help you explore your question. Their transcription was checked against the source pages; the current consolidated law and later case law have not been verified. These are source extracts, not legal advice. A qualified adviser can explain how the law applies to you.\n\n"
+        "answer": state_notice
+        + "Here are relevant summaries from official U.S. support resources. These explain where to find help; they do not determine your legal rights or replace advice from a qualified local professional.\n\n"
         + "\n\n".join(passages),
         "sources": sources,
-        "mode": "Source extracts · local retrieval",
+        "mode": "U.S. source-backed information",
     }
