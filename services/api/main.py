@@ -306,7 +306,9 @@ def health():
             "legal": "source extracts"
             if legal_engine.registry()
             else "source browsing",
-            "imageGeneration": "local demo covers"
+            "imageGeneration": "Gemini configured"
+            if os.getenv("IMAGE_PROVIDER") == "gemini"
+            else "local demo covers"
             if MODE == "demo"
             else "Bedrock configured"
             if os.getenv("BEDROCK_IMAGE_MODEL")

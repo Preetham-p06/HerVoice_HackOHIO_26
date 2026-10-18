@@ -7,10 +7,10 @@ The entire synthetic demo, dashboard, avatar, original cover illustrations, brow
 | Feature | Obtain | Server environment |
 | --- | --- | --- |
 | Real chat, draft rewriting, encouragement, legal synthesis | [Google AI Studio](https://ai.google.dev/gemini-api/docs/api-key) | `TEXT_PROVIDER=gemini`, `GEMINI_API_KEY`, `GEMINI_MODEL` (supported generateContent model) |
-| AI generated post images | [Amazon Bedrock / Nova Canvas](https://docs.aws.amazon.com/nova/latest/userguide/getting-started-api.html) | `AWS_REGION`, `AWS_PROFILE` locally or an AWS execution role, `BEDROCK_IMAGE_MODEL` for an available Nova Canvas model in that region |
+| AI generated post images | [Gemini image generation](https://ai.google.dev/gemini-api/docs/image-generation) | Reuse `GEMINI_API_KEY`; set `IMAGE_PROVIDER=gemini` and `GEMINI_IMAGE_MODEL` to an available image model. Image billing/quota must be enabled. |
 | Natural generated speech | [ElevenLabs API keys](https://elevenlabs.io/docs/overview/administration/workspaces/api-keys) and [voice library](https://elevenlabs.io/app/voice-library) | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL` |
 
-Bedrock uses the standard AWS SDK credential chain, not a generic Bedrock key field in this project. A deployed IAM role is preferred. Local access-key credentials, if used, belong in the AWS credentials profile rather than source code. The image adapter uses the real provider only in `APP_MODE=live`; demo mode intentionally produces local illustrations. Gemini can be enabled independently in a local demo with synthetic input. Restart the API after configuring its environment. Choose currently available model identifiers from the provider console; placeholders in `.env.example` must be replaced.
+Gemini image generation can run with synthetic demo storage when explicitly configured; without it, demo images remain local illustrations. AWS is not needed for Gemini images. The optional legacy Bedrock adapter uses the standard AWS SDK credential chain, not a generic Bedrock key field in this project. A deployed IAM role is preferred. Local access-key credentials, if used, belong in the AWS credentials profile rather than source code. The Bedrock adapter uses the real provider only in `APP_MODE=live`. Gemini can be enabled independently in a local demo with synthetic input. Restart the API after configuring its environment. Choose currently available model identifiers from the provider console; placeholders in `.env.example` must be replaced.
 
 ## Full live deployment
 

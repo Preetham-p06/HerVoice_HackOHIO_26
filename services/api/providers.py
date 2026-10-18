@@ -98,3 +98,53 @@ def speech(text):
         raise HTTPException(
             503, "Voice generation unavailable. Text remains available."
         )
+
+
+def image(prompt: str) -> bytes:
+    """Generate a neutral cover with Gemini; never include request narratives."""
+    import base64
+    import io
+    from PIL import Image
+
+    key = os.getenv("GEMINI_API_KEY")
+    model = os.getenv("GEMINI_IMAGE_MODEL", "")
+    if not key or not re.fullmatch(r"[a-zA-Z0-9._-]+", model):
+        raise HTTPException(503, "Gemini image generation is not configured.")
+    try:
+        with httpx.Client(timeout=90) as client:
+            response = client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                headers={"x-goog-api-key": key},
+                json={
+                    "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                    "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]},
+                },
+            )
+            if response.status_code == 429:
+                raise HTTPException(429, "Gemini image quota is exhausted. Enable image billing or increase quota in Google AI Studio.")
+            response.raise_for_status()
+            parts = response.json()["candidates"][0]["content"]["parts"]
+            for part in parts:
+                inline = part.get("inlineData", {})
+                if inline.get("mimeType") not in ["image/png", "image/jpeg", "image/webp"]:
+                    continue
+                encoded = inline.get("data", "")
+                if len(encoded) > 16 * 1024 * 1024:
+                    raise ValueError("image_too_large")
+                raw = base64.b64decode(encoded, validate=True)
+                with Image.open(io.BytesIO(raw)) as source:
+                    if source.width * source.height > 4_000_000:
+                        raise ValueError("image_too_large")
+                    source.load()
+                    im = source.convert("RGB")
+                    im.thumbnail((1024, 1024))
+                    output = io.BytesIO()
+                    im.save(output, format="PNG")
+                    return output.getvalue()
+            raise ValueError("image_not_returned")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            503, "Gemini could not generate an image. Check API key, model access and image quota, then retry."
+        ) from None

@@ -607,6 +607,12 @@ function Home() {
   );
 }
 function Help() {
+  const [imageProvider, ImageProvider] = useState("");
+  useEffect(() => {
+    api("/health")
+      .then((h) => ImageProvider(h.capabilities.imageGeneration))
+      .catch(() => {});
+  }, []);
   const [step, S] = useState(0);
   const [busy, B] = useState(false);
   const [error, E] = useState("");
@@ -1047,9 +1053,11 @@ Take it at your own pace.`),
             <Field
               label="Image prompt"
               hint={
-                DEMO
-                  ? "Demo generates original illustrations locally; live mode uses the configured image provider. Only this prompt is sent to the image provider."
-                  : "Only this image prompt is sent to the configured image provider."
+                imageProvider === "Gemini configured"
+                  ? "Gemini generates images from this prompt. Your support message is not included."
+                  : DEMO
+                    ? "Demo generates original illustrations locally; live mode uses the configured image provider. Only this prompt is sent to the image provider."
+                    : "Only this image prompt is sent to the configured image provider."
               }
             >
               <input
@@ -1084,8 +1092,9 @@ Take it at your own pace.`),
             )}
             {job?.status === "failed" && (
               <p role="alert" className="error">
-                Image generation failed. Try again or check the image provider
-                configuration.
+                {job.error === "image_quota_exceeded"
+                  ? "Gemini image quota is exhausted. Enable image billing or increase quota in Google AI Studio, then try again."
+                  : "Image generation failed. Try again or check the image provider configuration."}
               </p>
             )}
             {job?.status === "complete" && (
@@ -1509,6 +1518,12 @@ function Requests({
   );
 }
 function Chat() {
+  const [liveAI, LiveAI] = useState(!DEMO);
+  useEffect(() => {
+    api("/health")
+      .then((h) => LiveAI(h.capabilities.chat === "Gemini configured"))
+      .catch(() => {});
+  }, []);
   const [messages, M] = useState<{ role: string; text: string }[]>([]);
   const [remember, Remember] = useState(false);
   const [verse, Verse] = useState("");
@@ -1645,7 +1660,7 @@ function Chat() {
         <div>
           <strong>Your support space</strong>
           <small>
-            AI {DEMO ? "demo " : ""}companion · not a therapist or emergency
+            AI {liveAI ? "" : "demo "}companion · not a therapist or emergency
             service
           </small>
         </div>
@@ -1681,7 +1696,7 @@ function Chat() {
               <small>
                 {m.role === "you"
                   ? "You"
-                  : DEMO
+                  : !liveAI
                     ? "HerVoice · Demo response"
                     : "HerVoice · AI response"}
               </small>
@@ -1689,7 +1704,9 @@ function Chat() {
             </div>
           ))}
           {busy && (
-            <p>{DEMO ? "Preparing a demo response…" : "Preparing a reply…"}</p>
+            <p>
+              {liveAI ? "Preparing a reply…" : "Preparing a demo response…"}
+            </p>
           )}
         </div>
         {avatar && <Companion speaking={speaking} mouthShape={mouthShape} />}

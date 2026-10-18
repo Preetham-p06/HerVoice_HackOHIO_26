@@ -96,7 +96,9 @@ class Jobs:
                     for i in range(3):
                         if self.get(j["id"], j["owner"])["status"] == "canceled":
                             return
-                        if self.store.mode == "demo":
+                        if os.getenv("IMAGE_PROVIDER") == "gemini":
+                            data = providers.image(prompt)
+                        elif self.store.mode == "demo":
                             data = cover(i)
                         else:
                             import boto3
@@ -204,9 +206,9 @@ class Jobs:
                 j["status"] = "complete"
                 j["progress"] = 100
                 self.put(j)
-        except Exception:
+        except Exception as exc:
             j["status"] = "failed"
-            j["error"] = "enhancement_unavailable"
+            j["error"] = "image_quota_exceeded" if isinstance(exc, HTTPException) and exc.status_code == 429 else "enhancement_unavailable"
             self.put(j)
 
     def result(self, j, index):
