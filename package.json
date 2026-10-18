@@ -1,0 +1,26 @@
+{
+  "name": "hervoice",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/web",
+    "build": "npm run build --workspace apps/web",
+    "typecheck": "npm run typecheck --workspace apps/web",
+    "test": ".venv/bin/python -m pytest tests -q",
+    "dev:all": ".venv/bin/python scripts/dev.py",
+    "contracts": ".venv/bin/python scripts/contracts.py",
+    "test:e2e": "playwright test",
+    "format": "prettier --write apps/web package.json",
+    "lint": ".venv/bin/ruff check services tests scripts --select F"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
+    "prettier": "^3.9.10"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^7.9.17"
+  }
+}

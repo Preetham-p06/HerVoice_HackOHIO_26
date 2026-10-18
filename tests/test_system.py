@@ -1,0 +1,337 @@
+import os, tempfile, uuid, io
+
+os.environ["DATA_DIR"] = tempfile.mkdtemp(prefix="hervoice-test-")
+import pytest
+from fastapi.testclient import TestClient
+from PIL import Image
+from services.api.main import app
+from services.api.codec import encode, decode, cover
+
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+
+def request(client, channel="direct"):
+    body = {
+        "original": "My own words ❤️ नमस्ते",
+        "narrative": "The exact approved message ❤️ नमस्ते",
+        "contact": {"method": "none"},
+        "channel": channel,
+        "idempotencyKey": str(uuid.uuid4()),
+    }
+    r = client.post("/v1/requests", json=body)
+    assert r.status_code == 201, r.text
+    return r.json()["id"], body
+
+
+def signin(c, org="demo-a"):
+    assert c.post("/v1/demo/session", json={"organization": org}).status_code == 200
+
+
+def test_guest_idempotency_and_ownership(client):
+    cid, b = request(client)
+    assert client.post("/v1/requests", json=b).json()["id"] == cid
+    assert client.get("/v1/requests/" + cid).json()["narrative"] == b["narrative"]
+    assert TestClient(app).get("/v1/requests/" + cid).status_code == 404
+    assert TestClient(app).get("/v1/cases").status_code == 401
+
+
+def test_org_boundary(client):
+    cid, _ = request(client)
+    signin(client, "demo-b")
+    assert client.get("/v1/cases/" + cid).status_code == 404
+    assert (
+        client.patch(
+            "/v1/cases/" + cid,
+            json={"version": 1, "status": "closed", "reason": "Test"},
+        ).status_code
+        == 404
+    )
+    assert client.post("/v1/cases/" + cid + "/related", json={}).status_code == 404
+
+
+def test_image_intake_exactly_once(client):
+    cid, b = request(client, "image")
+    png = client.get("/v1/requests/" + cid + "/image")
+    assert png.status_code == 200
+    assert (
+        client.post(
+            "/v1/intake/preview",
+            files={"file": ("cover.png", png.content, "image/png")},
+        ).status_code
+        == 401
+    )
+    signin(client, "demo-b")
+    assert (
+        client.post(
+            "/v1/intake/preview",
+            files={"file": ("cover.png", png.content, "image/png")},
+        ).status_code
+        == 422
+    )
+    signin(client)
+    preview = client.post(
+        "/v1/intake/preview", files={"file": ("cover.png", png.content, "image/png")}
+    ).json()
+    assert preview["narrative"] == b["narrative"]
+    assert not preview["alreadyReceived"]
+    for _ in range(2):
+        assert (
+            client.post(
+                "/v1/intake/confirm",
+                json={"id": cid, "verification": preview["verification"]},
+            ).status_code
+            == 200
+        )
+    c = client.get("/v1/cases/" + cid).json()
+    assert len([e for e in c["events"] if e["type"] == "intake_received"]) == 1
+
+
+def test_events_concurrency_contact_validation(client):
+    cid, _ = request(client)
+    signin(client)
+    assert (
+        client.patch(
+            "/v1/cases/" + cid, json={"version": 1, "status": "closed"}
+        ).status_code
+        == 422
+    )
+    r = client.patch(
+        "/v1/cases/" + cid,
+        json={
+            "version": 1,
+            "status": "in_review",
+            "assignment": "Training responder",
+            "note": "Synthetic note",
+        },
+    )
+    assert r.status_code == 200
+    assert len(r.json()["events"]) == 4
+    assert (
+        client.patch(
+            "/v1/cases/" + cid, json={"version": 1, "note": "stale"}
+        ).status_code
+        == 409
+    )
+    for method, value in [("email", "invalid"), ("text", "12")]:
+        assert (
+            client.post(
+                "/v1/requests",
+                json={
+                    "original": "a",
+                    "narrative": "a",
+                    "idempotencyKey": str(uuid.uuid4()),
+                    "contact": {"method": method, "value": value},
+                },
+            ).status_code
+            == 422
+        )
+
+
+def test_queue_related_and_delete(client):
+    cid, _ = request(client)
+    signin(client)
+    r = client.get("/v1/cases?page=1")
+    assert len(r.json()["items"]) <= 6
+    related = client.post("/v1/cases/" + cid + "/related", json={}).json()
+    assert all(x["id"] != cid for x in related)
+    assert client.delete("/v1/requests/" + cid).status_code == 200
+    assert client.get("/v1/requests/" + cid).status_code == 404
+
+
+@pytest.mark.parametrize("text", ["ASCII", "हिंदी 日本語", "❤️ 🌿 🫶"])
+def test_codec_utf8(text):
+    key = b"a" * 32
+    payload = text.encode()
+    assert decode(encode(cover(), payload, key, "a"), key, "a") == payload
+
+
+def test_codec_bounds_tamper_wrong_key_and_jpeg():
+    key = b"a" * 32
+    png = encode(cover(), b"test", key, "a")
+    with pytest.raises(ValueError):
+        decode(png, b"b" * 32, "a")
+    with pytest.raises(ValueError):
+        decode(png, key, "b")
+    with pytest.raises(ValueError):
+        encode(cover(), b"a" * 40000, key, "a")
+    with pytest.raises(ValueError):
+        decode(b"invalid", key, "a")
+    im = Image.open(io.BytesIO(png))
+    px = list(im.get_flattened_data())
+    r, g, b, a = px[400]
+    px[400] = (r ^ 1, g, b, a)
+    im.putdata(px)
+    out = io.BytesIO()
+    im.save(out, format="PNG")
+    with pytest.raises(ValueError):
+        decode(out.getvalue(), key, "a")
+    out = io.BytesIO()
+    im.convert("RGB").save(out, format="JPEG")
+    with pytest.raises(ValueError):
+        decode(out.getvalue(), key, "a")
+
+
+def test_legal_abstains_and_origin(client):
+    assert (
+        client.post(
+            "/v1/legal", json={"question": "rights", "jurisdiction": "Mars"}
+        ).json()["sources"]
+        == []
+    )
+    assert (
+        "cannot verify"
+        in client.post("/v1/legal", json={"question": "unrelated astronomy"}).json()[
+            "answer"
+        ]
+    )
+    assert (
+        client.post(
+            "/v1/demo/session", json={}, headers={"origin": "https://evil.invalid"}
+        ).status_code
+        == 403
+    )
+
+
+def test_exact_codec_capacity_and_header():
+    im = Image.new("RGBA", (32, 32), (40, 100, 130, 200))
+    out = io.BytesIO()
+    im.save(out, format="PNG")
+    png = out.getvalue()
+    key = b"a" * 32
+    capacity = 32 * 32 // 8 - 68
+    encoded = encode(png, b"x" * capacity, key, "a")
+    assert decode(encoded, key, "a") == b"x" * capacity
+    assert Image.open(io.BytesIO(encoded)).getpixel((0, 0))[3] == 200
+    with pytest.raises(ValueError):
+        encode(png, b"x" * (capacity + 1), key, "a")
+    modified = Image.open(io.BytesIO(encoded))
+    pixels = list(modified.get_flattened_data())
+    r, g, b, a = pixels[0]
+    pixels[0] = (r ^ 1, g, b, a)
+    modified.putdata(pixels)
+    out = io.BytesIO()
+    modified.save(out, format="PNG")
+    with pytest.raises(ValueError):
+        decode(out.getvalue(), key, "a")
+
+
+def test_at_rest_payload_encryption():
+    from services.api.store import CaseStore
+
+    s = object.__new__(CaseStore)
+    s.mode = "live"
+    s.key = b"z" * 32
+    c = {
+        "id": "case-id",
+        "org": "org-a",
+        "narrative": "sensitive synthetic text",
+        "status": "received",
+        "priority": "normal",
+        "created": "date",
+        "version": 1,
+    }
+    packed = s.packed(c, "hash", "idem")
+    assert "sensitive" not in packed["data"]
+    assert json_load(s.unpacked(packed)["data"]) == c
+    packed["org"] = "org-b"
+    with pytest.raises(Exception):
+        s.unpacked(packed)
+
+
+def json_load(v):
+    import json
+
+    return json.loads(v)
+
+
+def test_live_auth_signature_and_membership(client, monkeypatch):
+    import services.api.main as main
+    import jwt, time
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from types import SimpleNamespace
+
+    private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    monkeypatch.setattr(main, "MODE", "live")
+    monkeypatch.setenv("CLERK_ISSUER", "https://issuer.invalid")
+    monkeypatch.setenv("CLERK_AUDIENCE", "hervoice")
+
+    class Keys:
+        def __init__(self, *a, **kw):
+            pass
+
+        def get_signing_key_from_jwt(self, t):
+            return SimpleNamespace(key=private.public_key())
+
+    monkeypatch.setattr(jwt, "PyJWKClient", Keys)
+    claims = {
+        "sub": "staff-1",
+        "iss": "https://issuer.invalid",
+        "aud": "hervoice",
+        "iat": int(time.time()),
+        "exp": int(time.time()) + 60,
+        "org_id": "org-a",
+    }
+    token = jwt.encode(claims, private, algorithm="RS256")
+    client.cookies.set("__session", token)
+    monkeypatch.setattr(
+        main.store,
+        "membership",
+        lambda u, o: {"role": "responder"} if u == "staff-1" and o == "org-a" else None,
+    )
+    assert client.get("/v1/me").json()["org"] == "org-a"
+    client.cookies.set(
+        "__session", jwt.encode(claims | {"exp": 0}, private, algorithm="RS256")
+    )
+    assert client.get("/v1/me").status_code == 401
+    client.cookies.set(
+        "__session",
+        jwt.encode(claims | {"org_id": "org-b"}, private, algorithm="RS256"),
+    )
+    assert client.get("/v1/me").status_code == 403
+    assert client.post("/v1/demo/session", json={}).status_code == 404
+
+
+def test_legal_retrieval_filters_and_provenance():
+    from services.api.legal import retrieve, vector
+
+    doc = {
+        "id": "test",
+        "jurisdiction": "India",
+        "status": "active",
+        "reviewUntil": "2099-01-01",
+        "chunks": [
+            {
+                "id": "test-1",
+                "text": "Synthetic fixture: housing support options.",
+                "page": 1,
+                "vector": vector("Synthetic fixture: housing support options."),
+            }
+        ],
+    }
+    assert retrieve("housing support", "India", [doc])[0][2]["id"] == "test-1"
+    assert not retrieve("housing support", "Mars", [doc])
+    assert not retrieve("housing support", "India", [doc | {"status": "superseded"}])
+    assert not retrieve(
+        "housing support", "India", [doc | {"reviewUntil": "2000-01-01"}]
+    )
+    assert not retrieve("unrelated astronomy", "India", [doc])
+
+
+def test_cover_job_owner_and_result(client):
+    import time
+
+    cid, _ = request(client)
+    j = client.post("/v1/requests/" + cid + "/covers", json={}).json()
+    assert TestClient(app).get(f"/v1/requests/{cid}/jobs/{j['id']}").status_code == 404
+    for _ in range(100):
+        status = client.get(f"/v1/requests/{cid}/jobs/{j['id']}").json()
+        if status["status"] in ["complete", "failed"]:
+            break
+        time.sleep(0.02)
+    assert status["status"] == "complete"
+    assert len(status["results"]) == 3
+    result = client.post(f"/v1/requests/{cid}/jobs/{j['id']}/encode/1")
+    assert result.status_code == 200 and result.headers["content-type"] == "image/png"

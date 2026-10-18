@@ -1,0 +1,30 @@
+name: HerVoice checks
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - run: python -m venv .venv
+      - run: .venv/bin/pip install -r services/api/requirements.lock
+      - run: .venv/bin/ruff check services tests scripts --select F
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run contracts
+      - run: git diff --exit-code packages/api-client
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-report
+          path: playwright-report/
