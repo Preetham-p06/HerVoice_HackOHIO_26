@@ -4,6 +4,14 @@ import AxeBuilder from "@axe-core/playwright";
 async function visit(page: Page, path: string) {
   await page.goto(path);
   await expect(page.locator('html[data-app-ready="true"]')).toBeAttached();
+  await page
+    .getByRole("button", { name: "Personal space", exact: true })
+    .first()
+    .click();
+  await page
+    .getByRole("button", { name: "Open support tools", exact: true })
+    .click();
+  await expect(page.locator(".private-shell")).toBeVisible();
 }
 
 test("guest image request → verified intake → real case event", async ({
@@ -45,13 +53,13 @@ test("guest image request → verified intake → real case event", async ({
   expect(path).toBeTruthy();
   await visit(page, "/sign-in");
   await page.getByRole("button", { name: "Open demo workspace" }).click();
-  await expect(page).toHaveURL(/\/responder$/);
+  await expect(page).toHaveURL(/\/workspace$/);
   await visit(page, "/responder/intake");
   await page.getByLabel("Choose image (max 8 MB)").setInputFiles(path!);
   await page.getByRole("button", { name: "Verify & preview" }).click();
   await expect(page.getByText(approved, { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Confirm intake" }).click();
-  await expect(page).toHaveURL(new RegExp("/responder/cases/" + cid));
+  await expect(page).toHaveURL(new RegExp("/workspace/cases/" + cid));
   await page
     .getByLabel("Private case note")
     .fill("Synthetic test note: review completed.");
@@ -169,4 +177,82 @@ test("consented chat memory survives navigation and can be turned off", async ({
   await visit(page, "/resources");
   await visit(page, "/support");
   await expect(page.locator(".message")).toHaveCount(0);
+});
+
+test("neutral reading cover is the default on every entry and after closing tools", async ({
+  page,
+}) => {
+  const calls: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/v1/")) calls.push(request.url());
+  });
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "More joy in the little things." }),
+  ).toBeVisible();
+  await expect(page).toHaveTitle("Everyday Notes — Ideas for everyday living");
+  await expect(page.locator(".private-shell")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Help options/ })).toHaveCount(
+    0,
+  );
+  expect(calls).toEqual([]);
+  await page.getByRole("button", { name: "At home", exact: true }).click();
+  await expect(page.locator(".story-card")).toHaveCount(1);
+  await page.getByRole("button", { name: /At home.*A little green/ }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "A little green goes a long way.",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Back to stories", exact: true })
+    .click();
+  await visit(page, "/studio");
+  await page.getByRole("link", { name: "Support chat", exact: true }).click();
+  await expect(page.getByLabel("Your message", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Get help", exact: true }).click();
+  await expect(
+    page.getByLabel("What’s on your mind?", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByLabel("What’s on your mind?")
+    .fill("Synthetic private draft that must disappear");
+  await page
+    .getByRole("button", { name: "Back to reading", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "More joy in the little things." }),
+  ).toBeVisible();
+  await expect(page.locator("textarea")).toHaveCount(0);
+  await page.goto("/journal");
+  await expect(
+    page.getByRole("heading", { name: "More joy in the little things." }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Your message", { exact: true })).toHaveCount(0);
+  await expect(page).toHaveTitle("Everyday Notes — Ideas for everyday living");
+  const result = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(result.violations).toEqual([]);
+});
+
+test("double Escape covers private tools and reload keeps them covered", async ({
+  page,
+}) => {
+  await visit(page, "/journal");
+  await page
+    .getByLabel("Your message", { exact: true })
+    .fill("Synthetic unsent private chat");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".private-shell")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "More joy in the little things." }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.locator(".private-shell")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "More joy in the little things." }),
+  ).toBeVisible();
 });

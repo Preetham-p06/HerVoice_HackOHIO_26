@@ -64,6 +64,7 @@ export type NewRequest = {
   "original": string;
   "narrative": string;
   "category"?: string;
+  "details"?: SituationDetails;
   "contact"?: Contact;
   "location"?: string | null;
   "urgent"?: boolean;
@@ -74,6 +75,13 @@ export type NewRequest = {
 export type Session = {
   "organization"?: "demo-a" | "demo-b";
   "role"?: "responder" | "administrator";
+};
+
+export type SituationDetails = {
+  "duration"?: string;
+  "frequency"?: string;
+  "visibleInjuries"?: "not_shared" | "yes" | "no" | "unsure";
+  "personDescription"?: string;
 };
 
 export type Text = {

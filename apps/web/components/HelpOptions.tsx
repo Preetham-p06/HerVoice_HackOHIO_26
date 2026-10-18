@@ -60,10 +60,10 @@ export default function HelpOptions() {
             onClick={() => {
               window.speechSynthesis?.cancel();
               window.dispatchEvent(new Event("hervoice-exit"));
-              window.location.replace("https://www.weather.gov/");
+              window.dispatchEvent(new Event("hervoice-cover"));
             }}
           >
-            Quick exit
+            Back to reading
           </button>
           <button
             className="close-dialog"
@@ -105,7 +105,7 @@ export default function HelpOptions() {
           </span>
           <ArrowUpRight size={22} />
         </a>
-        <Link className="dialog-option" href="/help" onClick={close}>
+        <Link className="dialog-option" href="/studio" onClick={close}>
           <HeartHandshake size={25} />
           <span>
             <strong>Write a support request</strong>
@@ -117,7 +117,7 @@ export default function HelpOptions() {
           </span>
           <ArrowRight size={22} />
         </Link>
-        <Link className="dialog-option" href="/resources" onClick={close}>
+        <Link className="dialog-option" href="/collections" onClick={close}>
           <ShieldCheck size={25} />
           <span>
             <strong>Find U.S. resources</strong>
@@ -132,7 +132,7 @@ export default function HelpOptions() {
         </p>
         <p className="dialog-privacy">
           Calls and external websites can leave records on your device.{" "}
-          <Link href="/privacy-safety" onClick={close}>
+          <Link href="/about" onClick={close}>
             Privacy & safety
           </Link>
         </p>

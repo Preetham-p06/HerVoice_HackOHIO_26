@@ -1,19 +1,16 @@
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { DiscreetSession } from "../components/DiscreetSession";
 export const metadata = {
-  title: "HerVoice — Find support in the United States",
+  title: "Everyday Notes — Ideas for everyday living",
+  robots: { index: false, follow: false },
   description:
-    "A discreet place to request support, talk things through, and explore your options.",
+    "Thoughtful spaces, everyday rituals, and small ideas for ordinary days.",
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
-          <ClerkProvider>{children}</ClerkProvider>
-        ) : (
-          children
-        )}
+        <DiscreetSession>{children}</DiscreetSession>
       </body>
     </html>
   );

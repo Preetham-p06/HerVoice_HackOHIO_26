@@ -27,3 +27,8 @@ Axe WCAG 2 A/AA and 2.1 AA tagging was run through the development-only `#audit`
 ## Help panel
 
 A persistent **Help options** launcher and prominent **Get help now** buttons open a native modal dialog. It does not open automatically or clear a draft. Native focus containment, Escape dismissal, focus return, and 44px close/quick-exit controls support keyboard use. Quick exit is also available inside the modal because the rest of the document becomes inert. Phone and advocate-chat links require an explicit click; no call, message, or geolocation starts automatically. The floating launcher has no flashing/pulsing animation.
+
+
+## Default public surface: Everyday Notes
+
+The public experience is a neutral editorial reading site in warm paper, forest green, and muted botanical illustration. All stories and SVG art are original; no remote media or fonts are requested. Search and category filters work locally. The neutral Personal space button opens a keyboard-accessible native dialog before support tools are displayed. The public view has no support navigation, hotline launcher, or demonstration banner. HerVoice branding, explicit help buttons, and source/clinical limitations are visible only after deliberate entry. Neutral metadata, favicon, and frontend paths remain consistent in both modes. The unlock state exists only in the root layout's React memory, so client navigation works but a reload/new tab does not remember it.

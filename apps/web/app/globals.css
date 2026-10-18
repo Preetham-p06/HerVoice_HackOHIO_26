@@ -2946,3 +2946,646 @@ body {
   border-top: 4px solid #12676c !important;
   background: linear-gradient(135deg, #f0f8f5, #fff) !important;
 }
+
+/* Neutral public reading surface. No remote fonts, images, analytics or media. */
+.everyday-site {
+  background: #f8f5ee;
+  color: #283e32;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.everyday-site * {
+  box-sizing: border-box;
+}
+.everyday-site button {
+  font: inherit;
+  cursor: pointer;
+}
+.everyday-topline {
+  text-align: center;
+  padding: 13px 16px;
+  background: #e7ecdf;
+  font-size: 10px;
+  letter-spacing: 0.19em;
+  font-weight: 700;
+  color: #405340;
+}
+.everyday-site .everyday-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1260px;
+  margin: 0 auto;
+  padding: 28px 36px;
+  border: 0;
+  background: transparent;
+  gap: 16px;
+  box-shadow: none;
+}
+.everyday-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: none;
+  color: #294332;
+  font-family: Georgia, serif !important;
+  font-size: 29px !important;
+  letter-spacing: -1.5px;
+  min-height: 44px;
+  padding: 0;
+}
+.everyday-brand span:not(.sr-only) {
+  font-style: italic;
+  margin-left: -5px;
+}
+.personal-space {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: transparent;
+  border: 1px solid #a9b5a3;
+  border-radius: 999px;
+  padding: 11px 17px;
+  color: #334c39;
+  font-size: 12px !important;
+  min-height: 44px;
+}
+.everyday-site .everyday-main {
+  max-width: 1260px;
+  width: 100%;
+  margin: auto;
+  padding: 20px 36px 0;
+}
+.everyday-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 65px;
+  padding: 12px 0 55px;
+}
+.everyday-kicker {
+  font-size: 10px;
+  letter-spacing: 0.17em;
+  font-weight: 700;
+  color: #50604b;
+}
+.everyday-hero h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(52px, 6.3vw, 84px);
+  line-height: 1.05;
+  letter-spacing: -0.055em;
+  color: #293f30;
+  font-weight: 400;
+  margin: 23px 0;
+}
+.everyday-hero > div > p {
+  max-width: 390px;
+  color: #596151;
+  font-size: 16px;
+  line-height: 1.85;
+  margin-bottom: 26px;
+}
+.everyday-hero > div > button,
+.entry-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: #344d37;
+  color: #fff;
+  border: 1px solid #344d37;
+  border-radius: 5px;
+  padding: 15px 21px;
+  min-height: 48px;
+  font-size: 13px !important;
+}
+.editor-note {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 36px;
+  border-left: 2px solid #c9b690;
+  padding-left: 17px;
+}
+.editor-note > span {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.7;
+  max-width: 64px;
+  color: #6b6048;
+  font-weight: 700;
+}
+.editor-note p {
+  font:
+    italic 16px/1.5 Georgia,
+    serif;
+  margin: 0;
+  color: #5b6553;
+}
+.feature-art {
+  position: relative;
+  background: #e9dfce;
+  border: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 160px 160px 10px 10px;
+  box-shadow: 16px 17px 0 #eeeadf;
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+.feature-art > svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 600/530;
+  object-fit: cover;
+}
+.feature-art > span {
+  display: block;
+  background: #efe9db;
+  padding: 20px 25px 23px;
+  color: #4d5c45;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.8;
+  position: relative;
+}
+.feature-art strong {
+  font:
+    400 23px/1.4 Georgia,
+    serif;
+  color: #2f4534;
+  letter-spacing: -0.02em;
+  display: block;
+  padding-right: 22px;
+}
+.feature-art > span > svg {
+  position: absolute;
+  right: 22px;
+  bottom: 26px;
+}
+.reading-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  padding-top: 35px;
+  border-top: 1px solid #d6d9cc;
+}
+.reading-section-heading h2 {
+  font:
+    400 34px/1.2 Georgia,
+    serif;
+  letter-spacing: -0.035em;
+  color: #304633;
+  margin: 12px 0 0;
+}
+.reading-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid #9eab96;
+  color: #56664d;
+  padding: 8px 0;
+}
+.reading-search input {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  width: 150px !important;
+  font-size: 12px !important;
+  padding: 5px !important;
+  min-height: 32px;
+  color: #344b37;
+}
+.reading-search input::placeholder {
+  color: #59654f;
+}
+.reading-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 25px 0 24px;
+}
+.reading-categories button {
+  background: transparent;
+  color: #57614e;
+  border: 1px solid #c8cdbd;
+  border-radius: 999px;
+  padding: 10px 17px;
+  font-size: 11px;
+  min-height: 44px;
+}
+.reading-categories button[aria-pressed="true"] {
+  background: #364e39;
+  border-color: #364e39;
+  color: #fff;
+}
+.reading-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.story-card {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #2e4533;
+  min-width: 0;
+}
+.story-art {
+  border-radius: 7px;
+  overflow: hidden;
+  margin-bottom: 17px;
+}
+.story-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.25s;
+}
+.story-card:hover .story-art svg {
+  transform: scale(1.035);
+}
+.story-card > span {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #4f5d47;
+}
+.story-card > span > span {
+  color: #65705d;
+  font-weight: 400;
+}
+.story-card h3 {
+  font:
+    400 25px/1.15 Georgia,
+    serif;
+  letter-spacing: -0.03em;
+  margin: 12px 0;
+  color: #2e4533;
+}
+.story-card p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #626b59;
+  margin: 0 0 15px;
+}
+.story-card .story-read {
+  font-size: 11px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-transform: none;
+  letter-spacing: 0;
+  min-height: 28px;
+}
+.reading-quote {
+  margin: 60px 0 0;
+  text-align: center;
+  padding: 42px 24px;
+  background: #e9ecdf;
+  border-radius: 9px;
+  color: #3f573d;
+}
+.reading-quote > svg {
+  margin: auto;
+}
+.reading-quote p {
+  font:
+    italic 35px/1.2 Georgia,
+    serif;
+  color: #3c5038;
+  letter-spacing: -0.03em;
+  margin: 17px 0;
+}
+.reading-quote > span {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+.everyday-site .everyday-footer {
+  max-width: 1260px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  justify-content: space-between;
+  margin: 0 auto;
+  padding: 35px 36px;
+  border: 0;
+  background: none;
+}
+.everyday-footer > span {
+  font:
+    italic 22px Georgia,
+    serif;
+  letter-spacing: -0.04em;
+  color: #354d37;
+}
+.everyday-footer p {
+  font-size: 11px;
+  color: #626b59;
+}
+.everyday-footer button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: #40543b;
+  font-size: 11px;
+}
+.everyday-article {
+  max-width: 850px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+.reading-back {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  color: #3b513a;
+  background: none;
+  border: 0;
+  padding: 12px 0;
+  min-height: 44px;
+  font-size: 13px !important;
+}
+.article-heading {
+  text-align: center;
+  padding: 35px 0;
+}
+.article-heading > span {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  color: #59674e;
+}
+.article-heading h1 {
+  font:
+    400 clamp(38px, 5vw, 66px)/1.08 Georgia,
+    serif;
+  color: #304833;
+  letter-spacing: -0.045em;
+  margin: 20px 0;
+}
+.article-heading p {
+  font-size: 16px;
+  color: #606b57;
+}
+.article-art {
+  max-height: 490px;
+  overflow: hidden;
+  border-radius: 15px;
+}
+.article-art svg {
+  display: block;
+  width: 100%;
+}
+.article-copy {
+  max-width: 620px;
+  margin: 35px auto;
+}
+.article-copy p {
+  font:
+    19px/1.85 Georgia,
+    serif;
+  color: #46543f;
+  margin-bottom: 24px;
+}
+.entry-dialog {
+  border: 1px solid #c6cdbb;
+  border-radius: 18px;
+  padding: 36px;
+  max-width: 470px;
+  width: calc(100% - 32px);
+  color: #344832;
+  background: #fbf9f2;
+  box-shadow: 0 30px 100px #19231c55;
+}
+.entry-dialog::backdrop {
+  background: #15271f66;
+  backdrop-filter: blur(6px);
+}
+.entry-dialog h2 {
+  font:
+    400 32px/1.15 Georgia,
+    serif;
+  color: #2d4432;
+  letter-spacing: -0.03em;
+  margin: 18px 0;
+}
+.entry-dialog p {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #52604a;
+}
+.entry-dialog .entry-notice {
+  font-size: 12px;
+  padding: 15px;
+  border: 1px solid #d5d9c8;
+  border-radius: 9px;
+  background: #eeefe4;
+}
+.entry-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  background: none;
+  border: 0;
+  padding: 10px;
+  color: #3b4c35;
+  min-width: 44px;
+  min-height: 44px;
+}
+.entry-open {
+  width: 100%;
+  margin-top: 10px;
+}
+.entry-continue {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #3c5138;
+  padding: 15px;
+  min-height: 44px;
+  margin-top: 7px;
+  font-size: 13px !important;
+}
+html[data-covering="true"] .private-shell {
+  display: none !important;
+}
+html[data-covering="true"] body::after {
+  content: "everyday notes";
+  display: grid;
+  place-items: center;
+  position: fixed;
+  inset: 0;
+  background: #f8f5ee;
+  color: #294332;
+  font:
+    italic 38px Georgia,
+    serif;
+  z-index: 999999;
+}
+@media (max-width: 850px) {
+  .everyday-hero {
+    gap: 35px;
+  }
+  .reading-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .everyday-hero h1 {
+    font-size: 58px;
+  }
+  .everyday-site .everyday-footer {
+    flex-wrap: wrap;
+  }
+  .everyday-site .everyday-footer p {
+    order: 3;
+    width: 100%;
+    margin: 0;
+  }
+}
+@media (max-width: 600px) {
+  .everyday-site .everyday-header {
+    padding: 20px;
+  }
+  .everyday-brand {
+    font-size: 23px !important;
+    gap: 6px;
+  }
+  .everyday-brand svg {
+    width: 20px;
+  }
+  .personal-space {
+    padding: 10px 12px;
+    gap: 6px;
+    font-size: 10px !important;
+  }
+  .personal-space > svg:first-child {
+    display: none;
+  }
+  .everyday-site .everyday-main {
+    padding: 18px 22px 0;
+  }
+  .everyday-hero {
+    grid-template-columns: 1fr;
+    gap: 33px;
+    padding-bottom: 42px;
+  }
+  .everyday-hero h1 {
+    font-size: 61px;
+    margin: 18px 0;
+  }
+  .everyday-hero > div > p {
+    font-size: 14px;
+  }
+  .editor-note {
+    margin-top: 26px;
+  }
+  .feature-art {
+    max-width: 420px;
+    margin: auto;
+    box-shadow: 9px 10px 0 #eeeadf;
+    border-radius: 130px 130px 9px 9px;
+  }
+  .feature-art > svg {
+    aspect-ratio: 600/420;
+  }
+  .reading-section-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 27px;
+  }
+  .reading-section-heading h2 {
+    font-size: 31px;
+  }
+  .reading-search {
+    width: 100%;
+  }
+  .reading-search input {
+    width: 100% !important;
+  }
+  .reading-categories {
+    gap: 7px;
+  }
+  .reading-categories button {
+    font-size: 10px;
+    padding: 9px 12px;
+  }
+  .reading-grid {
+    gap: 25px 16px;
+  }
+  .story-card h3 {
+    font-size: 23px;
+  }
+  .story-card > span {
+    font-size: 8px;
+  }
+  .story-card > span > span {
+    display: block;
+    line-height: 1.8;
+  }
+  .story-card p {
+    font-size: 11px;
+  }
+  .reading-quote {
+    margin-top: 40px;
+    padding: 35px 18px;
+  }
+  .reading-quote p {
+    font-size: 30px;
+  }
+  .everyday-site .everyday-footer {
+    padding: 28px 22px;
+    gap: 10px;
+  }
+  .entry-dialog {
+    padding: 30px 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-art svg {
+    transition: none;
+  }
+  .story-card:hover .story-art svg {
+    transform: none;
+  }
+}
+.optional-details {
+  margin: 20px 0;
+  padding: 18px;
+  border: 1px solid #cadbd6;
+  border-radius: 12px;
+  background: #f4f9f6;
+}
+.optional-details summary {
+  cursor: pointer;
+  min-height: 30px;
+  font-weight: 700;
+  color: #234c45;
+}
+.optional-details > p {
+  font-size: 13px;
+  color: #455e53;
+  line-height: 1.7;
+}
+.analysis-panel dl > div {
+  margin-bottom: 12px;
+}
+.analysis-panel dt {
+  font-size: 12px;
+  font-weight: 700;
+}
+.analysis-panel dd {
+  margin: 4px 0;
+  font-size: 14px;
+  white-space: pre-wrap;
+}

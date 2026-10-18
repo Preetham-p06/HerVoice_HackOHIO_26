@@ -1,6 +1,8 @@
 # HerVoice
 
-A U.S.-first, help-oriented support platform with a complete local **synthetic demo**: guest request → saved receipt → encrypted PNG → authorized intake → responder case updates. Includes text support chat, opt-in voice and an original 3D companion, source-backed U.S. support and legal-resource summaries, resource browsing, and organization-scoped case work.
+A U.S.-first support platform behind **Everyday Notes**, a neutral reading website. The public page, tab title, and navigation paths look like an everyday editorial site. Choose **Personal space → Open support tools** to enter HerVoice. Returning to reading, switching tabs, pressing Escape twice, or reloading covers the tools and clears unsaved page state. This does not hide browser/network history, downloaded files, a recognizable deployment domain, or device monitoring.
+
+HerVoice provides support workflows with a complete local **synthetic demo**: guest request → saved receipt → encrypted PNG → authorized intake → responder case updates. Includes text support chat, opt-in voice and an original 3D companion, source-backed U.S. support and legal-resource summaries, resource browsing, and organization-scoped case work.
 
 **Use synthetic information only.** This is development software, not an emergency service or a monitored assistance channel. The demo sends no real reports or messages. Live adapters are included but have not been exercised with live credentials. See [feature parity and remaining work](docs/feature-parity.md).
 
@@ -12,7 +14,7 @@ Requires Node 22 and Python 3.13. From the repository root:
 ./scripts/dev.sh
 ```
 
-The first run installs dependencies. Open [HerVoice](http://localhost:3000). The API’s interactive contract is at [FastAPI docs](http://localhost:8000/docs). Stop both services with Ctrl+C. No account, paid provider, MongoDB instance or AWS account is required for the demo.
+The first run installs dependencies. Open [Everyday Notes](http://localhost:3000). The API’s interactive contract is at [FastAPI docs](http://localhost:8000/docs). Stop both services with Ctrl+C. No account, paid provider, MongoDB instance or AWS account is required for the demo.
 
 Alternative container setup:
 
@@ -24,7 +26,7 @@ Compose binds both exposed ports to localhost and persists demo data in a named 
 
 ## Five-minute coworker walkthrough
 
-1. Choose **Get help**, write a short synthetic note, leave contact as **Do not contact me**, and optionally type a city. Review and edit the exact message.
+1. Choose **Personal space → Open support tools**, then **Get help**, write a short synthetic note, leave contact as **Do not contact me**, and optionally type a city. Review and edit the exact message.
 2. Choose **Prepare a discreet PNG**, submit, and download the verified PNG. The receipt says **Prepared**, not delivered. Three built-in covers, uploaded PNGs and optional three-cover preparation work.
 3. Open **Responder portal**. Select practice organization A and open its server-established demo session. Organization B has a separate queue and cannot decode A’s PNGs.
 4. Open **Image intake**, upload the original PNG, verify the message, and confirm intake. The original request is linked once; repeated intake does not duplicate it.

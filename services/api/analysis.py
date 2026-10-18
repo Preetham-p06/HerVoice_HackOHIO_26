@@ -24,17 +24,25 @@ def decompose(case):
         if case.get("urgent")
         else "No urgency selected",
         "reviewFlags": flags,
+        "details": case.get("details", {}),
         "method": "Extractive demo analysis; flags require human review and do not establish facts or assess danger",
     }
 
 
+def matching_text(case):
+    return (
+        case.get("details", {}).get("personDescription", "").strip()
+        or case["narrative"]
+    )
+
+
 def match(source, candidates, limit=4, threshold=0.08):
-    q = vector(source["narrative"])
+    q = vector(matching_text(source))
     rows = []
     for item in candidates:
         if item["id"] == source["id"] or item["org"] != source["org"]:
             continue
-        score = sum(a * b for a, b in zip(q, vector(item["narrative"])))
+        score = sum(a * b for a, b in zip(q, vector(matching_text(item))))
         if score >= threshold:
             rows.append(
                 {

@@ -423,3 +423,37 @@ def test_opt_in_memory_api_and_session_preservation(client):
     assert TestClient(app).get("/v1/support/memory").json()["enabled"] is False
     client.delete("/v1/support/memory")
     assert client.get("/v1/support/memory").json()["enabled"] is False
+
+
+def test_optional_situation_details_are_preserved_and_scoped(client):
+    details = {
+        "duration": "About a month",
+        "frequency": "Unsure",
+        "visibleInjuries": "unsure",
+        "personDescription": "Synthetic description only",
+    }
+    body = {
+        "original": "Synthetic words",
+        "narrative": "Exact approved words",
+        "details": details,
+        "idempotencyKey": str(uuid.uuid4()),
+    }
+    result = client.post("/v1/requests", json=body)
+    assert result.status_code == 201
+    cid = result.json()["id"]
+    signin(client)
+    assert client.get("/v1/cases/" + cid + "/analysis").json()["details"] == details
+    signin(client, "demo-b")
+    assert client.get("/v1/cases/" + cid + "/analysis").status_code == 404
+    body["idempotencyKey"] = str(uuid.uuid4())
+    body["details"]["visibleInjuries"] = "invented"
+    assert client.post("/v1/requests", json=body).status_code == 422
+
+
+def test_encouragement_does_not_promise_dispatch(client):
+    result = client.post(
+        "/v1/encouragement", json={"text": "Synthetic request for a quiet moment"}
+    )
+    assert result.status_code == 200
+    assert result.json()["provider"].startswith("Original demo verse")
+    assert "help is on the way" not in result.json()["text"].lower()

@@ -275,6 +275,9 @@
           "contact": {
             "$ref": "#/components/schemas/Contact"
           },
+          "details": {
+            "$ref": "#/components/schemas/SituationDetails"
+          },
           "idempotencyKey": {
             "maxLength": 100,
             "minLength": 16,
@@ -341,6 +344,41 @@
           }
         },
         "title": "Session",
+        "type": "object"
+      },
+      "SituationDetails": {
+        "properties": {
+          "duration": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Duration",
+            "type": "string"
+          },
+          "frequency": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Frequency",
+            "type": "string"
+          },
+          "personDescription": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Persondescription",
+            "type": "string"
+          },
+          "visibleInjuries": {
+            "default": "not_shared",
+            "enum": [
+              "not_shared",
+              "yes",
+              "no",
+              "unsure"
+            ],
+            "title": "Visibleinjuries",
+            "type": "string"
+          }
+        },
+        "title": "SituationDetails",
         "type": "object"
       },
       "Text": {
@@ -813,6 +851,42 @@
           }
         },
         "summary": "Draft"
+      }
+    },
+    "/v1/encouragement": {
+      "post": {
+        "operationId": "encouragement_v1_encouragement_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Text"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Encouragement"
       }
     },
     "/v1/health": {

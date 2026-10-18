@@ -38,3 +38,21 @@ def test_memory_consent_encryption_owner_and_delete():
     )
     memory.delete("owner")
     assert memory.read("owner") is None
+
+
+def test_person_description_is_used_when_supplied():
+    source = dict(
+        id="one",
+        org="a",
+        alias="one",
+        narrative="housing",
+        details={"personDescription": "Synthetic gray coat red bicycle"},
+    )
+    candidate = dict(
+        id="two",
+        org="a",
+        alias="two",
+        narrative="different financial situation",
+        details=source["details"],
+    )
+    assert match(source, [candidate], threshold=0.99)[0]["score"] == 1

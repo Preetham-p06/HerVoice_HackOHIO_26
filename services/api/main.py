@@ -343,11 +343,19 @@ class Contact(BaseModel):
         return self
 
 
+class SituationDetails(BaseModel):
+    duration: str = Field(default="", max_length=300)
+    frequency: str = Field(default="", max_length=300)
+    visibleInjuries: Literal["not_shared", "yes", "no", "unsure"] = "not_shared"
+    personDescription: str = Field(default="", max_length=2000)
+
+
 class NewRequest(BaseModel):
     alias: str = Field(default="", max_length=100)
     original: str = Field(min_length=1, max_length=8000)
     narrative: str = Field(min_length=1, max_length=8000)
     category: str = Field(default="Other", max_length=100)
+    details: SituationDetails = Field(default_factory=SituationDetails)
     contact: Contact = Field(default_factory=Contact)
     location: str | None = Field(default=None, max_length=300)
     urgent: bool = False
@@ -1148,3 +1156,19 @@ def monitor_loop():
 
 
 threading.Thread(target=monitor_loop, daemon=True, name="hervoice-maintenance").start()
+
+
+@app.post("/v1/encouragement")
+def encouragement(b: Text):
+    if providers.enabled():
+        reply = providers.generate(
+            "Write a short original reassuring poem based on the supplied feeling. Respect autonomy. Never promise that help is coming, recovery, confidentiality, or safety. Do not give medical/legal advice. Return JSON with text, expression gentle, animation idle.",
+            [{"role": "user", "parts": [{"text": b.text}]}],
+        )
+        return {"text": reply.text, "provider": "AI-generated encouragement"}
+    if MODE == "live":
+        raise HTTPException(503, "Writing provider is not configured")
+    return {
+        "text": "No perfect words are needed here.\nA little space, a breath, a pause.\nYour choices still belong to you;\nthis moment asks for nothing more.",
+        "provider": "Original demo verse · not a clinical intervention",
+    }

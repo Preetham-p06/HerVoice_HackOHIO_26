@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useEffect, useRef, useId } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import NextLink from "next/link";
+import { usePathname, useRouter as useNextRouter } from "next/navigation";
+import CoverSite from "../../components/CoverSite";
+import { useDiscreetSession } from "../../components/DiscreetSession";
 import dynamic from "next/dynamic";
 import HelpOptions from "../../components/HelpOptions";
 import { US_REGIONS } from "../../components/us-regions";
@@ -84,6 +86,50 @@ async function api(path: string, body?: unknown, method?: string) {
     );
   return d;
 }
+const publicRoutes = [
+  ["/help/complete", "/studio/complete"],
+  ["/privacy-safety", "/about"],
+  ["/requests", "/saved"],
+  ["/resources", "/collections"],
+  ["/support", "/journal"],
+  ["/rights", "/library"],
+  ["/sign-in", "/account"],
+  ["/sign-up", "/join"],
+  ["/responder", "/workspace"],
+  ["/help", "/studio"],
+];
+function neutralPath(path: string) {
+  for (const [privateRoute, publicRoute] of publicRoutes) {
+    if (path === privateRoute || path.startsWith(privateRoute + "/"))
+      return publicRoute + path.slice(privateRoute.length);
+  }
+  return path;
+}
+function privatePath(path: string) {
+  for (const [privateRoute, publicRoute] of publicRoutes) {
+    if (path === publicRoute || path.startsWith(publicRoute + "/"))
+      return privateRoute + path.slice(publicRoute.length);
+  }
+  return path;
+}
+function Link(props: React.ComponentProps<typeof NextLink>) {
+  return (
+    <NextLink
+      {...props}
+      href={
+        typeof props.href === "string" ? neutralPath(props.href) : props.href
+      }
+    />
+  );
+}
+function useRouter() {
+  const router = useNextRouter();
+  return {
+    ...router,
+    push: (href: string) => router.push(neutralPath(href)),
+    replace: (href: string) => router.replace(neutralPath(href)),
+  };
+}
 function Button({
   children,
   onClick,
@@ -145,7 +191,55 @@ const nav = [
   ["/resources", "Resources"],
 ];
 export default function App() {
-  const path = usePathname();
+  const rawPath = usePathname();
+  const path = privatePath(rawPath);
+  const router = useRouter();
+  const { unlocked, unlock: Unlock } = useDiscreetSession();
+  const escapeTime = useRef(0);
+  function conceal() {
+    if (document.querySelector(".private-shell"))
+      document.documentElement.dataset.covering = "true";
+    else delete document.documentElement.dataset.covering;
+    window.speechSynthesis?.cancel();
+    document
+      .querySelectorAll("audio,video")
+      .forEach((el) => (el as HTMLMediaElement).pause());
+    window.dispatchEvent(new Event("hervoice-exit"));
+    Unlock(false);
+  }
+  function cover() {
+    conceal();
+    router.replace("/");
+  }
+  useEffect(() => {
+    if (!unlocked) delete document.documentElement.dataset.covering;
+  }, [unlocked]);
+  useEffect(() => {
+    function visibility() {
+      if (document.visibilityState === "hidden") cover();
+    }
+    function key(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      const time = Date.now();
+      if (time - escapeTime.current < 900) cover();
+      escapeTime.current = time;
+    }
+    function restored(e: PageTransitionEvent) {
+      if (e.persisted) cover();
+    }
+    window.addEventListener("hervoice-cover", cover);
+    window.addEventListener("keydown", key);
+    document.addEventListener("visibilitychange", visibility);
+    window.addEventListener("pagehide", conceal);
+    window.addEventListener("pageshow", restored);
+    return () => {
+      window.removeEventListener("hervoice-cover", cover);
+      window.removeEventListener("keydown", key);
+      document.removeEventListener("visibilitychange", visibility);
+      window.removeEventListener("pagehide", conceal);
+      window.removeEventListener("pageshow", restored);
+    };
+  }, []);
   const staff = path.startsWith("/responder");
   const [error, setError] = useState("");
   useEffect(() => {
@@ -156,23 +250,35 @@ export default function App() {
     };
   }, [path]);
   function exit() {
-    window.speechSynthesis?.cancel();
-    window.dispatchEvent(new Event("hervoice-exit"));
-    window.location.replace("https://www.weather.gov/");
+    cover();
   }
+  if (!unlocked)
+    return (
+      <>
+        {process.env.NODE_ENV === "development" && <DevAudit />}
+        <CoverSite
+          onOpen={() => {
+            delete document.documentElement.dataset.covering;
+            Unlock(true);
+            const destination = neutralPath(rawPath);
+            if (destination !== rawPath) router.replace(destination);
+          }}
+        />
+      </>
+    );
   return (
-    <>
+    <div className="private-shell">
       {process.env.NODE_ENV === "development" && <DevAudit />}
       <a className="skip" href="#main">
         Skip to content
       </a>
       <div className="safetybar">
         <span>
-          <LockKeyhole size={12} /> A space for you. Share only what feels
-          right.
+          <LockKeyhole size={12} /> Personal space · Esc twice returns to
+          reading.
         </span>
         <button onClick={exit}>
-          Quick exit <LogOut size={13} />
+          Back to reading <LogOut size={13} />
         </button>
       </div>
       <header>
@@ -266,7 +372,7 @@ export default function App() {
           <span>Built with care. Designed around you.</span>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
 function Home() {
@@ -476,8 +582,8 @@ function Home() {
         <div>
           <h3>Your safety. Your choices.</h3>
           <p>
-            Share as much or as little as you want. Quick exit is always at the
-            top.
+            Share as much or as little as you want. Back to reading is always at
+            the top.
             <br />
             Learn what this site saves and what leaving can’t erase.
           </p>
@@ -500,6 +606,10 @@ function Help() {
   const [info, I] = useState("");
   const [f, F] = useState({
     alias: "",
+    duration: "",
+    frequency: "",
+    visibleInjuries: "not_shared",
+    personDescription: "",
     original: "",
     narrative: "",
     category: "Safety planning",
@@ -553,6 +663,12 @@ function Help() {
         original: f.original,
         narrative: f.narrative,
         category: f.category,
+        details: {
+          duration: f.duration,
+          frequency: f.frequency,
+          visibleInjuries: f.visibleInjuries,
+          personDescription: f.personDescription,
+        },
         contact: {
           method: f.method,
           value: f.method === "none" ? "" : f.value,
@@ -634,6 +750,50 @@ function Help() {
                 maxLength={100}
               />
             </Field>
+            <details className="optional-details">
+              <summary>Optional situation details</summary>
+              <p>
+                Skip anything you do not want to share. These details are saved
+                with your request for authorized responders; only the approved
+                message is embedded in the PNG.
+              </p>
+              <Field label="How long has this been happening? (optional)">
+                <input
+                  value={f.duration}
+                  onChange={(e) => set("duration", e.target.value)}
+                  maxLength={300}
+                />
+              </Field>
+              <Field label="How often does this happen? (optional)">
+                <input
+                  value={f.frequency}
+                  onChange={(e) => set("frequency", e.target.value)}
+                  maxLength={300}
+                />
+              </Field>
+              <Field label="Visible injuries (optional)">
+                <select
+                  value={f.visibleInjuries}
+                  onChange={(e) => set("visibleInjuries", e.target.value)}
+                >
+                  <option value="not_shared">Prefer not to share</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                  <option value="unsure">Unsure</option>
+                </select>
+              </Field>
+              <Field
+                label="Description of the person involved (optional)"
+                hint="Include only details you choose to share, such as behavior or identifying characteristics. Similarities require human review and do not identify a person."
+              >
+                <textarea
+                  rows={3}
+                  value={f.personDescription}
+                  onChange={(e) => set("personDescription", e.target.value)}
+                  maxLength={2000}
+                />
+              </Field>
+            </details>
             <label className="check">
               <input
                 type="checkbox"
@@ -1191,6 +1351,7 @@ function Requests({
 function Chat() {
   const [messages, M] = useState<{ role: string; text: string }[]>([]);
   const [remember, Remember] = useState(false);
+  const [verse, Verse] = useState("");
   const [text, T] = useState("");
   const [busy, B] = useState(false);
   const [error, E] = useState("");
@@ -1396,7 +1557,34 @@ function Chat() {
           />
         </div>
       )}
+      {verse && (
+        <div className="panel" aria-live="polite">
+          <h2>A few words for this moment</h2>
+          <p style={{ whiteSpace: "pre-line" }}>{verse}</p>
+          <small>Encouragement, not a promise of assistance.</small>
+        </div>
+      )}
       <div className="chattools">
+        <Button
+          secondary
+          disabled={busy}
+          onClick={async () => {
+            B(true);
+            E("");
+            try {
+              const d = await api("/encouragement", {
+                text: text.trim() || "A quiet moment of encouragement",
+              });
+              Verse(d.text);
+            } catch (e) {
+              E((e as Error).message);
+            } finally {
+              B(false);
+            }
+          }}
+        >
+          A few words of encouragement
+        </Button>
         <Button
           secondary
           disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
@@ -1436,6 +1624,7 @@ function Chat() {
             );
             Remember(false);
             M([]);
+            Verse("");
             B(false);
             StudioBusy(false);
             Studio("");
@@ -1767,12 +1956,12 @@ function Privacy() {
       </p>
       {[
         [
-          "Quick exit",
-          "The Quick exit button stops speech, clears the current page, and replaces it with a weather website. It cannot erase browser history, network records, downloads, or monitoring software traces.",
+          "Returning to reading",
+          "Everyday Notes is the default public view and browser-tab title. Personal space opens HerVoice tools. Back to reading, pressing Escape twice, switching tabs, or restoring a page from browser history covers the tools, stops playback, and clears unsaved page state. Reloading also returns to reading. This cannot erase browser history, network records, downloads, screenshots, cookies, saved requests, consented chat memory, or monitoring software traces. The website address itself can still identify the service; choose a neutral deployment domain.",
         ],
         [
           "Drafts and conversations",
-          "Request drafts and chat history stay in page memory. They are cleared when you leave or refresh. Chat text is sent to this local demo API for a deterministic reply and is not stored.",
+          "Request drafts stay in page memory and are cleared when the tools close. Chat is not retained by default. You may explicitly enable encrypted conversation memory for 24 hours after your latest message; turning memory off deletes it. Returning to reading does not delete previously saved requests or consented memory. Live AI services receive submitted text when configured.",
         ],
         [
           "Submitted requests",
@@ -2105,6 +2294,8 @@ function CaseDetail({ id }: { id: string }) {
   const [status, S] = useState("");
   const [related, D] = useState<any[]>([]);
   const [analysis, Analysis] = useState<any>(null);
+  const [matchLimit, MatchLimit] = useState(4);
+  const [matchThreshold, MatchThreshold] = useState(0.08);
   const [info, I] = useState("");
   useEffect(() => {
     api("/cases/" + id)
@@ -2172,6 +2363,31 @@ function CaseDetail({ id }: { id: string }) {
                         ? analysis.reviewFlags.join(" · ")
                         : "No keyword review flags. This does not establish safety."}
                     </p>
+                    {analysis.details && (
+                      <dl>
+                        {Object.entries(analysis.details).map(
+                          ([key, value]) => (
+                            <div key={key}>
+                              <dt>
+                                {(
+                                  {
+                                    duration: "Duration",
+                                    frequency: "Frequency",
+                                    visibleInjuries: "Visible injuries",
+                                    personDescription: "Person description",
+                                  } as Record<string, string>
+                                )[key] || key}
+                              </dt>
+                              <dd>
+                                {!value || value === "not_shared"
+                                  ? "Not shared"
+                                  : String(value)}
+                              </dd>
+                            </div>
+                          ),
+                        )}
+                      </dl>
+                    )}
                     <small>{analysis.method}</small>
                   </div>
                 )}
@@ -2202,15 +2418,46 @@ function CaseDetail({ id }: { id: string }) {
               </div>
               <div className="panel">
                 <h2>Related reports</h2>
+                <Field label="Maximum related reports">
+                  <select
+                    value={matchLimit}
+                    onChange={(e) => MatchLimit(Number(e.target.value))}
+                  >
+                    {[4, 8, 12, 20].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Minimum cosine similarity">
+                  <select
+                    value={matchThreshold}
+                    onChange={(e) => MatchThreshold(Number(e.target.value))}
+                  >
+                    {[0.08, 0.25, 0.5, 0.75, 0.9].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
                 <p>
-                  Lexical overlap supports human review. It does not establish
-                  identity or a shared incident.
+                  Cosine similarity compares the optional person description, or
+                  the reviewed narrative when no description is supplied.
+                  Results support human review; they do not establish identity
+                  or a shared incident.
                 </p>
                 <Button
                   secondary
                   onClick={async () => {
                     try {
-                      D(await api("/cases/" + id + "/related", {}));
+                      D(
+                        await api("/cases/" + id + "/related", {
+                          limit: matchLimit,
+                          threshold: matchThreshold,
+                        }),
+                      );
                     } catch (e) {
                       E((e as Error).message);
                     }

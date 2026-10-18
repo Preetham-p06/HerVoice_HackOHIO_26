@@ -2,11 +2,11 @@
 
 **U.S.-first update:** The current application uses reviewed U.S. national support resources and Ohio court resource summaries. The India source work below records the original audit/build history and is no longer the active source corpus.
 
-Reference: https://github.com/annu12340/Haven
+Reference: user-supplied upstream repository (reviewed outside this checkout).
 
 Inspected commit: `a93c17f2af624c46b7187d9870119d129950f55d`, matching both supplied documents. The reference was cloned to `/tmp/hervoice-reference`, outside this implementation. No upstream code, binary model, image asset or Git history was copied. No LICENSE was found at the reference root; original code and a code-generated companion avoid unclear reuse rights.
 
-The supplied rebuild brief is a product specification, not authorization for contacts, social publication, dispatch or deployment. The user's instructions override its Haven naming: this implementation is **HerVoice**. The supplied screenshot identifies the destination repository as `Preetham-p06/HerWay`.
+The supplied rebuild brief is a product specification, not authorization for contacts, social publication, dispatch or deployment. The user's instructions override its reference project naming: this implementation is **HerVoice**. The supplied screenshot identifies the destination repository as `Preetham-p06/HerWay`.
 
 ## Findings and rebuilt journey
 

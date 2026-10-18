@@ -1,10 +1,10 @@
 # HerVoice: judge walkthrough
 
-HerVoice is U.S.-first. The Haven reference is a feature specification, not a source of privacy guarantees, legal advice, or clinical claims. All interface and illustration work here is original.
+HerVoice is U.S.-first. The reference project reference is a feature specification, not a source of privacy guarantees, legal advice, or clinical claims. All interface and illustration work here is original.
 
 ## Five-minute local demonstration
 
-1. Start with `npm run dev:all`; open http://localhost:3000. The persistent **Help options** button opens the real U.S. hotline choices. Use synthetic information for the demonstration.
+1. Start with `npm run dev:all`; open http://localhost:3000. The default view is **Everyday Notes**, with working reading, filtering, and search. Choose **Personal space → Open support tools** to enter HerVoice. The persistent **Help options** button opens the real U.S. hotline choices. Use synthetic information for the demonstration.
 2. **Request support** → enter a short situation → optionally request a rewrite → review → choose image delivery. Pick a botanical, landscape, or food illustration, upload your own original PNG, or request three covers. Download the encoded PNG. Image delivery is still **prepared** at this point.
 3. **Responder sign-in** → choose the demo organization → **Image intake**. Under **Image monitoring lab**, upload that PNG and queue it. Wait for the 30-second scan or press **Scan now**. Open the resulting verified case. The receipt now reflects actual intake. Re-queueing does not create a duplicate intake event. Images belonging to another organization are rejected.
 4. Open the case, press **Analyze intake**, inspect the extractive summary and human-review flags. Search related cases: numeric cosine similarity is shown as a similarity score, never as a culprit identity probability. Link/reject decisions require a reason.
@@ -34,3 +34,12 @@ Responses are bounded to 12 MB/20 items; redirects are not followed. Duplicate s
 ## Scope boundaries
 
 This implements the reference's demo workflows and configurable integration paths. It does not reproduce proprietary assets, unsupported success metrics, “total privacy,” guaranteed social-media delivery, or guaranteed culprit identification. Public account-based case history, durable distributed worker recovery, key-rotation migration, broad state-law coverage, and operational service partnerships remain outside this hackathon build. Do not present this as a production emergency service.
+
+
+## Discreet entry and return behavior
+
+The default rendered public DOM contains no support navigation, hotline launcher, or case content. Opening a bookmarked support URL still shows the reading site until the user opens Personal space. Metadata stays neutral in both modes. Frontend paths use `/studio`, `/journal`, `/library`, `/collections`, `/saved`, `/account`, and `/workspace`; legacy paths remain accepted but are neutralized when opened through the gate. Backend API paths are unchanged and may be visible in network records.
+
+**Back to reading** closes dialogs and unmounts support components, cancels speech/media, and replaces the current route with `/`. Two Escape presses within 900 ms do the same. Page hiding and history restoration cover the tools; there is no saved unlock preference. Returning to reading clears unsaved drafts and ephemeral conversation state, not saved requests or explicitly consented server memory. Reading stories/search/filter state is local and makes no support API calls before entry. A neutral deployment domain is still necessary; the current local address is not a production domain. No claim is made about hiding activity from monitoring software, history, screenshots, downloads or traffic inspection.
+
+The expanded request form now has optional duration, frequency, visible-injury and person-description fields. Matching uses the person description when supplied, with visible top-N and cosine-threshold controls. The encouragement button supplies original demo verse or configured provider generation; it never promises rescue or dispatch.

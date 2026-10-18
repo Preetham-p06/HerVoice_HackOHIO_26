@@ -8,6 +8,8 @@ import math
 import httpx
 from fastapi import HTTPException
 
+from .analysis import matching_text
+
 DIMENSIONS = 768
 
 
@@ -56,7 +58,7 @@ def index_case(store, case):
     )
     if current:
         return
-    values = embedding(case["narrative"])
+    values = embedding(matching_text(case))
     collection.replace_one(
         {"id": case["id"], "org": case["org"]},
         {
@@ -72,7 +74,7 @@ def index_case(store, case):
 
 def related(store, case, limit, threshold):
     index_case(store, case)
-    values = embedding(case["narrative"])
+    values = embedding(matching_text(case))
     # Atlas score=(1+cosine)/2. Convert back before applying caller threshold.
     pipeline = [
         {
