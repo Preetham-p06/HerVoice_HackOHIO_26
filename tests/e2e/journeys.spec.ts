@@ -226,9 +226,9 @@ test("neutral reading cover is the default on every entry and after closing tool
     .getByRole("button", { name: "Back to stories", exact: true })
     .click();
   await visit(page, "/studio");
-  await page.getByRole("link", { name: "Support chat", exact: true }).click();
+  await page.getByRole("link", { name: "Therapy bot", exact: true }).click();
   await expect(page.getByLabel("Your message", { exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Get help", exact: true }).click();
+  await page.getByRole("link", { name: "Create a post", exact: true }).click();
   await expect(
     page.getByLabel("What’s on your mind?", { exact: true }),
   ).toBeVisible();
@@ -272,4 +272,49 @@ test("double Escape covers private tools and reload keeps them covered", async (
   await expect(
     page.getByRole("heading", { name: "More joy in the little things." }),
   ).toBeVisible();
+});
+
+test("highlighted note opens the five-page hackathon demo directly", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".reading-clue mark")).toHaveText([
+    "Click",
+    "the",
+    "button",
+    "below",
+    "for",
+    "help",
+  ]);
+  await page
+    .getByRole("button", { name: "Open personal space", exact: true })
+    .click();
+  await expect(page.locator(".private-shell")).toBeVisible();
+  const nav = page.getByRole("navigation", {
+    name: "Main navigation",
+    exact: true,
+  });
+  await expect(nav.getByRole("link")).toHaveText([
+    "Home",
+    "Create a post",
+    "Law bot",
+    "Therapy bot",
+    "Dashboard",
+  ]);
+  await nav.getByRole("link", { name: "Create a post", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Create a post.", exact: true }),
+  ).toBeVisible();
+  await nav.getByRole("link", { name: "Law bot", exact: true }).click();
+  await expect(
+    page.getByLabel("What would you like to understand?"),
+  ).toBeVisible();
+  await nav.getByRole("link", { name: "Therapy bot", exact: true }).click();
+  await expect(page.getByLabel("Your message", { exact: true })).toBeVisible();
+  await nav.getByRole("link", { name: "Dashboard", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Live dashboard", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("5 sec", { exact: true })).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-app-ready", "true");
 });

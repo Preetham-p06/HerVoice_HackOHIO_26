@@ -82,6 +82,7 @@ export default function Companion({
     <Boundary>
       <div
         className="companion"
+        role="img"
         aria-label="Optional original animated companion"
       >
         <Canvas

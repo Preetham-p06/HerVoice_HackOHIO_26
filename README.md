@@ -1,6 +1,6 @@
 # HerVoice
 
-A U.S.-first support platform behind **Everyday Notes**, a neutral reading website. The public page, tab title, and navigation paths look like an everyday editorial site. Choose **Personal space → Open support tools** to enter HerVoice. Returning to reading, switching tabs, pressing Escape twice, or reloading covers the tools and clears unsaved page state. This does not hide browser/network history, downloaded files, a recognizable deployment domain, or device monitoring.
+A U.S.-first support platform behind **Everyday Notes**, a neutral reading website. The public page, tab title, and navigation paths look like an everyday editorial site. The six highlighted words read **Click the button below for help**. Press the prominent **Open personal space** button to enter HerVoice directly. The header’s Personal space dialog remains an alternative. Returning to reading, switching tabs, pressing Escape twice, or reloading covers the tools and clears unsaved page state. This does not hide browser/network history, downloaded files, a recognizable deployment domain, or device monitoring.
 
 HerVoice provides support workflows with a complete local **synthetic demo**: guest request → saved receipt → encrypted PNG → authorized intake → responder case updates. Includes text support chat, opt-in voice and an original 3D companion, source-backed U.S. support and legal-resource summaries, resource browsing, and organization-scoped case work.
 
@@ -26,7 +26,7 @@ Compose binds both exposed ports to localhost and persists demo data in a named 
 
 ## Five-minute coworker walkthrough
 
-1. Choose **Personal space → Open support tools**, then **Get help**, write a short synthetic note, leave contact as **Do not contact me**, and optionally type a city. Review and edit the exact message.
+1. Press **Open personal space**, then **Create a post**, write a short synthetic note, leave contact as **Do not contact me**, and optionally type a city. Review and edit the exact message.
 2. Choose **Prepare a discreet PNG**, submit, and download the verified PNG. The receipt says **Prepared**, not delivered. Three built-in covers, uploaded PNGs and optional three-cover preparation work.
 3. Open **Responder portal**. Select practice organization A and open its server-established demo session. Organization B has a separate queue and cannot decode A’s PNGs.
 4. Open **Image intake**, upload the original PNG, verify the message, and confirm intake. The original request is linked once; repeated intake does not duplicate it.
@@ -94,3 +94,6 @@ This also changes the demo encryption key; old downloads will no longer decode. 
 The care-service interface uses high-contrast help buttons, a persistent Quick exit, and a user-opened **Help options** dialog with real national advocate links. It does not imply that HerVoice is a hospital or provides medical care. The active source set covers U.S. national support and selected Ohio court resources; state-specific advice is never inferred for other states.
 
 The application is named **HerVoice**. The repository retains the user-provided GitHub name **HerWay**.
+
+
+The main demo navigation is **Home · Create a post · Law bot · Therapy bot · Dashboard**. The dashboard opens the server-established synthetic organization workspace automatically in demo mode and polls case changes every five seconds. Live mode still requires verified responder authorization. Therapy bot starts with the original 3D companion visible, without automatically playing speech; Text only remains available.

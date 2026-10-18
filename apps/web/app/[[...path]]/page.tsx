@@ -185,10 +185,11 @@ function date(s: string) {
   return new Date(s).toLocaleString();
 }
 const nav = [
-  ["/help", "Get help"],
-  ["/support", "Support chat"],
-  ["/rights", "Know your rights"],
-  ["/resources", "Resources"],
+  ["/", "Home"],
+  ["/help", "Create a post"],
+  ["/rights", "Law bot"],
+  ["/support", "Therapy bot"],
+  ["/responder", "Dashboard"],
 ];
 export default function App() {
   const rawPath = usePathname();
@@ -689,8 +690,8 @@ function Help() {
   }
   return (
     <section className="page formpage">
-      <div className="eyebrow">GET HELP · YOUR CHOICES COME FIRST</div>
-      <h1>One step at a time.</h1>
+      <div className="eyebrow">CREATE A POST · YOUR CHOICES COME FIRST</div>
+      <h1>Create a post.</h1>
       <p className="intro">
         You decide what to share. You can go back and change anything.
       </p>
@@ -1356,7 +1357,7 @@ function Chat() {
   const [text, T] = useState("");
   const [busy, B] = useState(false);
   const [error, E] = useState("");
-  const [avatar, A] = useState(false);
+  const [avatar, A] = useState(true);
   const [speaking, S] = useState(false);
   const [mouthShape, Mouth] = useState("");
   const [studio, Studio] = useState("");
@@ -1476,7 +1477,7 @@ function Chat() {
   }
   return (
     <section className="page chatpage">
-      <div className="eyebrow">A LITTLE SPACE TO BE HEARD</div>
+      <div className="eyebrow">THERAPY BOT · A LITTLE SPACE TO BE HEARD</div>
       <h1>Let’s talk things through.</h1>
       <p className="intro">No perfect words needed. Start wherever you are.</p>
       <div className="chatbar">
@@ -1492,46 +1493,49 @@ function Chat() {
         </div>
         <Badge>{remember ? "24-hour memory on" : "Memory off"}</Badge>
       </div>
-      <div className="chatbody" aria-live="polite">
-        {!messages.length && (
-          <div className="welcome">
-            <span className="iconbox">
-              <MessageCircle size={28} />
-            </span>
-            <h2>I’m here to listen.</h2>
-            <p>
-              You can share what’s on your mind, or start with a small question.
-            </p>
-            <div className="chips">
-              {[
-                "I’m not sure where to start",
-                "I’d like to explore my options",
-                "I just need to talk",
-              ].map((t) => (
-                <button key={t} onClick={() => T(t)}>
-                  {t}
-                </button>
-              ))}
+      <div className={"therapy-scene" + (avatar ? " with-avatar" : "")}>
+        <div className="chatbody" aria-live="polite">
+          {!messages.length && (
+            <div className="welcome">
+              <span className="iconbox">
+                <MessageCircle size={28} />
+              </span>
+              <h2>I’m here to listen.</h2>
+              <p>
+                You can share what’s on your mind, or start with a small
+                question.
+              </p>
+              <div className="chips">
+                {[
+                  "I’m not sure where to start",
+                  "I’d like to explore my options",
+                  "I just need to talk",
+                ].map((t) => (
+                  <button key={t} onClick={() => T(t)}>
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-        {messages.map((m, i) => (
-          <div className={"message " + m.role} key={i}>
-            <small>
-              {m.role === "you"
-                ? "You"
-                : DEMO
-                  ? "HerVoice · Demo response"
-                  : "HerVoice · AI response"}
-            </small>
-            <p>{m.text}</p>
-          </div>
-        ))}
-        {busy && (
-          <p>{DEMO ? "Preparing a demo response…" : "Preparing a reply…"}</p>
-        )}
+          )}
+          {messages.map((m, i) => (
+            <div className={"message " + m.role} key={i}>
+              <small>
+                {m.role === "you"
+                  ? "You"
+                  : DEMO
+                    ? "HerVoice · Demo response"
+                    : "HerVoice · AI response"}
+              </small>
+              <p>{m.text}</p>
+            </div>
+          ))}
+          {busy && (
+            <p>{DEMO ? "Preparing a demo response…" : "Preparing a reply…"}</p>
+          )}
+        </div>
+        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} />}
       </div>
-      {avatar && <Companion speaking={speaking} mouthShape={mouthShape} />}
       {studio && (
         <div className="panel">
           <p>Studio voice · captions are in the conversation above.</p>
@@ -1695,7 +1699,7 @@ function Rights() {
   const [error, E] = useState("");
   return (
     <section className="page formpage">
-      <div className="eyebrow">KNOW YOUR RIGHTS</div>
+      <div className="eyebrow">LAW BOT · KNOW YOUR RIGHTS</div>
       <h1>Clarity is a place to start.</h1>
       <p className="intro">
         Explore official sources about your options. This demo does not provide
@@ -2057,9 +2061,26 @@ function Staff({ path }: { path: string }) {
   const [me, M] = useState<any>(null);
   const [error, E] = useState("");
   useEffect(() => {
-    api("/me")
-      .then(M)
-      .catch((e) => E(e.message));
+    let active = true;
+    async function openWorkspace() {
+      try {
+        let session;
+        try {
+          session = await api("/me");
+        } catch (e) {
+          if (!DEMO) throw e;
+          await api("/demo/session", { organization: "demo-a" });
+          session = await api("/me");
+        }
+        if (active) M(session);
+      } catch (e) {
+        if (active) E((e as Error).message);
+      }
+    }
+    void openWorkspace();
+    return () => {
+      active = false;
+    };
   }, []);
   return (
     <div className="staffshell">
@@ -2136,7 +2157,7 @@ function Queue({ overview }: { overview: boolean }) {
   }
   useEffect(() => {
     load();
-    const t = setInterval(load, 30000);
+    const t = setInterval(load, 5000);
     return () => clearInterval(t);
   }, [q, status, priority, page]);
   return (
@@ -2144,12 +2165,10 @@ function Queue({ overview }: { overview: boolean }) {
       <div className="eyebrow">PRACTICE CENTER · PRIVATE WORKSPACE</div>
       <div className="sectionHeading">
         <div>
-          <h1>
-            {overview ? "A clearer view of support." : "Support requests"}
-          </h1>
+          <h1>{overview ? "Live dashboard" : "Support requests"}</h1>
           <p>
             {overview
-              ? "Review requests and help shape the next step."
+              ? "New posts and case changes refresh automatically every 5 seconds."
               : "All cases are scoped to your organization."}
           </p>
         </div>
@@ -2169,7 +2188,7 @@ function Queue({ overview }: { overview: boolean }) {
           </div>
           <div>
             <small>Queue freshness</small>
-            <strong>30 sec</strong>
+            <strong>5 sec</strong>
           </div>
         </div>
       )}

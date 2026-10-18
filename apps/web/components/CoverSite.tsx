@@ -268,13 +268,19 @@ export default function CoverSite({ onOpen }: { onOpen: () => void }) {
                   <br />
                   the little things.
                 </h1>
-                <p>
-                  Thoughtful spaces, everyday rituals, and small ideas for a
-                  life that feels a little more like you.
+                <p className="reading-clue">
+                  A note can be a quiet reminder: <mark>Click</mark> into a new
+                  thought, follow <mark>the</mark> thread, and let a small{" "}
+                  <mark>button</mark> open another page. There’s more{" "}
+                  <mark>below</mark>, a little space <mark>for</mark> what
+                  matters, and <mark>help</mark> when you choose it.
                 </p>
-                <button onClick={() => Selected("windowsill")}>
-                  Find a little inspiration <ArrowRight size={19} />
+                <button className="demo-entry-button" onClick={onOpen}>
+                  Open personal space <ArrowRight size={19} />
                 </button>
+                <p className="reading-entry-hint">
+                  Your next page is one click away.
+                </p>
                 <div className="editor-note">
                   <span>THE EDITOR’S NOTE</span>
                   <p>
