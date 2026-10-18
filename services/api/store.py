@@ -49,6 +49,7 @@ class CaseStore:
             self.cases.create_index(
                 [("org", 1), ("status", 1), ("priority", 1), ("created", -1)]
             )
+            self.cases.create_index([("org", 1), ("severity", 1), ("created", -1)])
             self.cases.create_index("secret")
             self.mongo.memberships.create_index([("user", 1), ("org", 1)], unique=True)
         else:
@@ -79,6 +80,7 @@ class CaseStore:
             data=text,
             status=c["status"],
             priority=c["priority"],
+            severity=c.get("severity", "unreviewed"),
             created=c["created"],
             version=c["version"],
         )

@@ -468,3 +468,72 @@ def test_prepared_post_requires_owner_and_submits_once(client):
     signin(client)
     case = client.get("/v1/cases/" + cid).json()
     assert len([e for e in case["events"] if e["type"] == "received"]) == 1
+
+
+def test_brief_generation_receives_all_optional_fields(client, monkeypatch):
+    import services.api.main as main
+    from types import SimpleNamespace
+    monkeypatch.setattr(main.providers,"enabled",lambda:True)
+    def generate(system, contents):
+        data=json_load(contents[0]["parts"][0]["text"])
+        assert data["alias"]=="Synthetic guest"
+        assert data["details"]["duration"]=="5 months"
+        assert data["details"]["frequency"]=="9 times per month"
+        assert data["contact"]["method"]=="none"
+        return SimpleNamespace(text="A reviewed draft.")
+    monkeypatch.setattr(main.providers,"generate",generate)
+    r=client.post("/v1/drafts",json={"text":"housing support","alias":"Synthetic guest","details":{"duration":"5 months","frequency":"9 times per month"}})
+    assert r.status_code==200
+    assert r.json()["text"]=="A reviewed draft."
+
+
+def test_receipt_owned_signal_is_idempotent_and_scanner_receives(client):
+    import time
+    cid,_=request(client,"image")
+    job=client.post(f"/v1/requests/{cid}/covers",json={}).json()
+    for _ in range(150):
+        status=client.get(f"/v1/requests/{cid}/jobs/{job['id']}").json()
+        if status["status"]=="complete":break
+        time.sleep(.02)
+    assert status["status"]=="complete"
+    body={"jobId":job["id"],"index":0}
+    assert TestClient(app).post(f"/v1/requests/{cid}/demo-signal",json=body).status_code==404
+    first=client.post(f"/v1/requests/{cid}/demo-signal",json=body)
+    assert first.status_code==200
+    assert client.post(f"/v1/requests/{cid}/demo-signal",json=body).json()["id"]==first.json()["id"]
+    assert client.get(f"/v1/requests/{cid}").json()["delivery"]=="prepared_only"
+    signin(client)
+    assert client.post("/v1/monitor/scan").status_code==200
+    case=client.get(f"/v1/cases/{cid}").json()
+    assert case["delivery"]=="received_demo"
+    assert len([e for e in case["events"] if e["type"]=="monitor_received"])==1
+
+
+def test_analysis_saved_without_automatic_priority_change(client, monkeypatch):
+    import services.api.main as main
+    cid,_=request(client)
+    signin(client)
+    monkeypatch.setattr(main,"interpret",lambda c:{"summary":"Synthetic advisory summary","severity":"high","method":"Synthetic AI fixture"})
+    response=client.post(f"/v1/cases/{cid}/analysis")
+    assert response.status_code==200
+    case=client.get(f"/v1/cases/{cid}").json()
+    assert case["analysis"]["severity"]=="high"
+    assert case["priority"]=="normal"
+    result=client.patch(f"/v1/cases/{cid}",json={"version":case["version"],"priority":"high"})
+    assert result.status_code==200
+    assert result.json()["priority"]=="high"
+    assert any(e["type"]=="priority_changed" for e in result.json()["events"])
+
+
+def test_queue_returns_location_and_reviewed_severity(client):
+    cid,_=request(client)
+    signin(client)
+    case=client.get(f"/v1/cases/{cid}").json()
+    response=client.patch(f"/v1/cases/{cid}",json={"version":case["version"],"severity":"critical","priority":"high"})
+    assert response.status_code==200
+    assert response.json()["severity"]=="critical"
+    items=client.get("/v1/cases").json()["items"]
+    target=next(item for item in items if item["id"]==cid)
+    assert "location" in target
+    assert target["severity"]=="critical"
+    assert client.patch(f"/v1/cases/{cid}",json={"version":response.json()["version"],"severity":"invented"}).status_code==422

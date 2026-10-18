@@ -29,7 +29,7 @@ Compose binds both exposed ports to localhost and persists demo data in a named 
 1. Press **Open personal space**, then **Create a post**, write a short synthetic note, leave contact as **Do not contact me**, and optionally type a city. Review and edit the exact message.
 2. Choose **Prepare a discreet PNG**, submit, and download the verified PNG. The receipt says **Prepared**, not delivered. Three built-in covers, uploaded PNGs and optional three-cover preparation work.
 3. Open **Responder portal**. Select practice organization A and open its server-established demo session. Organization B has a separate queue and cannot decode A’s PNGs.
-4. Open **Image intake**, upload the original PNG, verify the message, and confirm intake. The original request is linked once; repeated intake does not duplicate it.
+4. Open **Signals & image intake**, upload the original PNG, verify the message, and confirm intake. The original request is linked once; repeated intake does not duplicate it.
 5. Change status, assignment or notes. Activity comes from stored events. Closing requires a reason; stale updates are rejected.
 6. Explore support chat, opt-in voice and the original illustrated companion. Nothing starts playing automatically. **Know your rights** defaults to United States; try “protection order forms” and optionally choose Ohio. Unsupported questions and jurisdictions abstain.
 
@@ -97,3 +97,5 @@ The application is named **HerVoice**. The repository retains the user-provided 
 
 
 The main demo navigation is **Home · Create a post · Law bot · Therapy bot · Dashboard**. The dashboard opens the server-established synthetic organization workspace automatically in demo mode and polls case changes every five seconds. Live mode still requires verified responder authorization. Therapy bot starts with the original illustrated companion visible, without automatically playing speech; Text only remains available.
+
+For the screenshot-matched workflow and a complete judge demonstration, see [reference parity audit](docs/screenshot-parity-audit.md).

@@ -8,7 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field, model_validator
 from .codec import encode, decode, cover
 from . import providers
-from .analysis import decompose, match
+from .analysis import decompose, match, interpret
 from .store import CaseStore
 from . import legal as legal_engine
 import base64
@@ -411,6 +411,8 @@ def create(body: NewRequest, req: Request, res: Response):
         secure=MODE == "live",
         max_age=86400,
     )
+    if body.channel == "direct":
+        schedule_analysis(c["id"], c["org"])
     return {"id": c["id"], "delivery": c["delivery"]}
 
 
@@ -437,6 +439,7 @@ def submit_prepared(cid: str, req: Request):
             c["version"] += 1
             c["events"].append(event("received", "Submitted by receipt owner"))
             save(c, r["secret"], r["idem"], expected=version)
+            schedule_analysis(cid, c["org"])
         return {"id": cid, "delivery": c["delivery"]}
 
 
@@ -541,13 +544,16 @@ def cases(
         and (not status or c["status"] == status)
         and (not priority or c["priority"] == priority)
     ]
-    allc.sort(key=lambda c: (c["priority"] != "high", c["created"]))
+    severity_rank = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+    allc.sort(key=lambda c: (severity_rank.get(c.get("severity"), 3 if c["priority"] == "high" else 1), c["created"]), reverse=True)
     page = max(1, page)
     return {
         "items": [
             {
-                k: c[k]
+                k: c.get(k)
                 for k in [
+                    "location",
+                    "severity",
                     "id",
                     "alias",
                     "category",
@@ -573,6 +579,8 @@ def detail(cid: str, s=Depends(staff)):
 
 class Update(BaseModel):
     version: int
+    priority: Literal["high", "normal"] | None = None
+    severity: Literal["unreviewed", "low", "medium", "high", "critical"] | None = None
     status: Literal["received", "in_review", "closed"] | None = None
     assignment: str | None = Field(default=None, max_length=100)
     note: str = Field(default="", max_length=2000)
@@ -587,9 +595,9 @@ def update(cid: str, b: Update, s=Depends(staff)):
             raise HTTPException(409, "Case changed. Refresh before updating.")
         if b.status == "closed" and not b.reason.strip():
             raise HTTPException(422, "A closure reason is required")
-        for k in ["status", "assignment"]:
+        for k in ["status", "assignment", "priority", "severity"]:
             v = getattr(b, k)
-            if v is not None and v != c[k]:
+            if v is not None and v != c.get(k):
                 c[k] = v
                 c["events"].append(
                     event(
@@ -686,6 +694,7 @@ def confirm(b: Intake, s=Depends(staff)):
                 )
             )
             save(c, r["secret"], r["idem"], expected=c["version"] - 1)
+            schedule_analysis(c["id"], c["org"])
         return {"id": c["id"], "status": c["status"]}
 
 
@@ -694,10 +703,44 @@ class MatchOptions(BaseModel):
     threshold: float = Field(default=0.08, ge=0, le=1)
 
 
+def analyze_case(cid, org):
+    with lock:
+        _, case = scoped(cid, {"org": org})
+        snapshot = case["narrative"]
+    result = interpret(case)
+    with lock:
+        r, current = scoped(cid, {"org": org})
+        if current["narrative"] != snapshot:
+            raise HTTPException(409, "Report changed. Analyze the latest version.")
+        previous = current["version"]
+        current["analysis"] = result
+        current["version"] += 1
+        current["events"].append(event("analysis_completed", "Structured intake prepared for human review", "intake analysis"))
+        save(current, r["secret"], r["idem"], expected=previous)
+    return result
+
+
+def schedule_analysis(cid, org):
+    if providers.enabled():
+        from .jobs import POOL
+        def run():
+            try:
+                analyze_case(cid, org)
+            except Exception:
+                pass  # Original intake remains; responders can explicitly retry.
+        POOL.submit(run)
+
+
 @app.get("/v1/cases/{cid}/analysis")
 def case_analysis(cid: str, s=Depends(staff)):
     _, c = scoped(cid, s)
-    return decompose(c)
+    return c.get("analysis") or decompose(c)
+
+
+@app.post("/v1/cases/{cid}/analysis")
+def refresh_analysis(cid: str, s=Depends(staff)):
+    scoped(cid, s)
+    return analyze_case(cid, s["org"])
 
 
 @app.post("/v1/cases/{cid}/related")
@@ -707,12 +750,12 @@ def related(cid: str, b: MatchOptions = MatchOptions(), s=Depends(staff)):
         from .matching import related as atlas_related
 
         return atlas_related(store, c, b.limit, b.threshold)
-    return match(
-        c,
-        [json.loads(r["data"]) for r in store.all(org=s["org"])],
-        b.limit,
-        b.threshold,
-    )
+    candidates = [json.loads(r["data"]) for r in store.all(org=s["org"])]
+    candidates = [item for item in candidates if item.get("status") != "prepared"]
+    if MODE == "demo" and os.getenv("MATCH_PROVIDER") == "openai_local":
+        from .matching import local_semantic
+        return local_semantic(c, candidates, b.limit, b.threshold)
+    return match(c, candidates, b.limit, b.threshold)
 
 
 class Decision(BaseModel):
@@ -736,8 +779,16 @@ class Text(BaseModel):
     text: str = Field(min_length=1, max_length=8000)
 
 
+class DraftBrief(Text):
+    alias: str = Field(default="", max_length=100)
+    location: str = Field(default="", max_length=300)
+    details: SituationDetails = Field(default_factory=SituationDetails)
+    contact: Contact = Field(default_factory=Contact)
+    urgent: bool = False
+
+
 @app.post("/v1/drafts")
-def draft(b: Text):
+def draft(b: DraftBrief):
     if MODE == "live" and not providers.enabled():
         raise HTTPException(
             503, "Writing assistance is not configured. Continue with your own words."
@@ -745,7 +796,7 @@ def draft(b: Text):
     if providers.enabled():
         reply = providers.generate(
             "Rewrite only the supplied facts in clear first-person language. Preserve uncertainty. Do not invent contact details, abuse, injuries, urgency or relationships. Return JSON with text, expression neutral, animation idle.",
-            [{"role": "user", "parts": [{"text": b.text}]}],
+            [{"role": "user", "parts": [{"text": json.dumps(b.model_dump(), ensure_ascii=False)}]}],
         )
         return {
             "text": reply.text,
@@ -923,6 +974,33 @@ def encode_job_cover(cid: str, jid: str, index: int, req: Request):
     )
 
 
+class DemoSignal(BaseModel):
+    jobId: str = Field(min_length=16, max_length=100)
+    index: int = Field(ge=0, le=2)
+
+
+@app.post("/v1/requests/{cid}/demo-signal")
+def publish_demo_signal(cid: str, b: DemoSignal, req: Request):
+    if MODE != "demo":
+        raise HTTPException(403, "The controlled feed is available only in demo mode")
+    _, c = owned(cid, req)
+    data = encode_job_cover(cid, b.jobId, b.index, req).body
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    jid = hashlib.sha256((c["org"] + ":" + cid).encode()).hexdigest()
+    with lock:
+        existing = db.execute("SELECT status FROM monitor_feed WHERE id=?", (jid,)).fetchone()
+        if existing:
+            return {"id": jid, "status": existing["status"], "source": "Controlled demo feed"}
+        count = db.execute("SELECT COUNT(*) FROM monitor_feed WHERE org=? AND status='queued'", (c["org"],)).fetchone()[0]
+        if count >= 20:
+            raise HTTPException(429, "The demo feed is full. Wait for its next scan.")
+        nonce = secrets.token_bytes(12)
+        sealed = nonce + AESGCM(KEY).encrypt(nonce, data, c["org"].encode())
+        db.execute("INSERT INTO monitor_feed VALUES(?,?,?,?,?,?)", (jid,c["org"],sealed,"queued","",now()))
+        db.commit()
+    return {"id": jid, "status": "queued", "source": "Controlled demo feed"}
+
+
 @app.post("/v1/support/session")
 def support_session(res: Response, req: Request):
     token = req.cookies.get("hv_chat") or secrets.token_urlsafe(32)
@@ -1089,6 +1167,7 @@ def scan_feed(org):
                         )
                     )
                     save(c, r["secret"], r["idem"], expected=previous)
+                    schedule_analysis(c["id"], c["org"])
             except Exception:
                 pass
             db.execute(

@@ -360,3 +360,62 @@ test("dashboard columns, row actions, related dialog and companion zoom", async 
     page.getByRole("button", { name: "Zoom out companion" }),
   ).toBeVisible();
 });
+
+test("structured brief → image → monitored signal → verified dashboard case", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/drafts", async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body.details.duration).toBe("5 months");
+    expect(body.details.frequency).toBe("9 times per month");
+    await route.fulfill({
+      json: {
+        text: "Synthetic reviewed report for a housing conversation.",
+        provider: "Synthetic test writing fixture",
+      },
+    });
+  });
+  await visit(page, "/studio");
+  await page
+    .getByLabel("What’s on your mind?")
+    .fill("Synthetic housing support");
+  await page
+    .getByLabel("How long has this been happening? (optional)")
+    .press("Home");
+  for (let i = 0; i < 5; i++)
+    await page
+      .getByLabel("How long has this been happening? (optional)")
+      .press("ArrowRight");
+  await page.getByLabel("Frequency of incidents (optional)").press("Home");
+  for (let i = 0; i < 9; i++)
+    await page
+      .getByLabel("Frequency of incidents (optional)")
+      .press("ArrowRight");
+  await page
+    .getByRole("button", { name: "Generate Text", exact: true })
+    .click();
+  await expect(page.getByLabel("Approved message")).toHaveValue(
+    "Synthetic reviewed report for a housing conversation.",
+  );
+  await page
+    .getByRole("button", { name: "Generate Images", exact: true })
+    .click();
+  await expect(
+    page.getByRole("img", { name: "Generated image option 1" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByLabel("Submission destination").selectOption("feed");
+  await page
+    .getByRole("button", { name: "Send demo signal", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Your demo signal is queued." }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Watch the signal reach the dashboard" })
+    .click();
+  await page.getByRole("button", { name: "Scan now", exact: true }).click();
+  await expect(
+    page.getByRole("link", { name: /Open verified case/ }).first(),
+  ).toBeVisible();
+});

@@ -56,3 +56,13 @@ def test_person_description_is_used_when_supplied():
         details=source["details"],
     )
     assert match(source, [candidate], threshold=0.99)[0]["score"] == 1
+
+
+def test_semantic_match_scope_threshold_and_prepared_exclusion(monkeypatch):
+    from services.api import matching
+    monkeypatch.setattr(matching,"cached_embedding",lambda model,org,text:[1.,0.] if text=="same" else [0.,1.])
+    source={"id":"one","org":"a","narrative":"same"}
+    cases=[source,{"id":"two","org":"a","alias":"Two","narrative":"same"},{"id":"three","org":"b","alias":"Three","narrative":"same"},{"id":"four","org":"a","alias":"Four","narrative":"same","status":"prepared"}]
+    results=matching.local_semantic(source,cases,limit=1,threshold=.9)
+    assert [item["id"] for item in results]==["two"]
+    assert results[0]["score"]==1

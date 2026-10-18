@@ -48,6 +48,7 @@ type Case = {
   category: string;
   status: string;
   priority: string;
+  severity?: string;
   created: string;
   updated?: string;
   narrative: string;
@@ -184,6 +185,43 @@ function Field({
     <div className="field">
       <label htmlFor={id}>{label}</label>
       {control}
+      {hint && <small id={id + "-hint"}>{hint}</small>}
+    </div>
+  );
+}
+function RangeField({
+  label,
+  value,
+  max,
+  unit,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: string;
+  max: number;
+  unit: string;
+  onChange: (value: string) => void;
+  hint?: string;
+}) {
+  const id = useId();
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <div className="range-row">
+        <input
+          id={id}
+          type="range"
+          min="0"
+          max={max}
+          step="1"
+          value={parseInt(value) || 0}
+          aria-valuetext={value || "Not shared"}
+          aria-describedby={hint ? id + "-hint" : undefined}
+          onChange={(e) => onChange(e.target.value + " " + unit)}
+        />
+        <output htmlFor={id}>{value || "Not shared"}</output>
+      </div>
       {hint && <small id={id + "-hint"}>{hint}</small>}
     </div>
   );
@@ -600,10 +638,88 @@ function Home() {
           Privacy & safety <ArrowRight size={18} />
         </Link>
       </section>
+      <ProcessOverview />
       <section className="softnote">
         <p>You deserve care, respect, and a choice in what comes next.</p>
       </section>
     </>
+  );
+}
+function ProcessOverview() {
+  return (
+    <section className="process-overview" aria-labelledby="process-title">
+      <div className="eyebrow">HOW HERVOICE WORKS</div>
+      <h2 id="process-title">An ordinary image. A message that matters.</h2>
+      <p className="process-intro">
+        Follow the message from your words to an authorized responder’s
+        workspace.
+      </p>
+      <div className="process-lanes">
+        {[
+          {
+            name: "Your side",
+            steps: [
+              {
+                icon: MessageCircle,
+                title: "Share a few details",
+                text: "Write as much or as little as you choose.",
+              },
+              {
+                icon: BookOpen,
+                title: "Generate and review",
+                text: "AI turns your details into sentences. You approve the message.",
+              },
+              {
+                icon: Leaf,
+                title: "Create an everyday image",
+                text: "Choose an AI image. The approved message is encrypted inside its PNG.",
+              },
+            ],
+          },
+          {
+            name: "Responder side",
+            steps: [
+              {
+                icon: Search,
+                title: "Detect an original PNG",
+                text: "A permitted feed or the controlled demo scanner finds a tagged signal.",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Verify and structure",
+                text: "The original message is decoded, authenticated, and summarized for human review.",
+              },
+              {
+                icon: LayoutDashboard,
+                title: "Review the case",
+                text: "Responders review the case, set priority, record actions and compare related reports.",
+              },
+            ],
+          },
+        ].map((lane) => (
+          <div className="process-lane" key={lane.name}>
+            <h3>{lane.name}</h3>
+            <ol>
+              {lane.steps.map((step, i) => (
+                <li key={step.title}>
+                  <span className="process-icon">
+                    <step.icon size={24} />
+                  </span>
+                  <span className="eyebrow">STEP 0{i + 1}</span>
+                  <h4>{step.title}</h4>
+                  <p>{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+      <p className="process-footnote">
+        Social platforms may change image files. Use original PNG transfer;
+        delivery and human response are never guaranteed. The hackathon scanner
+        uses a controlled feed, not public social accounts.
+      </p>
+    </section>
   );
 }
 function Help() {
@@ -636,7 +752,11 @@ function Help() {
   });
   const title = useRef<HTMLHeadingElement>(null);
   function set(k: string, v: unknown) {
-    F((x) => ({ ...x, [k]: v }));
+    F((x) => ({
+      ...x,
+      [k]: v,
+      ...(step === 0 && k !== "narrative" ? { narrative: "" } : {}),
+    }));
   }
   useEffect(() => {
     title.current?.focus();
@@ -660,6 +780,43 @@ function Help() {
     );
     return () => clearInterval(timer);
   }, [record, job]);
+  async function expandBrief() {
+    E("");
+    if (!f.original.trim()) {
+      E("Add a few words about the situation first.");
+      return;
+    }
+    B(true);
+    try {
+      const result = await api("/drafts", {
+        text: f.original,
+        alias: f.alias,
+        location: f.location,
+        urgent: f.urgent,
+        details: {
+          duration: f.duration,
+          frequency: f.frequency,
+          visibleInjuries: f.visibleInjuries,
+          personDescription: f.personDescription,
+        },
+        contact: {
+          method: f.method,
+          value: f.method === "none" ? "" : f.value,
+          safeTime: f.safeTime,
+          voicemail: f.voicemail,
+        },
+      });
+      set("narrative", result.text);
+      Job(null);
+      Record(null);
+      I(result.provider);
+      S(1);
+    } catch (e) {
+      E((e as Error).message);
+    } finally {
+      B(false);
+    }
+  }
   async function generate() {
     B(true);
     E("");
@@ -760,6 +917,11 @@ function Help() {
     B(true);
     try {
       if (mode === "direct") await api(`/requests/${record}/submit`, {});
+      if (mode === "feed")
+        await api(`/requests/${record}/demo-signal`, {
+          jobId: job.id,
+          index: chosen,
+        });
       S(3);
       api("/encouragement", {
         text: "A short reassuring note about personal choice",
@@ -784,6 +946,14 @@ Take it at your own pace.`),
       <p className="intro">
         Your words. An everyday image. A next step you choose.
       </p>
+      <div className="journey-caption">
+        <ShieldCheck size={18} />
+        <span>01 Write your message</span>
+        <ArrowRight size={14} />
+        <span>02 Create an everyday image</span>
+        <ArrowRight size={14} />
+        <span>03 Choose how to share</span>
+      </div>
       <ol className="steps">
         {[
           "Fill out the form",
@@ -810,7 +980,9 @@ Take it at your own pace.`),
               "Your post is ready.",
               mode === "direct"
                 ? "Post successfully submitted!"
-                : "Your image is ready to share.",
+                : mode === "feed"
+                  ? "Your demo signal is queued."
+                  : "Your image is ready to share.",
             ][step]
           }
         </h2>
@@ -849,27 +1021,30 @@ Take it at your own pace.`),
                 maxLength={100}
               />
             </Field>
-            <details className="optional-details">
+            <details className="optional-details" open>
               <summary>Optional situation details</summary>
               <p>
                 Skip anything you do not want to share. These details are saved
                 with your request for authorized responders; only the approved
                 message is embedded in the PNG.
               </p>
-              <Field label="How long has this been happening? (optional)">
-                <input
+              <div className="situation-sliders">
+                <RangeField
+                  label="How long has this been happening? (optional)"
                   value={f.duration}
-                  onChange={(e) => set("duration", e.target.value)}
-                  maxLength={300}
+                  max={120}
+                  unit="months"
+                  onChange={(v) => set("duration", v)}
                 />
-              </Field>
-              <Field label="How often does this happen? (optional)">
-                <input
+                <RangeField
+                  label="Frequency of incidents (optional)"
                   value={f.frequency}
-                  onChange={(e) => set("frequency", e.target.value)}
-                  maxLength={300}
+                  max={60}
+                  unit="times per month"
+                  hint="Approximate number per month."
+                  onChange={(v) => set("frequency", v)}
                 />
-              </Field>
+              </div>
               <Field label="Visible injuries (optional)">
                 <select
                   value={f.visibleInjuries}
@@ -1100,6 +1275,9 @@ Take it at your own pace.`),
               </p>
             )}
             {job?.status === "complete" && (
+              <h3 className="image-selection-heading">Select an image</h3>
+            )}
+            {job?.status === "complete" && (
               <div className="post-image-options">
                 {job.results.map((r: any) => (
                   <button
@@ -1150,6 +1328,11 @@ Take it at your own pace.`),
                     ? "Submit to the demo dashboard"
                     : "Submit to the organization queue"}
                 </option>
+                {DEMO && (
+                  <option value="feed">
+                    Send to monitored demo feed · #HerVoiceSignal
+                  </option>
+                )}
                 <option value="image">
                   Keep as an image for manual sharing
                 </option>
@@ -1170,14 +1353,36 @@ Take it at your own pace.`),
                 ? DEMO
                   ? "Saved to the practice dashboard. No real organization has been contacted."
                   : "Saved to the organization queue. Human review is not guaranteed."
-                : "Prepared only. No organization or social platform has received your image."}
+                : mode === "feed"
+                  ? "Your original encoded PNG is queued in the controlled #HerVoiceSignal feed. The 30-second scanner verifies and receives it into the demo dashboard. No public social account was contacted."
+                  : "Prepared only. No organization or social platform has received your image."}
             </p>
+            {mode === "feed" && (
+              <Link className="btn" href="/responder/intake">
+                Watch the signal reach the dashboard <ArrowRight size={16} />
+              </Link>
+            )}
             <blockquote>
               {poem || "Preparing a little encouragement…"}
             </blockquote>
             <Link className="button secondary" href={`/requests/${record}`}>
               View receipt and image
             </Link>
+          </div>
+        )}
+        {step === 0 && (
+          <div className="generate-brief">
+            <div>
+              <strong>Turn a few words into your message.</strong>
+              <p>
+                AI expands the details you supplied. You review every word
+                before anything is shared.
+              </p>
+            </div>
+            <Button disabled={busy} onClick={expandBrief}>
+              {busy ? "Generating text…" : "Generate Text"}
+              <ArrowRight size={16} />
+            </Button>
           </div>
         )}
         {error && (
@@ -1208,7 +1413,9 @@ Take it at your own pace.`),
                 : step === 2
                   ? mode === "direct"
                     ? "Submit post"
-                    : "Finish preparing image"
+                    : mode === "feed"
+                      ? "Send demo signal"
+                      : "Finish preparing image"
                   : "Continue"}
               <ArrowRight size={16} />
             </Button>
@@ -2270,7 +2477,7 @@ function Staff({ path }: { path: string }) {
         {[
           ["/responder", "Overview", LayoutDashboard],
           ["/responder/cases", "Cases", FolderOpen],
-          ["/responder/intake", "Image intake", Upload],
+          ["/responder/intake", "Signals & image intake", Upload],
           ["/responder/settings", "Settings", Settings],
         ].map(([p, t, Icon]) => (
           <Link
@@ -2334,6 +2541,10 @@ function Queue({ overview }: { overview: boolean }) {
     "Issue",
     "Status",
   ]);
+  const rank = (c: Case) =>
+    (({ critical: 4, high: 3, medium: 2, low: 1 }) as Record<string, number>)[
+      c.severity || ""
+    ] || (c.priority === "high" ? 3 : 1);
   const [descending, Descending] = useState(true);
   const [copied, Copied] = useState("");
   const visible = (name: string) => columns.includes(name);
@@ -2476,9 +2687,7 @@ function Queue({ overview }: { overview: boolean }) {
               {[...(data?.items || [])]
                 .sort(
                   (a: Case, b: Case) =>
-                    (Number(b.priority === "high") -
-                      Number(a.priority === "high")) *
-                    (descending ? 1 : -1),
+                    (rank(b) - rank(a)) * (descending ? 1 : -1),
                 )
                 .map((c: Case, index: number) => (
                   <tr key={c.id}>
@@ -2500,7 +2709,13 @@ function Queue({ overview }: { overview: boolean }) {
                             (c.priority === "high" ? "high" : "normal")
                           }
                         >
-                          {c.priority === "high" ? "High · reported" : "Normal"}
+                          {c.severity && c.severity !== "unreviewed"
+                            ? c.severity === "critical"
+                              ? "Very high"
+                              : c.severity
+                            : c.priority === "high"
+                              ? "High · reported"
+                              : "Not reviewed"}
                         </span>
                       </td>
                     )}
@@ -2546,8 +2761,8 @@ function Queue({ overview }: { overview: boolean }) {
           </table>
         </div>
         <small>
-          Severity reflects the person’s immediate-danger selection, not an AI
-          assessment.
+          Severity is responder-reviewed when available; otherwise the person’s
+          selected urgency is shown. AI suggestions require review.
         </small>
         {data && !data.items.length && <p>No matching requests.</p>}
         <div className="pagination">
@@ -2581,7 +2796,11 @@ function CaseDetail({ id }: { id: string }) {
   const [reason, R] = useState("");
   const [assignment, A] = useState("");
   const [status, S] = useState("");
+  const [severity, Severity] = useState("unreviewed");
+  const [priority, Priority] = useState("normal");
   const [related, D] = useState<any[]>([]);
+  const [matchingBusy, MatchingBusy] = useState(false);
+  const [searched, Searched] = useState(false);
   const [analysis, Analysis] = useState<any>(null);
   const [matchLimit, MatchLimit] = useState(4);
   const [matchThreshold, MatchThreshold] = useState(0.08);
@@ -2590,16 +2809,44 @@ function CaseDetail({ id }: { id: string }) {
     api("/cases/" + id)
       .then((d) => {
         C(d);
+        Analysis(d.analysis || null);
         S(d.status);
+        Priority(d.priority);
+        Severity(d.severity || "unreviewed");
         A(d.assignment);
       })
       .catch((e) => E(e.message));
   }, [id]);
+  async function findRelated() {
+    MatchingBusy(true);
+    E("");
+    try {
+      D(
+        await api("/cases/" + id + "/related", {
+          limit: matchLimit,
+          threshold: matchThreshold,
+        }),
+      );
+      Searched(true);
+    } catch (e) {
+      E((e as Error).message);
+    } finally {
+      MatchingBusy(false);
+    }
+  }
   async function update() {
     try {
       const d = await api(
         "/cases/" + id,
-        { version: c!.version, status, assignment, note, reason },
+        {
+          version: c!.version,
+          status,
+          priority,
+          severity,
+          assignment,
+          note,
+          reason,
+        },
         "PATCH",
       );
       C(d);
@@ -2621,7 +2868,13 @@ function CaseDetail({ id }: { id: string }) {
           <div className="sectionHeading">
             <h1>{c.alias || "Guest request"}</h1>
             <div className="actions">
-              <Button secondary onClick={() => matches.current?.showModal()}>
+              <Button
+                secondary
+                onClick={() => {
+                  matches.current?.showModal();
+                  void findRelated();
+                }}
+              >
                 Find Match
               </Button>
               <Button
@@ -2665,7 +2918,11 @@ function CaseDetail({ id }: { id: string }) {
             <article className="panel">
               <ShieldCheck size={20} />
               <h2>Nature of the situation</h2>
-              <p>{c.category}</p>
+              <p>
+                {analysis?.nature?.length
+                  ? analysis.nature.join(" · ")
+                  : c.category}
+              </p>
               <span
                 className={"severity-pill " + (c.urgent ? "high" : "normal")}
               >
@@ -2753,23 +3010,24 @@ function CaseDetail({ id }: { id: string }) {
                 support human review; they do not establish identity or a shared
                 incident.
               </p>
-              <Button
-                secondary
-                onClick={async () => {
-                  try {
-                    D(
-                      await api("/cases/" + id + "/related", {
-                        limit: matchLimit,
-                        threshold: matchThreshold,
-                      }),
-                    );
-                  } catch (e) {
-                    E((e as Error).message);
-                  }
-                }}
-              >
-                Find related reports
+              <Button secondary disabled={matchingBusy} onClick={findRelated}>
+                {matchingBusy
+                  ? "Finding related reports…"
+                  : "Find related reports"}
               </Button>
+              {error && (
+                <p className="error" role="alert">
+                  {error}
+                </p>
+              )}
+              {matchingBusy && (
+                <p role="status">
+                  Comparing reported details with stored reports…
+                </p>
+              )}
+              {searched && !matchingBusy && related.length === 0 && (
+                <p>No reports met this similarity threshold.</p>
+              )}
               {related.map((r) => (
                 <div className="related" key={r.id}>
                   <Link href={"/responder/cases/" + r.id}>{r.alias}</Link>
@@ -2812,8 +3070,11 @@ function CaseDetail({ id }: { id: string }) {
                 <Button
                   secondary
                   onClick={() =>
-                    api("/cases/" + id + "/analysis")
-                      .then(Analysis)
+                    api("/cases/" + id + "/analysis", {})
+                      .then((result) => {
+                        Analysis(result);
+                        return api("/cases/" + id).then(C);
+                      })
                       .catch((e) => E(e.message))
                   }
                 >
@@ -2823,6 +3084,23 @@ function CaseDetail({ id }: { id: string }) {
                   <div className="analysis-panel">
                     <h3>Structured intake · review required</h3>
                     <p>{analysis.summary}</p>
+                    {analysis.nature && (
+                      <p>
+                        <strong>Reported nature:</strong>{" "}
+                        {analysis.nature.join(" · ") || "Unspecified"}
+                      </p>
+                    )}
+                    {analysis.severity && (
+                      <p>
+                        <Badge>AI review suggestion: {analysis.severity}</Badge>
+                        <br />
+                        {analysis.reasoning}
+                      </p>
+                    )}
+                    <p className="notice">
+                      This summary is advisory. Queue priority and case
+                      decisions remain with the responder.
+                    </p>
                     <p>
                       Location: {analysis.location} · {analysis.urgency}
                     </p>
@@ -2895,6 +3173,29 @@ function CaseDetail({ id }: { id: string }) {
                     {["received", "in_review", "closed"].map((x) => (
                       <option key={x}>{x}</option>
                     ))}
+                  </select>
+                </Field>
+                <Field label="Reviewed severity">
+                  <select
+                    value={severity}
+                    onChange={(e) => Severity(e.target.value)}
+                  >
+                    {["unreviewed", "low", "medium", "high", "critical"].map(
+                      (v) => (
+                        <option key={v} value={v}>
+                          {v === "critical" ? "Very high" : v}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </Field>
+                <Field label="Responder priority">
+                  <select
+                    value={priority}
+                    onChange={(e) => Priority(e.target.value)}
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
                   </select>
                 </Field>
                 <Field label="Assigned responder">

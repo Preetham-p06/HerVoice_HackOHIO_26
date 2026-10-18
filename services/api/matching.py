@@ -128,12 +128,37 @@ def related(store, case, limit, threshold):
         if not found or found["org"] != case["org"]:
             continue
         target = json.loads(found["data"])
+        if target.get("status") == "prepared":
+            continue
         results.append(
             {
                 "id": target["id"],
                 "alias": target["alias"],
                 "score": round(cosine, 4),
-                "method": "Gemini embeddings · Atlas cosine similarity · not identity probability",
+                "method": ("OpenAI" if os.getenv("EMBEDDING_PROVIDER") == "openai" else "Gemini") + " embeddings · Atlas cosine similarity · not identity probability",
             }
         )
     return results[:limit]
+
+
+from functools import lru_cache
+
+
+@lru_cache(maxsize=256)
+def cached_embedding(model, org, text):
+    # Bounded process-local cache for synthetic demo reports. No disk persistence.
+    return embedding(text)
+
+
+def local_semantic(source, candidates, limit=4, threshold=.08):
+    model=embedding_model()
+    q=cached_embedding(model,source["org"],matching_text(source))
+    results=[]
+    for item in candidates:
+        if item["org"]!=source["org"] or item["id"]==source["id"] or item.get("status")=="prepared":
+            continue
+        values=cached_embedding(model,item["org"],matching_text(item))
+        score=max(-1,min(1,sum(a*b for a,b in zip(q,values))))
+        if score>=threshold:
+            results.append({"id":item["id"],"alias":item["alias"],"score":round(score,4),"method":"OpenAI embeddings · process-local cosine search · not identity probability"})
+    return sorted(results,key=lambda r:(-r["score"],r["id"]))[:limit]

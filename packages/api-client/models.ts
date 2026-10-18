@@ -34,6 +34,20 @@ export type Decision = {
   "reason": string;
 };
 
+export type DemoSignal = {
+  "jobId": string;
+  "index": number;
+};
+
+export type DraftBrief = {
+  "text": string;
+  "alias"?: string;
+  "location"?: string;
+  "details"?: SituationDetails;
+  "contact"?: Contact;
+  "urgent"?: boolean;
+};
+
 export type HTTPValidationError = {
   "detail"?: (ValidationError)[];
 };
@@ -90,6 +104,8 @@ export type Text = {
 
 export type Update = {
   "version": number;
+  "priority"?: "high" | "normal" | null;
+  "severity"?: "unreviewed" | "low" | "medium" | "high" | "critical" | null;
   "status"?: "received" | "in_review" | "closed" | null;
   "assignment"?: string | null;
   "note"?: string;

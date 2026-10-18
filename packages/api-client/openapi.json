@@ -143,6 +143,66 @@
         "title": "Decision",
         "type": "object"
       },
+      "DemoSignal": {
+        "properties": {
+          "index": {
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Index",
+            "type": "integer"
+          },
+          "jobId": {
+            "maxLength": 100,
+            "minLength": 16,
+            "title": "Jobid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "jobId",
+          "index"
+        ],
+        "title": "DemoSignal",
+        "type": "object"
+      },
+      "DraftBrief": {
+        "properties": {
+          "alias": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Alias",
+            "type": "string"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/Contact"
+          },
+          "details": {
+            "$ref": "#/components/schemas/SituationDetails"
+          },
+          "location": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Location",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "urgent": {
+            "default": false,
+            "title": "Urgent",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "DraftBrief",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -416,11 +476,44 @@
             "title": "Note",
             "type": "string"
           },
+          "priority": {
+            "anyOf": [
+              {
+                "enum": [
+                  "high",
+                  "normal"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
           "reason": {
             "default": "",
             "maxLength": 500,
             "title": "Reason",
             "type": "string"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "enum": [
+                  "unreviewed",
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity"
           },
           "status": {
             "anyOf": [
@@ -682,6 +775,41 @@
           }
         },
         "summary": "Case Analysis"
+      },
+      "post": {
+        "operationId": "refresh_analysis_v1_cases__cid__analysis_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cid",
+            "required": true,
+            "schema": {
+              "title": "Cid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh Analysis"
       }
     },
     "/v1/cases/{cid}/related": {
@@ -824,7 +952,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Text"
+                "$ref": "#/components/schemas/DraftBrief"
               }
             }
           },
@@ -1262,6 +1390,53 @@
           }
         },
         "summary": "Covers Job"
+      }
+    },
+    "/v1/requests/{cid}/demo-signal": {
+      "post": {
+        "operationId": "publish_demo_signal_v1_requests__cid__demo_signal_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cid",
+            "required": true,
+            "schema": {
+              "title": "Cid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoSignal"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish Demo Signal"
       }
     },
     "/v1/requests/{cid}/image": {
