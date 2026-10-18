@@ -3710,3 +3710,103 @@ html[data-covering="true"] body::after {
     scroll-margin-top: 64px;
   }
 }
+
+/* Guided image post composer */
+.post-flow {
+  max-width: 1100px;
+}
+.post-flow .steps small {
+  font-size: 13px;
+}
+.prompt-presets,
+.post-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 24px;
+}
+.prompt-presets button {
+  border: 1px solid #b8c9c1;
+  border-radius: 24px;
+  background: #edf3ef;
+  color: #264c40;
+  padding: 10px 18px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.post-image-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.post-image-options button {
+  padding: 8px;
+  border: 2px solid #c4d2ca;
+  border-radius: 18px;
+  background: #fff;
+  color: #234c40;
+  cursor: pointer;
+}
+.post-image-options button[aria-pressed="true"] {
+  border-color: #14674f;
+  box-shadow: 0 0 0 3px #d5eae1;
+}
+.post-image-options img {
+  display: block;
+  width: 100%;
+  border-radius: 10px;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+.post-image-options span {
+  display: block;
+  padding: 12px 0;
+}
+.post-preview {
+  display: block;
+  width: min(100%, 640px);
+  margin: 24px auto;
+  border-radius: 20px;
+  box-shadow: 0 16px 45px #234c4018;
+}
+.post-share-actions {
+  justify-content: center;
+}
+.post-complete {
+  text-align: center;
+  padding: 16px 0 30px;
+}
+.post-success {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e0f0e7;
+  color: #185b40;
+  margin: 0 auto 24px;
+}
+.post-complete blockquote {
+  white-space: pre-line;
+  font-family: Georgia, serif;
+  font-size: 24px;
+  line-height: 1.8;
+  background: #f2f6f2;
+  border-left: 4px solid #41805d;
+  padding: 36px;
+  margin: 28px auto;
+  max-width: 600px;
+}
+@media (max-width: 650px) {
+  .post-image-options {
+    grid-template-columns: 1fr;
+  }
+  .post-share-actions .button {
+    flex: 1 1 45%;
+  }
+  .post-complete blockquote {
+    font-size: 20px;
+    padding: 22px;
+  }
+}

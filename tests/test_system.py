@@ -457,3 +457,14 @@ def test_encouragement_does_not_promise_dispatch(client):
     assert result.status_code == 200
     assert result.json()["provider"].startswith("Original demo verse")
     assert "help is on the way" not in result.json()["text"].lower()
+
+
+def test_prepared_post_requires_owner_and_submits_once(client):
+    cid, _ = request(client, "image")
+    assert client.get("/v1/requests/" + cid).json()["delivery"] == "prepared_only"
+    assert TestClient(app).post(f"/v1/requests/{cid}/submit").status_code == 404
+    assert client.post(f"/v1/requests/{cid}/submit").json()["delivery"] == "received_demo"
+    assert client.post(f"/v1/requests/{cid}/submit").status_code == 200
+    signin(client)
+    case = client.get("/v1/cases/" + cid).json()
+    assert len([e for e in case["events"] if e["type"] == "received"]) == 1

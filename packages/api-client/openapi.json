@@ -1556,6 +1556,44 @@
         "summary": "Job Result"
       }
     },
+    "/v1/requests/{cid}/submit": {
+      "post": {
+        "description": "Receipt owner explicitly submits a prepared image request exactly once.",
+        "operationId": "submit_prepared_v1_requests__cid__submit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cid",
+            "required": true,
+            "schema": {
+              "title": "Cid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Prepared"
+      }
+    },
     "/v1/session": {
       "delete": {
         "operationId": "logout_v1_session_delete",

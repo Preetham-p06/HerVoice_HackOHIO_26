@@ -48,3 +48,8 @@ The expanded request form now has optional duration, frequency, visible-injury a
 ## Primary demo navigation
 
 The five primary pages are Home, Create a post, Law bot, Therapy bot, and Dashboard. Their existing neutral frontend paths remain in use. The dashboard uses five-second polling and real stored case events; “live updates” does not imply emergency monitoring. Demo mode establishes a synthetic organization session when a visitor opens Dashboard without one; an existing organization selection is preserved. Live mode does not create demo access. Therapy bot shows the original code-generated companion beside the conversation, with opt-in speech and a Text only toggle. The reference video was inspected for its post form, live case table, and avatar-led layout; proprietary character assets were not copied.
+
+### Guided image post
+Create a post now follows four stages: complete the situation/contact form, review the exact approved message and generate three images, select an image and submit/share, then read the completion note. Image generation first creates a private prepared request; only explicit Submit post sends it to the dashboard. Receipt-owner submission is idempotent. Changing approved text invalidates its image selection.
+
+Demo images are original procedural illustrations, not AI photos. For live text-to-image generation configure AWS credentials and BEDROCK_IMAGE_MODEL on the API server (see .env.example); never place credentials in browser code. The image provider receives only the cover prompt. Social buttons invoke native file sharing where available, otherwise download the original PNG for manual attachment. They do not automatically publish to a social account or claim delivery.

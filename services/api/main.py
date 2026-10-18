@@ -422,6 +422,22 @@ def owned(cid, req):
     return r, c
 
 
+@app.post("/v1/requests/{cid}/submit")
+def submit_prepared(cid: str, req: Request):
+    """Receipt owner explicitly submits a prepared image request exactly once."""
+    with lock:
+        r, c = owned(cid, req)
+        if c["delivery"] == "prepared_only":
+            version = c["version"]
+            c["status"] = "received"
+            c["delivery"] = "received_demo" if MODE == "demo" else "received"
+            c["updated"] = now()
+            c["version"] += 1
+            c["events"].append(event("received", "Submitted by receipt owner"))
+            save(c, r["secret"], r["idem"], expected=version)
+        return {"id": cid, "delivery": c["delivery"]}
+
+
 @app.get("/v1/requests")
 def mine(req: Request):
     secret = hashlib.sha256(req.cookies.get("hv_receipt", "").encode()).hexdigest()

@@ -22,23 +22,24 @@ test("guest image request → verified intake → real case event", async ({
   await page
     .getByLabel("What’s on your mind?")
     .fill("Synthetic test: I would like to explore housing support. नमस्ते ❤️");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.getByLabel("Safe contact preference")).toHaveValue("none");
   await page.getByLabel("City or region (optional)").fill("Synthetic city");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   const approved = "Approved synthetic test message. नमस्ते ❤️";
   await page.getByLabel("Approved message").fill(approved);
-  await page.getByRole("button", { name: "Back", exact: true }).click();
-  await expect(page.getByLabel("City or region (optional)")).toHaveValue(
-    "Synthetic city",
-  );
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await expect(page.getByLabel("Approved message")).toHaveValue(approved);
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await page.getByRole("radio", { name: /Prepare a discreet PNG/ }).check();
   await page
-    .getByRole("button", { name: "Prepare request", exact: true })
+    .getByRole("button", { name: "Generate Images", exact: true })
     .click();
+  await expect(
+    page.getByRole("img", { name: "Generated image option 1" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByRole("img", { name: "Selected generated post image" }),
+  ).toBeVisible();
+  await page.getByLabel("Submission destination").selectOption("image");
+  await page.getByRole("button", { name: "Finish preparing image" }).click();
+  await page.getByRole("link", { name: "View receipt and image" }).click();
   await expect(
     page.getByRole("heading", { name: "Your request is saved." }),
   ).toBeVisible();

@@ -600,7 +600,6 @@ function Home() {
   );
 }
 function Help() {
-  const router = useRouter();
   const [step, S] = useState(0);
   const [busy, B] = useState(false);
   const [error, E] = useState("");
@@ -622,7 +621,6 @@ function Help() {
     urgent: false,
     channel: "direct",
   });
-  const idem = useRef(crypto.randomUUID());
   const title = useRef<HTMLHeadingElement>(null);
   function set(k: string, v: unknown) {
     F((x) => ({ ...x, [k]: v }));
@@ -630,40 +628,32 @@ function Help() {
   useEffect(() => {
     title.current?.focus();
   }, [step]);
-  async function next() {
-    E("");
-    if (step === 0 && !f.original.trim()) {
-      E("Please add a few words about the support you would like.");
-      return;
-    }
-    if (
-      step === 1 &&
-      f.method === "email" &&
-      !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.value)
-    ) {
-      E("Enter a valid safe email address.");
-      return;
-    }
-    if (
-      step === 1 &&
-      ["phone", "text"].includes(f.method) &&
-      f.value.replace(/\D/g, "").length < 7
-    ) {
-      E("Enter a safe contact number.");
-      return;
-    }
-    if (step < 3) {
-      if (step === 0 && !f.narrative) set("narrative", f.original);
-      S(step + 1);
-      return;
-    }
+  const [record, Record] = useState<string | null>(null);
+  const [job, Job] = useState<any>(null);
+  const [chosen, Choose] = useState(0);
+  const [prompt, Prompt] = useState(
+    "Good morning, a cup of coffee beside flowers, warm sunlight",
+  );
+  const [poem, Poem] = useState("");
+  const [mode, Mode] = useState("direct");
+  useEffect(() => {
+    if (!record || !job || !["queued", "running"].includes(job.status)) return;
+    const timer = setInterval(
+      () =>
+        api(`/requests/${record}/jobs/${job.id}`)
+          .then(Job)
+          .catch((e) => E(e.message)),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, [record, job]);
+  async function generate() {
     B(true);
+    E("");
     try {
+      // A fresh prepared record keeps each edited message and its image consistent.
       const r = await api("/requests", {
-        alias: f.alias,
-        original: f.original,
-        narrative: f.narrative,
-        category: f.category,
+        ...f,
         details: {
           duration: f.duration,
           frequency: f.frequency,
@@ -677,42 +667,137 @@ function Help() {
           voicemail: f.voicemail,
         },
         location: f.location || null,
-        urgent: f.urgent,
-        channel: f.channel,
-        idempotencyKey: idem.current,
+        channel: "image",
+        idempotencyKey: crypto.randomUUID(),
       });
-      router.push("/requests/" + r.id);
+      Record(r.id);
+      Choose(0);
+      Job(await api(`/requests/${r.id}/covers`, { prompt }));
     } catch (e) {
       E((e as Error).message);
     } finally {
       B(false);
     }
   }
+  async function imageFile() {
+    const response = await fetch(
+      `/api/v1/requests/${record}/jobs/${job.id}/encode/${chosen}`,
+      { method: "POST" },
+    );
+    if (!response.ok)
+      throw Error("Unable to prepare the PNG. Please try again.");
+    return new File([await response.blob()], "morning-note.png", {
+      type: "image/png",
+    });
+  }
+  async function share(platform?: string) {
+    E("");
+    try {
+      const file = await imageFile();
+      if (platform && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        I(
+          "Image handed to your device’s share sheet. Delivery is not confirmed.",
+        );
+      } else {
+        const url = URL.createObjectURL(file);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = file.name;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        I(
+          platform
+            ? `PNG downloaded. Attach it as an original file in ${platform}; this does not publish a post.`
+            : "Verified PNG downloaded.",
+        );
+      }
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") E((e as Error).message);
+    }
+  }
+  async function next() {
+    E("");
+    if (step === 0) {
+      if (!f.original.trim()) {
+        E("Please add a few words about the support you would like.");
+        return;
+      }
+      if (f.method === "email" && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.value)) {
+        E("Enter a valid safe email address.");
+        return;
+      }
+      if (
+        ["phone", "text"].includes(f.method) &&
+        f.value.replace(/\D/g, "").length < 7
+      ) {
+        E("Enter a safe contact number.");
+        return;
+      }
+      if (!f.narrative) set("narrative", f.original);
+      Job(null);
+      Record(null);
+      S(1);
+      return;
+    }
+    if (step === 1) {
+      S(2);
+      return;
+    }
+    B(true);
+    try {
+      if (mode === "direct") await api(`/requests/${record}/submit`, {});
+      S(3);
+      api("/encouragement", {
+        text: "A short reassuring note about personal choice",
+      })
+        .then((d) => Poem(d.text))
+        .catch(() =>
+          Poem(`Your words matter.
+Your next step belongs to you.
+Take it at your own pace.`),
+        );
+    } catch (e) {
+      E((e as Error).message);
+    } finally {
+      B(false);
+    }
+  }
+  const working = busy || (job && ["queued", "running"].includes(job.status));
   return (
-    <section className="page formpage">
-      <div className="eyebrow">CREATE A POST · YOUR CHOICES COME FIRST</div>
+    <section className="page formpage post-flow">
+      <div className="eyebrow">CREATE A POST · ONE STEP AT A TIME</div>
       <h1>Create a post.</h1>
       <p className="intro">
-        You decide what to share. You can go back and change anything.
+        Your words. An everyday image. A next step you choose.
       </p>
       <ol className="steps">
-        {["Your situation", "Safe contact", "Your message", "How to send"].map(
-          (t, i) => (
-            <li className={i <= step ? "current" : ""} key={t}>
-              <span>{i < step ? <Check size={14} /> : i + 1}</span>
-              <small>{t}</small>
-            </li>
-          ),
-        )}
+        {[
+          "Fill out the form",
+          "Review and generate image",
+          "Submit post",
+          "Submission complete",
+        ].map((label, i) => (
+          <li
+            key={label}
+            className={i <= step ? "current" : ""}
+            aria-current={i === step ? "step" : undefined}
+          >
+            <span>{i < step || step === 3 ? <Check size={14} /> : i + 1}</span>
+            <small>{label}</small>
+          </li>
+        ))}
       </ol>
       <div className="panel">
         <h2 ref={title} tabIndex={-1}>
           {
             [
-              "What would you like support with?",
-              "How can someone safely contact you?",
-              "Your message, in your words.",
-              "Choose your next step.",
+              "Tell us what’s happening.",
+              "Review your words. Create your image.",
+              "Your post is ready.",
+              mode === "direct"
+                ? "Post successfully submitted!"
+                : "Your image is ready to share.",
             ][step]
           }
         </h2>
@@ -810,9 +895,6 @@ function Help() {
                 person.
               </p>
             )}
-          </>
-        ) : step === 1 ? (
-          <>
             <Field label="Safe contact preference">
               <select
                 value={f.method}
@@ -907,25 +989,34 @@ function Help() {
               Use my location
             </Button>
           </>
-        ) : step === 2 ? (
+        ) : step === 1 ? (
           <>
-            <p>This exact message will be submitted or hidden in your PNG.</p>
-            <Field label="Approved message">
+            <Field
+              label="Approved message"
+              hint="Review and edit this text before generating your image."
+            >
               <textarea
                 rows={7}
+                disabled={!!working}
                 value={f.narrative}
-                onChange={(e) => set("narrative", e.target.value)}
                 maxLength={8000}
+                onChange={(e) => {
+                  set("narrative", e.target.value);
+                  Job(null);
+                }}
               />
             </Field>
             <div className="actions">
               <Button
                 secondary
+                disabled={working}
                 onClick={async () => {
                   B(true);
+                  E("");
                   try {
                     const d = await api("/drafts", { text: f.narrative });
                     set("narrative", d.text);
+                    Job(null);
                     I(d.provider);
                   } catch (e) {
                     E((e as Error).message);
@@ -936,81 +1027,140 @@ function Help() {
               >
                 Help me write this
               </Button>
-              <Button secondary onClick={() => set("narrative", f.original)}>
+              <Button
+                secondary
+                onClick={() => {
+                  set("narrative", f.original);
+                  Job(null);
+                }}
+              >
                 Revert to my words
               </Button>
             </div>
-            <small>
-              Demo assistance keeps your words intact. A configured live AI
-              provider would receive your supplied text.
-            </small>
+            <Field
+              label="Image prompt"
+              hint={
+                DEMO
+                  ? "Demo generates original illustrations locally; live mode uses the configured image provider. Only this prompt is sent to the image provider."
+                  : "Only this image prompt is sent to the configured image provider."
+              }
+            >
+              <input
+                value={prompt}
+                maxLength={500}
+                onChange={(e) => Prompt(e.target.value)}
+              />
+            </Field>
+            <div className="prompt-presets">
+              {[
+                "Good Morning",
+                "Good Night",
+                "Sunset",
+                "Mountains",
+                "Ocean",
+              ].map((t) => (
+                <button key={t} type="button" onClick={() => Prompt(t)}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            <Button
+              disabled={working || !prompt.trim() || !f.narrative.trim()}
+              onClick={generate}
+            >
+              {working ? "Generating images…" : "Generate Images"}
+            </Button>
+            {job && (
+              <p role="status">
+                Image generation: {job.status} · {job.progress}%
+              </p>
+            )}
+            {job?.status === "failed" && (
+              <p role="alert" className="error">
+                Image generation failed. Try again or check the image provider
+                configuration.
+              </p>
+            )}
+            {job?.status === "complete" && (
+              <div className="post-image-options">
+                {job.results.map((r: any) => (
+                  <button
+                    key={r.index}
+                    aria-pressed={chosen === r.index}
+                    onClick={() => Choose(r.index)}
+                  >
+                    <img
+                      alt={`Generated image option ${r.index + 1}`}
+                      src={`/api/v1/requests/${record}/jobs/${job.id}/results/${r.index}`}
+                    />
+                    <span>
+                      {chosen === r.index ? "Selected" : "Choose image"}{" "}
+                      {r.index + 1}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : step === 2 ? (
+          <>
+            <img
+              className="post-preview"
+              alt="Selected generated post image"
+              src={`/api/v1/requests/${record}/jobs/${job.id}/results/${chosen}`}
+            />
+            <div className="post-share-actions">
+              {["Telegram", "Twitter", "Instagram", "Slack"].map((t) => (
+                <Button key={t} secondary onClick={() => share(t)}>
+                  <Upload size={16} /> Share on {t}
+                </Button>
+              ))}
+            </div>
+            <Button secondary onClick={() => share()}>
+              <Download size={16} /> Download verified PNG
+            </Button>
+            <p className="notice">
+              Sharing opens your device’s share sheet when supported, or
+              downloads a file to attach yourself. Social platforms may resize
+              images and destroy the embedded message. Sharing does not confirm
+              receipt.
+            </p>
+            <Field label="Submission destination">
+              <select value={mode} onChange={(e) => Mode(e.target.value)}>
+                <option value="direct">
+                  {DEMO
+                    ? "Submit to the demo dashboard"
+                    : "Submit to the organization queue"}
+                </option>
+                <option value="image">
+                  Keep as an image for manual sharing
+                </option>
+              </select>
+            </Field>
+            <details>
+              <summary>Review the approved message</summary>
+              <p>{f.narrative}</p>
+            </details>
           </>
         ) : (
-          <>
-            <p>
-              Recipient:{" "}
-              <strong>
-                {DEMO
-                  ? "HerVoice Practice Center"
-                  : process.env.NEXT_PUBLIC_ORG_NAME ||
-                    "Participating organization"}
-              </strong>{" "}
-              <Badge>
-                {DEMO ? "Synthetic organization" : "Direct support queue"}
-              </Badge>
-            </p>
-            <label className="option">
-              <input
-                type="radio"
-                name="channel"
-                checked={f.channel === "direct"}
-                onChange={() => set("channel", "direct")}
-              />
-              <div>
-                <strong>
-                  {DEMO
-                    ? "Submit a demo support request"
-                    : "Submit a support request"}
-                </strong>
-                <p>
-                  {DEMO
-                    ? "Save to the practice responder queue. No real organization is contacted."
-                    : "Save to the participating organization’s private queue. Human review is not guaranteed."}
-                </p>
-              </div>
-            </label>
-            <label className="option">
-              <input
-                type="radio"
-                name="channel"
-                checked={f.channel === "image"}
-                onChange={() => set("channel", "image")}
-              />
-              <div>
-                <strong>Prepare a discreet PNG</strong>
-                <p>
-                  Save a request and download an encrypted image. It is only
-                  received after authorized intake.
-                </p>
-              </div>
-            </label>
-            <div className="summary">
-              <p>
-                <strong>Message</strong>
-                <br />
-                {f.narrative}
-              </p>
-              <p>
-                <strong>Contact:</strong>{" "}
-                {f.method === "none"
-                  ? "Do not contact me"
-                  : `${f.method}: ${f.value}`}
-              </p>
-              <p>
-                <strong>Location:</strong> {f.location || "Not shared"}
-              </p>
+          <div className="post-complete">
+            <div className="post-success">
+              <Check size={32} />
             </div>
-          </>
+            <p>
+              {mode === "direct"
+                ? DEMO
+                  ? "Saved to the practice dashboard. No real organization has been contacted."
+                  : "Saved to the organization queue. Human review is not guaranteed."
+                : "Prepared only. No organization or social platform has received your image."}
+            </p>
+            <blockquote>
+              {poem || "Preparing a little encouragement…"}
+            </blockquote>
+            <Link className="button secondary" href={`/requests/${record}`}>
+              View receipt and image
+            </Link>
+          </div>
         )}
         {error && (
           <p className="error" role="alert">
@@ -1022,34 +1172,35 @@ function Help() {
             {info}
           </p>
         )}
-        <div className="formactions">
-          {step > 0 ? (
-            <Button secondary onClick={() => S(step - 1)}>
-              <ArrowLeft size={16} /> Back
+        {step < 3 && (
+          <div className="formactions">
+            {step > 0 ? (
+              <Button secondary disabled={working} onClick={() => S(step - 1)}>
+                <ArrowLeft size={16} /> Back
+              </Button>
+            ) : (
+              <span />
+            )}
+            <Button
+              disabled={working || (step === 1 && job?.status !== "complete")}
+              onClick={next}
+            >
+              {busy
+                ? "Saving…"
+                : step === 2
+                  ? mode === "direct"
+                    ? "Submit post"
+                    : "Finish preparing image"
+                  : "Continue"}
+              <ArrowRight size={16} />
             </Button>
-          ) : (
-            <span />
-          )}
-          <Button
-            disabled={busy || (step === 2 && !f.narrative.trim())}
-            onClick={next}
-          >
-            {busy
-              ? "Saving…"
-              : step === 3
-                ? f.channel === "image"
-                  ? "Prepare request"
-                  : DEMO
-                    ? "Submit demo request"
-                    : "Submit support request"
-                : "Continue"}
-            <ArrowRight size={16} />
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
       <p className="underform">
-        <LockKeyhole size={14} /> Drafts stay in memory until you submit.
-        Leaving this page clears your draft.
+        <LockKeyhole size={14} /> Generating images saves a private prepared
+        request. Draft fields stay in memory; use your receipt to manage saved
+        requests.
       </p>
     </section>
   );
