@@ -449,7 +449,7 @@ test("location denial has manual fallback and a remove control", async ({
   await page
     .getByRole("button", { name: "Use my location", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("denied or timed out");
+  await expect(page.getByRole("status").filter({ hasText: "Location permission" })).toContainText("denied or timed out");
   await page
     .getByLabel("City or region (optional)")
     .fill("Columbus, Ohio (synthetic)");
@@ -535,7 +535,7 @@ test("microphone denial preserves a typed message", async ({ page }) => {
   await page
     .getByRole("button", { name: "Speak your message", exact: true })
     .click();
-  await expect(page.getByRole("alert")).toContainText(
+  await expect(page.getByRole("alert").filter({ hasText: "Microphone permission" })).toContainText(
     "Microphone permission wasn’t granted",
   );
   await expect(page.getByLabel("Your message", { exact: true })).toHaveValue(
