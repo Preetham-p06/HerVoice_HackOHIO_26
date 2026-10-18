@@ -69,7 +69,7 @@ The default is `APP_MODE=demo`. Setting `APP_MODE=live` requires MongoDB, separa
 
 MongoDB stores case payloads encrypted with AES-GCM. Clerk tokens are signature/issuer/audience/expiry verified, then checked against active server-managed memberships. A trusted operator can establish memberships with `scripts/add_membership.py`; public signup cannot do so. Configure the Clerk session token’s `aud` to match `CLERK_AUDIENCE` and select an organization before using the workspace.
 
-Optional Gemini, Nova Canvas/Bedrock, S3 and ElevenLabs adapters use explicitly configured model IDs. No historical model ID is assumed. Provider failures are surfaced; live requests never fall back to synthetic submissions. Missing optional writing assistance does not block manual submission. Follow [live configuration and limitations](docs/architecture.md) before using real information.
+OpenAI can power text, image generation, speech and optional embeddings with one server-only API key. Legacy Gemini, Nova Canvas/Bedrock and ElevenLabs adapters remain available by explicit configuration; S3 storage is optional. See [API setup](docs/api-setup.md). No historical model ID is assumed. Provider failures are surfaced; live requests never fall back to synthetic submissions. Missing optional writing assistance does not block manual submission. Follow [live configuration and limitations](docs/architecture.md) before using real information.
 
 ## Data controls
 

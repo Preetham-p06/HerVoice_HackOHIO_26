@@ -26,10 +26,22 @@ SUPPORT_SYSTEM = """You are HerVoice, an AI support companion, not a therapist o
 
 
 def enabled():
-    return os.getenv("TEXT_PROVIDER", "demo") == "gemini"
+    return os.getenv("TEXT_PROVIDER", "demo") in ["gemini", "openai"]
+
+
+def name():
+    return "OpenAI" if os.getenv("TEXT_PROVIDER") == "openai" else "Gemini"
 
 
 def generate(system: str, contents: list[dict]) -> GeneratedReply:
+    if os.getenv("TEXT_PROVIDER") == "openai":
+        from . import openai_provider
+        try:
+            return GeneratedReply.model_validate_json(openai_provider.generate(system, contents)).safe()
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(503, "OpenAI returned an invalid structured reply. Please retry.") from None
     key = os.getenv("GEMINI_API_KEY")
     model = os.getenv("GEMINI_MODEL", "")
     if not key or not re.fullmatch(r"[a-zA-Z0-9._-]+", model):
@@ -76,6 +88,9 @@ def support(text, history):
 
 
 def speech(text):
+    if os.getenv("SPEECH_PROVIDER") == "openai":
+        from . import openai_provider
+        return openai_provider.speech(text)
     key = os.getenv("ELEVENLABS_API_KEY")
     voice = os.getenv("ELEVENLABS_VOICE_ID")
     model = os.getenv("ELEVENLABS_MODEL")
@@ -101,7 +116,10 @@ def speech(text):
 
 
 def image(prompt: str) -> bytes:
-    """Generate a neutral cover with Gemini; never include request narratives."""
+    """Generate a neutral cover; never include request narratives."""
+    if os.getenv("IMAGE_PROVIDER") == "openai":
+        from . import openai_provider
+        return openai_provider.image(prompt)
     import base64
     import io
     from PIL import Image

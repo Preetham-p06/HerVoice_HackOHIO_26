@@ -298,7 +298,7 @@ def health():
         "capabilities": {
             "requests": MODE,
             "codec": "working",
-            "chat": "Gemini configured"
+            "chat": providers.name() + " configured"
             if providers.enabled()
             else "deterministic demo"
             if MODE == "demo"
@@ -306,8 +306,8 @@ def health():
             "legal": "source extracts"
             if legal_engine.registry()
             else "source browsing",
-            "imageGeneration": "Gemini configured"
-            if os.getenv("IMAGE_PROVIDER") == "gemini"
+            "imageGeneration": ("OpenAI" if os.getenv("IMAGE_PROVIDER") == "openai" else "Gemini") + " configured"
+            if os.getenv("IMAGE_PROVIDER") in ["gemini", "openai"]
             else "local demo covers"
             if MODE == "demo"
             else "Bedrock configured"
@@ -316,7 +316,7 @@ def health():
             "liveAuth": "Clerk verification configured"
             if MODE == "live"
             else "unavailable",
-            "tts": "browser opt-in",
+            "tts": "OpenAI configured" if os.getenv("SPEECH_PROVIDER") == "openai" else "browser opt-in",
         },
     }
 
@@ -749,7 +749,7 @@ def draft(b: Text):
         )
         return {
             "text": reply.text,
-            "provider": "Gemini writing assistance — review every word before approving",
+            "provider": providers.name() + " writing assistance — review every word before approving",
         }
     return {
         "text": b.text.strip(),
@@ -789,7 +789,7 @@ def support_reply(b):
         )
     if providers.enabled():
         reply = providers.support(b.text, b.history)
-        return reply.model_dump() | {"provider": "Gemini AI companion"}
+        return reply.model_dump() | {"provider": providers.name() + " AI companion"}
     text = "Thank you for sharing that. You can choose what feels comfortable to discuss. Would it help to talk about what you need right now, or explore a small next step?"
     if b.history:
         text = "We can take this one step at a time. Thinking about what you shared earlier, what would feel most useful for you now? You can also explore the Resources page when you choose."
@@ -837,7 +837,7 @@ def legal(b: Legal):
             ],
         )
         result["answer"] = reply.text
-        result["mode"] = "Gemini synthesis of retrieved U.S. source summaries"
+        result["mode"] = providers.name() + " synthesis of retrieved U.S. source summaries"
     return result
 
 
@@ -856,7 +856,7 @@ def settings(s=Depends(staff)):
             if MODE == "demo"
             else "permitted connector required",
             "liveDispatch": "unavailable",
-            "AI": "Gemini configured"
+            "AI": providers.name() + " configured"
             if providers.enabled()
             else "deterministic demo"
             if MODE == "demo"

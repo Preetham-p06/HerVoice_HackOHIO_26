@@ -1,4 +1,4 @@
-"""Optional Gemini embeddings and MongoDB Atlas cosine search.
+"""Optional provider embeddings and MongoDB Atlas cosine search.
 Index only organization-approved case narratives. Vectors are sensitive derived data.
 """
 
@@ -13,8 +13,26 @@ from .analysis import matching_text
 DIMENSIONS = 768
 
 
+def embedding_model():
+    return os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small") if os.getenv("EMBEDDING_PROVIDER") == "openai" else os.getenv("GEMINI_EMBEDDING_MODEL", "")
+
+
 def embedding(text):
-    model = os.getenv("GEMINI_EMBEDDING_MODEL", "")
+    if os.getenv("EMBEDDING_PROVIDER") == "openai":
+        from . import openai_provider
+        try:
+            values = openai_provider.embedding(text, DIMENSIONS)
+            if len(values) != DIMENSIONS or not all(isinstance(v,(int,float)) and math.isfinite(v) for v in values):
+                raise ValueError()
+            norm = math.sqrt(sum(v*v for v in values))
+            if not norm:
+                raise ValueError()
+            return [v/norm for v in values]
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(503, "Embedding service unavailable; case data remains saved") from None
+    model = embedding_model()
     key = os.getenv("GEMINI_API_KEY", "")
     if not key or not re.fullmatch(r"[A-Za-z0-9._-]+", model):
         raise HTTPException(503, "Configure a supported Gemini embedding model and key")
@@ -46,7 +64,7 @@ def embedding(text):
 
 
 def index_case(store, case):
-    model = os.getenv("GEMINI_EMBEDDING_MODEL", "")
+    model = embedding_model()
     collection = store.mongo.case_vectors
     current = collection.find_one(
         {
@@ -86,7 +104,7 @@ def related(store, case, limit, threshold):
                 "limit": limit + 1,
                 "filter": {
                     "org": case["org"],
-                    "model": os.getenv("GEMINI_EMBEDDING_MODEL", ""),
+                    "model": embedding_model(),
                 },
             }
         },

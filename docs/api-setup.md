@@ -2,15 +2,20 @@
 
 The entire synthetic demo, dashboard, avatar, original cover illustrations, browser speech, and PNG verification work without paid API keys. Maya is a bundled original illustration, not a hosted avatar service; no avatar API key is required. It has a voice status indicator and zoom, not a rigged face or lip sync.
 
-## AI features
+## AI features — OpenAI
 
-| Feature | Obtain | Server environment |
-| --- | --- | --- |
-| Real chat, draft rewriting, encouragement, legal synthesis | [Google AI Studio](https://ai.google.dev/gemini-api/docs/api-key) | `TEXT_PROVIDER=gemini`, `GEMINI_API_KEY`, `GEMINI_MODEL` (supported generateContent model) |
-| AI generated post images | [Gemini image generation](https://ai.google.dev/gemini-api/docs/image-generation) | Reuse `GEMINI_API_KEY`; set `IMAGE_PROVIDER=gemini` and `GEMINI_IMAGE_MODEL` to an available image model. Image billing/quota must be enabled. |
-| Natural generated speech | [ElevenLabs API keys](https://elevenlabs.io/docs/overview/administration/workspaces/api-keys) and [voice library](https://elevenlabs.io/app/voice-library) | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL` |
+One server-only `OPENAI_API_KEY` powers all configured AI features. Create a project API key in the OpenAI API dashboard and fund that project's billing account. The app sends requests directly to `https://api.openai.com/v1` using that key. ChatGPT subscription billing does not configure this API project.
 
-Gemini image generation can run with synthetic demo storage when explicitly configured; without it, demo images remain local illustrations. AWS is not needed for Gemini images. The optional legacy Bedrock adapter uses the standard AWS SDK credential chain, not a generic Bedrock key field in this project. A deployed IAM role is preferred. Local access-key credentials, if used, belong in the AWS credentials profile rather than source code. The Bedrock adapter uses the real provider only in `APP_MODE=live`. Gemini can be enabled independently in a local demo with synthetic input. Restart the API after configuring its environment. Choose currently available model identifiers from the provider console; placeholders in `.env.example` must be replaced.
+| Feature | Environment |
+| --- | --- |
+| Chat, rewriting, encouragement, legal synthesis | `TEXT_PROVIDER=openai`, `OPENAI_TEXT_MODEL=gpt-4.1-mini` |
+| Generated image covers | `IMAGE_PROVIDER=openai`, `OPENAI_IMAGE_MODEL=gpt-image-1.5` |
+| Generated speech | `SPEECH_PROVIDER=openai`, `OPENAI_TTS_MODEL=gpt-4o-mini-tts`, `OPENAI_TTS_VOICE=coral` |
+| Optional Atlas semantic vectors | `EMBEDDING_PROVIDER=openai`, `OPENAI_EMBEDDING_MODEL=text-embedding-3-small`; 768-dimensional index, `MATCH_PROVIDER=atlas` |
+
+Text requests use the Responses API with strict structured output and `store=false`. Only the cover prompt is sent to image generation. Images are generated at 1024×1024, low quality, three choices per job. Voice is opt-in and generated audio is labelled AI. A generation attempt consumes the configured OpenAI project's API usage. The app reports provider errors rather than falling back to fabricated results. Gemini, Bedrock and ElevenLabs adapters remain available for explicit legacy configuration, but are not used when these OpenAI selectors are set. Restart the API after editing its environment.
+
+Official API references: [Responses](https://developers.openai.com/api/reference/resources/responses/methods/create), [image generation](https://developers.openai.com/api/reference/resources/images/methods/generate), [speech](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create).
 
 ## Full live deployment
 
@@ -20,7 +25,7 @@ Gemini image generation can run with synthetic demo storage when explicitly conf
 | [MongoDB Atlas](https://www.mongodb.com/docs/atlas/connect-to-database-deployment/) | `MONGODB_URI` with database credentials, `MONGODB_DATABASE`. Scope database access and network access to the API environment. |
 | Local encryption | Generate independent random 32-byte base64 values for `DATA_ENCRYPTION_KEY` and each organization in `RECIPIENT_KEYS`. These are your own encryption keys, not purchased API keys. Keep stable and backed up. |
 | Optional private AWS S3 media | `S3_PRIVATE_BUCKET` plus AWS role/profile permissions. Without it, job assets use configured local storage. |
-| Optional semantic related reports | Existing Gemini key plus `GEMINI_EMBEDDING_MODEL`, Atlas vector index `ATLAS_CASE_VECTOR_INDEX`, `MATCH_PROVIDER=atlas`; run documented indexing setup. Similarity does not verify identity. |
+| Optional semantic related reports | Existing OpenAI key plus `OPENAI_EMBEDDING_MODEL`, Atlas vector index `ATLAS_CASE_VECTOR_INDEX`, `MATCH_PROVIDER=atlas`; run documented indexing setup. Similarity does not verify identity. |
 | Optional permitted feed connector | `SOCIAL_FEED_URL`, `SOCIAL_FEED_TOKEN`, `SOCIAL_FEED_ORG`. This is a separately provided approved feed, not social-network publishing. |
 
 Set both `APP_MODE=live` and `NEXT_PUBLIC_APP_MODE=live`, the exact HTTPS `ALLOWED_ORIGINS`, organization settings, and the required encryption/auth/database environment before deployment. The web server needs its private `API_URL`. No map API key is needed: map links open Google Maps only after a click; there is no automatic external map load. No social API keys are needed for the current manual file-sharing workflow. FFmpeg/Rhubarb are optional local executables, not API subscriptions.

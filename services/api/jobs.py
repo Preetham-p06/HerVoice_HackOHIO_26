@@ -96,7 +96,7 @@ class Jobs:
                     for i in range(3):
                         if self.get(j["id"], j["owner"])["status"] == "canceled":
                             return
-                        if os.getenv("IMAGE_PROVIDER") == "gemini":
+                        if os.getenv("IMAGE_PROVIDER") in ["gemini", "openai"]:
                             data = providers.image(prompt)
                         elif self.store.mode == "demo":
                             data = cover(i)

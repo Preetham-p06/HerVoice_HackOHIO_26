@@ -1053,8 +1053,10 @@ Take it at your own pace.`),
             <Field
               label="Image prompt"
               hint={
-                imageProvider === "Gemini configured"
-                  ? "Gemini generates images from this prompt. Your support message is not included."
+                ["OpenAI configured", "Gemini configured"].includes(
+                  imageProvider,
+                )
+                  ? "The configured AI provider generates images from this prompt. Your support message is not included."
                   : DEMO
                     ? "Demo generates original illustrations locally; live mode uses the configured image provider. Only this prompt is sent to the image provider."
                     : "Only this image prompt is sent to the configured image provider."
@@ -1093,7 +1095,7 @@ Take it at your own pace.`),
             {job?.status === "failed" && (
               <p role="alert" className="error">
                 {job.error === "image_quota_exceeded"
-                  ? "Gemini image quota is exhausted. Enable image billing or increase quota in Google AI Studio, then try again."
+                  ? "AI generation quota or rate limit reached. Check the provider project billing and limits, then retry."
                   : "Image generation failed. Try again or check the image provider configuration."}
               </p>
             )}
@@ -1521,7 +1523,13 @@ function Chat() {
   const [liveAI, LiveAI] = useState(!DEMO);
   useEffect(() => {
     api("/health")
-      .then((h) => LiveAI(h.capabilities.chat === "Gemini configured"))
+      .then((h) =>
+        LiveAI(
+          ["OpenAI configured", "Gemini configured"].includes(
+            h.capabilities.chat,
+          ),
+        ),
+      )
       .catch(() => {});
   }, []);
   const [messages, M] = useState<{ role: string; text: string }[]>([]);
@@ -1713,7 +1721,7 @@ function Chat() {
       </div>
       {studio && (
         <div className="panel">
-          <p>Studio voice · captions are in the conversation above.</p>
+          <p>AI-generated voice · captions are in the conversation above.</p>
           <audio
             ref={audio}
             controls
@@ -1770,9 +1778,7 @@ function Chat() {
           disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
           onClick={studioVoice}
         >
-          {studioBusy
-            ? "Generating studio voice…"
-            : "Generate studio voice (ElevenLabs)"}
+          {studioBusy ? "Generating studio voice…" : "Generate AI voice"}
         </Button>
         <Button secondary onClick={toggleMemory}>
           {remember
