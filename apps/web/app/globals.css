@@ -4406,3 +4406,10 @@ html[data-covering="true"] body::after {
     gap: 14px;
   }
 }
+
+.post-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}

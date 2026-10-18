@@ -987,7 +987,11 @@ Take it at your own pace.`),
           }
         </h2>
         {step === 0 ? (
-          <>
+          <fieldset
+            className="post-fields"
+            disabled={busy}
+            aria-label="Situation and safe contact"
+          >
             <p>Share only what feels comfortable. A few words are enough.</p>
             <Field label="What’s on your mind?">
               <textarea
@@ -1176,7 +1180,7 @@ Take it at your own pace.`),
             >
               Use my location
             </Button>
-          </>
+          </fieldset>
         ) : step === 1 ? (
           <>
             <Field
@@ -1217,6 +1221,7 @@ Take it at your own pace.`),
               </Button>
               <Button
                 secondary
+                disabled={!!working}
                 onClick={() => {
                   set("narrative", f.original);
                   Job(null);
@@ -1239,6 +1244,7 @@ Take it at your own pace.`),
             >
               <input
                 value={prompt}
+                disabled={!!working}
                 maxLength={500}
                 onChange={(e) => Prompt(e.target.value)}
               />
