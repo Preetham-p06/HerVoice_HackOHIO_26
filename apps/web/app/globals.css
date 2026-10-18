@@ -4413,3 +4413,31 @@ html[data-covering="true"] body::after {
   margin: 0;
   min-width: 0;
 }
+
+.location-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0;
+}
+.voice-input {
+  margin: 18px 0 12px;
+  padding: 18px;
+  background: #f1f7fb;
+  border: 1px solid #d4e4ee;
+  border-radius: 14px;
+}
+.voice-input small {
+  display: block;
+  margin-top: 12px;
+  color: #3f5e71;
+  line-height: 1.6;
+}
+.voice-input .actions {
+  margin: 0;
+}
+.voice-input .recording {
+  background: #fff0f1;
+  color: #962f3e;
+  border-color: #cf8190;
+}

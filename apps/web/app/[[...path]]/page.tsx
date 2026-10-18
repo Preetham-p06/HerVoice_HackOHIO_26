@@ -6,6 +6,7 @@ import CoverSite from "../../components/CoverSite";
 import { useDiscreetSession } from "../../components/DiscreetSession";
 import dynamic from "next/dynamic";
 import HelpOptions from "../../components/HelpOptions";
+import VoiceInput from "../../components/VoiceInput";
 import { US_REGIONS } from "../../components/us-regions";
 const DevAudit = dynamic(() => import("../../components/DevAudit"), {
   ssr: false,
@@ -733,6 +734,14 @@ function Help() {
   const [busy, B] = useState(false);
   const [error, E] = useState("");
   const [info, I] = useState("");
+  const [locating, Locating] = useState(false);
+  const locationAttempt = useRef(0);
+  useEffect(
+    () => () => {
+      locationAttempt.current++;
+    },
+    [],
+  );
   const [f, F] = useState({
     alias: "",
     duration: "",
@@ -1147,39 +1156,64 @@ Take it at your own pace.`),
             >
               <input
                 value={f.location}
-                onChange={(e) => set("location", e.target.value)}
+                onChange={(e) => {
+                  locationAttempt.current++;
+                  Locating(false);
+                  set("location", e.target.value);
+                }}
               />
             </Field>
-            <Button
-              secondary
-              onClick={() => {
-                I("");
-                if (!navigator.geolocation) {
-                  I(
-                    "Location is not supported. You can type a location above.",
+            <div className="location-actions">
+              <Button
+                secondary
+                disabled={locating}
+                onClick={() => {
+                  I("");
+                  if (!navigator.geolocation) {
+                    I("Location is not supported. You can type a city above.");
+                    return;
+                  }
+                  const attempt = ++locationAttempt.current;
+                  Locating(true);
+                  navigator.geolocation.getCurrentPosition(
+                    (p) => {
+                      if (attempt !== locationAttempt.current) return;
+                      set(
+                        "location",
+                        `${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`,
+                      );
+                      Locating(false);
+                      I(
+                        "Location added. You can edit or remove it before generating or submitting.",
+                      );
+                    },
+                    () => {
+                      if (attempt !== locationAttempt.current) return;
+                      Locating(false);
+                      I(
+                        "Location permission was denied or timed out. You can type your city above.",
+                      );
+                    },
+                    { timeout: 8000, maximumAge: 60000 },
                   );
-                  return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                  (p) => {
-                    set(
-                      "location",
-                      `${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`,
-                    );
-                    I(
-                      "Coordinates added by your choice. No geocoding service was contacted.",
-                    );
-                  },
-                  () =>
-                    I(
-                      "Location permission was denied or timed out. You can type a city above.",
-                    ),
-                  { timeout: 8000 },
-                );
-              }}
-            >
-              Use my location
-            </Button>
+                }}
+              >
+                {locating ? "Finding your location…" : "Use my location"}
+              </Button>
+              {f.location && (
+                <Button
+                  secondary
+                  onClick={() => {
+                    locationAttempt.current++;
+                    Locating(false);
+                    set("location", "");
+                    I("Location removed.");
+                  }}
+                >
+                  Remove location
+                </Button>
+              )}
+            </div>
           </fieldset>
         ) : step === 1 ? (
           <>
@@ -1385,7 +1419,7 @@ Take it at your own pace.`),
                 before anything is shared.
               </p>
             </div>
-            <Button disabled={busy} onClick={expandBrief}>
+            <Button disabled={busy || locating} onClick={expandBrief}>
               {busy ? "Generating text…" : "Generate Text"}
               <ArrowRight size={16} />
             </Button>
@@ -1411,7 +1445,11 @@ Take it at your own pace.`),
               <span />
             )}
             <Button
-              disabled={working || (step === 1 && job?.status !== "complete")}
+              disabled={
+                working ||
+                (step === 0 && locating) ||
+                (step === 1 && job?.status !== "complete")
+              }
               onClick={next}
             >
               {busy
@@ -1760,6 +1798,12 @@ function Chat() {
   const audio = useRef<HTMLAudioElement>(null);
   const mediaJob = useRef("");
   const generation = useRef(0);
+  const playRequested = useRef(false);
+  const [voiceInfo, VoiceInfo] = useState("");
+  const chatEnd = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    chatEnd.current?.scrollIntoView({ block: "nearest" });
+  }, [messages, busy]);
   useEffect(() => {
     api("/support/memory")
       .then((d) => {
@@ -1800,6 +1844,18 @@ function Chat() {
   }, []);
   async function send() {
     if (!text.trim() || busy) return;
+    generation.current++;
+    playRequested.current = false;
+    if (mediaJob.current)
+      void api("/support/media/" + mediaJob.current, undefined, "DELETE").catch(
+        () => {},
+      );
+    StudioBusy(false);
+    window.speechSynthesis?.cancel();
+    audio.current?.pause();
+    S(false);
+    Studio("");
+    VoiceInfo("");
     const value = text;
     T("");
     const old = messages;
@@ -1816,7 +1872,11 @@ function Chat() {
           { role: "assistant", text: d.text },
         ]);
     } catch (e) {
-      E((e as Error).message);
+      if (g === generation.current) {
+        M(old);
+        T((current) => current || value);
+        E((e as Error).message);
+      }
     } finally {
       if (g === generation.current) B(false);
     }
@@ -1824,6 +1884,12 @@ function Chat() {
   async function studioVoice() {
     const last = [...messages].reverse().find((m) => m.role === "assistant");
     if (!last || studioBusy) return;
+    window.speechSynthesis?.cancel();
+    audio.current?.pause();
+    S(false);
+    playRequested.current = true;
+    Studio("");
+    VoiceInfo("Preparing your AI voice reply…");
     StudioBusy(true);
     E("");
     const g = generation.current;
@@ -1852,7 +1918,10 @@ function Chat() {
       cues.current = timing.mouthCues || [];
       Studio("/api/v1/support/media/" + job.id + "/results/0");
     } catch (e) {
-      if (g === generation.current) E((e as Error).message);
+      if (g === generation.current) {
+        VoiceInfo("");
+        E((e as Error).message);
+      }
     } finally {
       if (g === generation.current) StudioBusy(false);
     }
@@ -1860,6 +1929,15 @@ function Chat() {
   function speak() {
     const last = [...messages].reverse().find((m) => m.role === "assistant");
     if (!last) return;
+    if (
+      !window.speechSynthesis ||
+      typeof SpeechSynthesisUtterance === "undefined"
+    ) {
+      E("Device speech is unavailable. Choose Listen to reply for AI voice.");
+      return;
+    }
+    audio.current?.pause();
+    window.speechSynthesis.cancel();
     const s = new SpeechSynthesisUtterance(last.text);
     s.onend = () => S(false);
     s.onerror = () => {
@@ -1929,6 +2007,7 @@ function Chat() {
               {liveAI ? "Preparing a reply…" : "Preparing a demo response…"}
             </p>
           )}
+          <div ref={chatEnd} />
         </div>
         {avatar && <Companion speaking={speaking} mouthShape={mouthShape} />}
       </div>
@@ -1938,13 +2017,28 @@ function Chat() {
           <audio
             ref={audio}
             controls
+            aria-label="AI voice reply"
             src={studio}
+            onLoadedData={() => {
+              if (playRequested.current) {
+                playRequested.current = false;
+                audio.current
+                  ?.play()
+                  .then(() => VoiceInfo("Playing your AI voice reply."))
+                  .catch(() =>
+                    VoiceInfo("Voice is ready. Press play to listen."),
+                  );
+              }
+            }}
             onPlay={() => S(true)}
             onPause={() => {
               S(false);
               Mouth("X");
             }}
             onEnded={() => {
+              VoiceInfo(
+                "Finished speaking. You can replay the audio or continue typing.",
+              );
               S(false);
               Mouth("X");
             }}
@@ -1988,10 +2082,12 @@ function Chat() {
         </Button>
         <Button
           secondary
-          disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
+          disabled={
+            !messages.some((m) => m.role === "assistant") || studioBusy || busy
+          }
           onClick={studioVoice}
         >
-          {studioBusy ? "Generating studio voice…" : "Generate AI voice"}
+          {studioBusy ? "Preparing voice…" : "Listen to reply"}
         </Button>
         <Button secondary onClick={toggleMemory}>
           {remember
@@ -2003,10 +2099,11 @@ function Chat() {
         </Button>
         <Button
           secondary
-          disabled={!messages.length}
+          disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
           onClick={() => {
             if (speaking) {
               window.speechSynthesis?.cancel();
+              audio.current?.pause();
               S(false);
             } else speak();
           }}
@@ -2018,6 +2115,10 @@ function Chat() {
           secondary
           onClick={() => {
             generation.current++;
+            window.dispatchEvent(new Event("hervoice-reset"));
+            playRequested.current = false;
+            VoiceInfo("");
+            T("");
             void api("/support/memory", undefined, "DELETE").catch(() =>
               E("Could not delete saved memory. Please retry."),
             );
@@ -2047,6 +2148,22 @@ function Chat() {
           {error}
         </p>
       )}
+      {voiceInfo && (
+        <p role="status" className="notice">
+          {voiceInfo}
+        </p>
+      )}
+      <VoiceInput
+        onText={(words) => {
+          T((current) =>
+            (current ? current + " " + words : words).slice(0, 4000),
+          );
+          VoiceInfo(
+            "Your voice note is ready to review. Edit it if needed, then choose Send.",
+          );
+        }}
+        onError={E}
+      />
       <form
         className="composer"
         onSubmit={(e) => {

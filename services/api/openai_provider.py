@@ -71,3 +71,24 @@ def speech(text):
 
 def embedding(text, dimensions):
     return request("/embeddings", {"model":os.getenv("OPENAI_EMBEDDING_MODEL","text-embedding-3-small"),"input":text,"dimensions":dimensions})["data"][0]["embedding"]
+
+
+def transcribe(data: bytes, mime: str) -> str:
+    """Short consented microphone clip; no retained local audio file."""
+    extensions={"audio/webm":"webm","audio/mp4":"mp4","audio/ogg":"ogg","audio/wav":"wav","audio/mpeg":"mp3"}
+    key=os.getenv("OPENAI_API_KEY")
+    if not key:
+        raise HTTPException(503,"Voice input is not configured. You can type your message.")
+    try:
+        with httpx.Client(timeout=35) as client:
+            response=client.post(BASE+"/audio/transcriptions",headers={"Authorization":"Bearer "+key},data={"model":os.getenv("OPENAI_TRANSCRIBE_MODEL","gpt-4o-mini-transcribe"),"response_format":"json"},files={"file":("voice-note."+extensions[mime],data,mime)})
+            if not response.is_success:
+                raise HTTPException(503,"Voice transcription is unavailable. Please retry or type your message.")
+            text=response.json().get("text","").strip()
+            if not text:
+                raise HTTPException(422,"No words were detected. Try again or type your message.")
+            return text[:4000]
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(503,"Voice transcription is unavailable. Please type your message.") from None

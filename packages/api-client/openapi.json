@@ -29,6 +29,20 @@
         "title": "Body_monitor_submit_v1_monitor_feed_post",
         "type": "object"
       },
+      "Body_transcribe_audio_v1_support_transcribe_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_transcribe_audio_v1_support_transcribe_post",
+        "type": "object"
+      },
       "Body_uploaded_image_v1_requests__cid__image_post": {
         "properties": {
           "file": {
@@ -2069,6 +2083,42 @@
           }
         },
         "summary": "Support Session"
+      }
+    },
+    "/v1/support/transcribe": {
+      "post": {
+        "operationId": "transcribe_audio_v1_support_transcribe_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_transcribe_audio_v1_support_transcribe_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transcribe Audio"
       }
     }
   }

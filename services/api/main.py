@@ -1022,6 +1022,19 @@ def chat_owner(req):
     return "chat:" + hashlib.sha256(token.encode()).hexdigest()
 
 
+@app.post("/v1/support/transcribe")
+async def transcribe_audio(req: Request, file: UploadFile = File(...)):
+    chat_owner(req)
+    mime=(file.content_type or "").split(";")[0].strip()
+    if mime not in ["audio/webm","audio/mp4","audio/ogg","audio/wav","audio/mpeg"]:
+        raise HTTPException(422,"Choose a supported audio recording.")
+    data=await file.read(8*1024*1024+1)
+    if not data or len(data)>8*1024*1024:
+        raise HTTPException(413,"Recording must be between 1 byte and 8 MB.")
+    from .openai_provider import transcribe
+    return {"text":transcribe(data,mime),"provider":"OpenAI transcription"}
+
+
 @app.post("/v1/support/media")
 def speech_job(b: Text, req: Request):
     return jobs.create(chat_owner(req), "speech", b.text)

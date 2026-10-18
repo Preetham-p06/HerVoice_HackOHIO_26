@@ -8,6 +8,10 @@ export type Body_monitor_submit_v1_monitor_feed_post = {
   "file": string;
 };
 
+export type Body_transcribe_audio_v1_support_transcribe_post = {
+  "file": string;
+};
+
 export type Body_uploaded_image_v1_requests__cid__image_post = {
   "file": string;
 };

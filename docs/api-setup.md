@@ -10,6 +10,7 @@ One server-only `OPENAI_API_KEY` powers all configured AI features. Create a pro
 | --- | --- |
 | Chat, rewriting, encouragement, legal synthesis | `TEXT_PROVIDER=openai`, `OPENAI_TEXT_MODEL=gpt-4.1-mini` |
 | Generated image covers | `IMAGE_PROVIDER=openai`, `OPENAI_IMAGE_MODEL=gpt-image-1.5` |
+| Voice input | `OPENAI_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe` (optional override; uses the same OpenAI key) |
 | Generated speech | `SPEECH_PROVIDER=openai`, `OPENAI_TTS_MODEL=gpt-4o-mini-tts`, `OPENAI_TTS_VOICE=coral` |
 | Optional Atlas semantic vectors | `EMBEDDING_PROVIDER=openai`, `OPENAI_EMBEDDING_MODEL=text-embedding-3-small`; 768-dimensional index, `MATCH_PROVIDER=atlas` for live MongoDB, or `MATCH_PROVIDER=openai_local` for real embeddings with synthetic local storage |
 
@@ -31,3 +32,5 @@ Official API references: [Responses](https://developers.openai.com/api/reference
 Set both `APP_MODE=live` and `NEXT_PUBLIC_APP_MODE=live`, the exact HTTPS `ALLOWED_ORIGINS`, organization settings, and the required encryption/auth/database environment before deployment. The web server needs its private `API_URL`. No map API key is needed: map links open Google Maps only after a click; there is no automatic external map load. No social API keys are needed for the current manual file-sharing workflow. FFmpeg/Rhubarb are optional local executables, not API subscriptions.
 
 Store secrets in the API process environment or deployment secret manager. The example file documents names only and is not loaded automatically by uvicorn. Never commit real credentials or put private keys in `NEXT_PUBLIC_*` variables. Only Clerk's publishable key is intended to be public.
+
+Voice input starts only when **Speak your message** is selected. Stop the recording to transcribe it into an editable draft; choose **Send message** separately. **Listen to reply** generates and plays the AI response, with native audio controls and a **Stop voice** control. Microphone permission requires localhost or HTTPS; typing remains available if permission is denied.

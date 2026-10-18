@@ -537,3 +537,19 @@ def test_queue_returns_location_and_reviewed_severity(client):
     assert "location" in target
     assert target["severity"]=="critical"
     assert client.patch(f"/v1/cases/{cid}",json={"version":response.json()["version"],"severity":"invented"}).status_code==422
+
+
+def test_voice_input_requires_session_and_validates_upload(client, monkeypatch):
+    import services.api.openai_provider as provider
+    assert client.post("/v1/support/transcribe",files={"file":("voice.webm",b"synthetic","audio/webm")}).status_code==401
+    assert client.post("/v1/support/session").status_code==200
+    assert client.post("/v1/support/transcribe",files={"file":("image.png",b"fake","image/png")}).status_code==422
+    assert client.post("/v1/support/transcribe",files={"file":("voice.webm",b"","audio/webm")}).status_code==413
+    def transcribe(data,mime):
+        assert data==b"synthetic clip"
+        assert mime=="audio/webm"
+        return "Synthetic text to review."
+    monkeypatch.setattr(provider,"transcribe",transcribe)
+    response=client.post("/v1/support/transcribe",files={"file":("voice.webm",b"synthetic clip","audio/webm;codecs=opus")})
+    assert response.status_code==200
+    assert response.json()["text"]=="Synthetic text to review."

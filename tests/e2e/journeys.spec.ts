@@ -17,13 +17,21 @@ async function visit(page: Page, path: string) {
 
 test("guest image request → verified intake → real case event", async ({
   page,
+  context,
 }) => {
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({ latitude: 39.9612, longitude: -82.9988 });
   await visit(page, "/studio");
   await page
     .getByLabel("What’s on your mind?")
     .fill("Synthetic test: I would like to explore housing support. नमस्ते ❤️");
   await expect(page.getByLabel("Safe contact preference")).toHaveValue("none");
-  await page.getByLabel("City or region (optional)").fill("Synthetic city");
+  await page
+    .getByRole("button", { name: "Use my location", exact: true })
+    .click();
+  await expect(page.getByLabel("City or region (optional)")).toHaveValue(
+    "39.9612, -82.9988",
+  );
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   const approved = "Approved synthetic test message. नमस्ते ❤️";
   await page.getByLabel("Approved message").fill(approved);
@@ -62,6 +70,9 @@ test("guest image request → verified intake → real case event", async ({
   await expect(page.getByText(approved, { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Confirm intake" }).click();
   await expect(page).toHaveURL(new RegExp("/workspace/cases/" + cid));
+  await expect(
+    page.getByText("39.9612, -82.9988", { exact: true }),
+  ).toBeVisible();
   await page
     .getByLabel("Private case note")
     .fill("Synthetic test note: review completed.");
@@ -418,4 +429,116 @@ test("structured brief → image → monitored signal → verified dashboard cas
   await expect(
     page.getByRole("link", { name: /Open verified case/ }).first(),
   ).toBeVisible();
+});
+
+test("location denial has manual fallback and a remove control", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: (
+          _success: unknown,
+          failure: (error: unknown) => void,
+        ) => failure({ code: 1, message: "Denied in synthetic test" }),
+      },
+    });
+  });
+  await visit(page, "/studio");
+  await page
+    .getByRole("button", { name: "Use my location", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText("denied or timed out");
+  await page
+    .getByLabel("City or region (optional)")
+    .fill("Columbus, Ohio (synthetic)");
+  await page
+    .getByRole("button", { name: "Remove location", exact: true })
+    .click();
+  await expect(page.getByLabel("City or region (optional)")).toHaveValue("");
+});
+
+test("voice dictation stays editable until Send is chosen", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({ getTracks: () => [{ stop: () => {} }] }),
+      },
+    });
+    class FakeRecorder {
+      static isTypeSupported() {
+        return true;
+      }
+      state = "inactive";
+      mimeType = "audio/webm";
+      onstop: (() => void) | null = null;
+      ondataavailable: ((e: { data: Blob }) => void) | null = null;
+      start() {
+        this.state = "recording";
+      }
+      stop() {
+        this.state = "inactive";
+        this.ondataavailable?.({
+          data: new Blob(["synthetic clip"], { type: this.mimeType }),
+        });
+        this.onstop?.();
+      }
+    }
+    Object.defineProperty(window, "MediaRecorder", {
+      configurable: true,
+      value: FakeRecorder,
+    });
+  });
+  await page.route("**/api/v1/support/transcribe", (route) =>
+    route.fulfill({ json: { text: "Synthetic voice note to review." } }),
+  );
+  await visit(page, "/journal");
+  await page
+    .getByRole("button", { name: "Speak your message", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Stop recording", exact: true })
+    .click();
+  await expect(page.getByLabel("Your message", { exact: true })).toHaveValue(
+    "Synthetic voice note to review.",
+  );
+  await expect(page.locator(".message.you")).toHaveCount(0);
+  await page.getByRole("button", { name: "Send message", exact: true }).click();
+  await expect(page.locator(".message.assistant")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Listen to reply", exact: true }),
+  ).toBeEnabled();
+});
+
+test("microphone denial preserves a typed message", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          throw new DOMException(
+            "Synthetic permission denial",
+            "NotAllowedError",
+          );
+        },
+      },
+    });
+  });
+  await visit(page, "/journal");
+  await page
+    .getByLabel("Your message", { exact: true })
+    .fill("Synthetic words already typed.");
+  await page
+    .getByRole("button", { name: "Speak your message", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Microphone permission wasn’t granted",
+  );
+  await expect(page.getByLabel("Your message", { exact: true })).toHaveValue(
+    "Synthetic words already typed.",
+  );
 });

@@ -17,7 +17,7 @@ Set the documented environment values server-side; no credentials are committed.
 
 - Gemini: reviewed narrative rewriting, emotional-support responses, and synthesis over retrieved U.S. sources.
 - Nova Canvas / Bedrock: three generated cover choices. Local choices are original procedural illustrations, not claimed AI photographs.
-- ElevenLabs: **Generate studio voice** creates a scoped audio job and exposes a visible player. FFmpeg + Rhubarb can generate timed cue data; the current illustrated companion shows playback status rather than lip sync. Browser speech remains a separate opt-in fallback.
+- OpenAI: **Listen to reply** creates a scoped audio job and plays the reply through a visible player. **Speak your message** records up to 60 seconds and transcribes into an editable draft before Send. FFmpeg + Rhubarb can generate timed cue data; the current illustrated companion shows playback status rather than lip sync. Browser speech remains a separate opt-in fallback.
 - MongoDB/Clerk/private S3: encrypted case storage, verified organization membership, and private job assets.
 - Gemini embeddings + Atlas: set `MATCH_PROVIDER=atlas`, `GEMINI_EMBEDDING_MODEL`, and `ATLAS_CASE_VECTOR_INDEX`. Run `.venv/bin/python -m scripts.index_cases APPROVED_ORG_ID` with approved live settings to create the 768-dimensional cosine index and embed authorized case narratives. This sends those narratives to Gemini. Re-run indexing after case changes; Atlas indexing is asynchronous. Search enforces organization/model filters and excludes the current case. Local mode uses normalized hash embeddings and exact numeric cosine similarity; it is not semantic identity resolution.
 
