@@ -4106,3 +4106,14 @@ html[data-covering="true"] body::after {
 .portrait-companion .portrait-note {
   color: #4d414b !important;
 }
+
+.staffmain {
+  min-width: 0;
+}
+.live-table {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.live-table:has(.row-actions[open]) {
+  padding-bottom: 150px;
+}
