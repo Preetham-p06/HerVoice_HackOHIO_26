@@ -4,6 +4,10 @@ export type Body_intake_v1_intake_preview_post = {
   "file": string;
 };
 
+export type Body_monitor_submit_v1_monitor_feed_post = {
+  "file": string;
+};
+
 export type Body_uploaded_image_v1_requests__cid__image_post = {
   "file": string;
 };
@@ -43,6 +47,16 @@ export type Legal = {
   "question": string;
   "jurisdiction"?: string;
   "state"?: string | null;
+  "previousQuestions"?: (string)[];
+};
+
+export type MatchOptions = {
+  "limit"?: number;
+  "threshold"?: number;
+};
+
+export type MemoryConsent = {
+  "enabled": boolean;
 };
 
 export type NewRequest = {

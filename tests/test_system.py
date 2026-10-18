@@ -381,3 +381,45 @@ def test_nested_data_directory_startup(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     assert (target / "demo.sqlite").exists()
+
+
+def test_controlled_monitor_scopes_rejects_and_receives_once(client):
+    cid, _ = request(client, "image")
+    png = client.get("/v1/requests/" + cid + "/image").content
+    signin(client, "demo-b")
+    queued = client.post(
+        "/v1/monitor/feed", files={"file": ("cover.png", png, "image/png")}
+    )
+    assert queued.status_code == 200
+    client.post("/v1/monitor/scan")
+    assert client.get("/v1/monitor/feed").json()["items"][0]["status"] == "rejected"
+    signin(client)
+    for _ in range(2):
+        assert (
+            client.post(
+                "/v1/monitor/feed", files={"file": ("cover.png", png, "image/png")}
+            ).status_code
+            == 200
+        )
+        assert client.post("/v1/monitor/scan").status_code == 200
+    case = client.get("/v1/cases/" + cid).json()
+    assert case["status"] == "received"
+    assert len([e for e in case["events"] if e["type"] == "monitor_received"]) == 1
+    assert (
+        client.get("/v1/cases/" + cid + "/analysis").json()["summary"]
+        == case["narrative"]
+    )
+
+
+def test_opt_in_memory_api_and_session_preservation(client):
+    assert client.get("/v1/support/memory").json() == {"enabled": False, "messages": []}
+    assert client.put("/v1/support/memory", json={"enabled": True}).status_code == 401
+    client.post("/v1/support/session")
+    assert client.put("/v1/support/memory", json={"enabled": True}).status_code == 200
+    client.post("/v1/support", json={"text": "Synthetic conversation"})
+    assert len(client.get("/v1/support/memory").json()["messages"]) == 2
+    client.post("/v1/support/session")
+    assert len(client.get("/v1/support/memory").json()["messages"]) == 2
+    assert TestClient(app).get("/v1/support/memory").json()["enabled"] is False
+    client.delete("/v1/support/memory")
+    assert client.get("/v1/support/memory").json()["enabled"] is False

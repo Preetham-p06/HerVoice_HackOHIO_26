@@ -170,6 +170,7 @@ class CaseStore:
 
     def delete(self, id):
         if self.mode == "live":
+            self.mongo.case_vectors.delete_many({"id": id})
             self.cases.delete_one({"id": id})
             self.mongo.decisions.delete_many({"$or": [{"source": id}, {"target": id}]})
         else:

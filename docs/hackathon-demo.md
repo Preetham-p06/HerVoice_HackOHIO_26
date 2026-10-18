@@ -1,0 +1,36 @@
+# HerVoice: judge walkthrough
+
+HerVoice is U.S.-first. The Haven reference is a feature specification, not a source of privacy guarantees, legal advice, or clinical claims. All interface and illustration work here is original.
+
+## Five-minute local demonstration
+
+1. Start with `npm run dev:all`; open http://localhost:3000. The persistent **Help options** button opens the real U.S. hotline choices. Use synthetic information for the demonstration.
+2. **Request support** → enter a short situation → optionally request a rewrite → review → choose image delivery. Pick a botanical, landscape, or food illustration, upload your own original PNG, or request three covers. Download the encoded PNG. Image delivery is still **prepared** at this point.
+3. **Responder sign-in** → choose the demo organization → **Image intake**. Under **Image monitoring lab**, upload that PNG and queue it. Wait for the 30-second scan or press **Scan now**. Open the resulting verified case. The receipt now reflects actual intake. Re-queueing does not create a duplicate intake event. Images belonging to another organization are rejected.
+4. Open the case, press **Analyze intake**, inspect the extractive summary and human-review flags. Search related cases: numeric cosine similarity is shown as a similarity score, never as a culprit identity probability. Link/reject decisions require a reason.
+5. **Support chat** → send a message → optionally enable the original 3D companion and browser speech. Explicitly allow encrypted **24-hour conversation memory** if desired, revisit the page, and turn memory off to delete it. No responder can access these conversations.
+6. **Know your rights** → choose U.S./optional state → ask a question and a follow-up. Sources remain attached to the retrieved answer; unsupported jurisdictions and missing evidence produce an abstention. The small reviewed collection is support guidance, not comprehensive U.S. law.
+
+## Optional live services
+
+Set the documented environment values server-side; no credentials are committed. These adapters require operator configuration and have not been smoke-tested against paid/live accounts:
+
+- Gemini: reviewed narrative rewriting, emotional-support responses, and synthesis over retrieved U.S. sources.
+- Nova Canvas / Bedrock: three generated cover choices. Local choices are original procedural illustrations, not claimed AI photographs.
+- ElevenLabs: **Generate studio voice** creates a scoped audio job and exposes a visible player. FFmpeg + Rhubarb provide timed mouth cues to the 3D companion. With no cues, the companion uses a playback animation. Browser speech remains a separate opt-in fallback.
+- MongoDB/Clerk/private S3: encrypted case storage, verified organization membership, and private job assets.
+- Gemini embeddings + Atlas: set `MATCH_PROVIDER=atlas`, `GEMINI_EMBEDDING_MODEL`, and `ATLAS_CASE_VECTOR_INDEX`. Run `.venv/bin/python -m scripts.index_cases APPROVED_ORG_ID` with approved live settings to create the 768-dimensional cosine index and embed authorized case narratives. This sends those narratives to Gemini. Re-run indexing after case changes; Atlas indexing is asynchronous. Search enforces organization/model filters and excludes the current case. Local mode uses normalized hash embeddings and exact numeric cosine similarity; it is not semantic identity resolution.
+
+## Permitted social-feed connector
+
+No Instagram, X, or Slack account is accessed automatically. A participating organization can configure `SOCIAL_FEED_URL`, `SOCIAL_FEED_TOKEN`, and `SOCIAL_FEED_ORG`. The fixed HTTPS endpoint must be operated with permission to access those posts and original image files. Every 30 seconds, HerVoice sends an authenticated GET and expects:
+
+```json
+{"items":[{"id":"stable-source-post-id","hashtag":"#HerVoiceSignal","pngBase64":"BASE64_OF_UNCHANGED_PNG"}]}
+```
+
+Responses are bounded to 12 MB/20 items; redirects are not followed. Duplicate source IDs are ignored. Queued image bytes are encrypted at rest and cleared after scanning. The decoded payload must pass AES-GCM verification, organization/schema checks, and exact canonical-narrative matching before intake. Corrupted/recompressed images are rejected. The connector does not make HerVoice an emergency dispatch service. This single-process scheduler requires persistent storage and one API worker; a distributed scheduler and operational alerting are future deployment work.
+
+## Scope boundaries
+
+This implements the reference's demo workflows and configurable integration paths. It does not reproduce proprietary assets, unsupported success metrics, “total privacy,” guaranteed social-media delivery, or guaranteed culprit identification. Public account-based case history, durable distributed worker recovery, key-rotation migration, broad state-law coverage, and operational service partnerships remain outside this hackathon build. Do not present this as a production emergency service.

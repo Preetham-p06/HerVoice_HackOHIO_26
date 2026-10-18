@@ -133,3 +133,40 @@ test("U.S. resources and legal defaults", async ({ page }) => {
   );
   await expect(page.getByText("India Code", { exact: true })).toHaveCount(0);
 });
+
+test("consented chat memory survives navigation and can be turned off", async ({
+  page,
+}) => {
+  await visit(page, "/support");
+  await page
+    .getByRole("button", {
+      name: "Allow 24-hour conversation memory",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText("24-hour memory on", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Your message", { exact: true })
+    .fill("Synthetic test: I want a small next step.");
+  await page.getByRole("button", { name: "Send message", exact: true }).click();
+  await expect(page.locator(".message.assistant")).toHaveCount(1);
+  await visit(page, "/resources");
+  await visit(page, "/support");
+  await expect(
+    page.getByText("Synthetic test: I want a small next step.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Turn off & delete saved memory",
+      exact: true,
+    })
+    .click();
+  await expect(page.getByText("Memory off", { exact: true })).toBeVisible();
+  await visit(page, "/resources");
+  await visit(page, "/support");
+  await expect(page.locator(".message")).toHaveCount(0);
+});

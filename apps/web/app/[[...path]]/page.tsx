@@ -272,15 +272,21 @@ export default function App() {
 function Home() {
   return (
     <>
+      <section className="signal-banner" aria-label="Your space, your pace">
+        <span>
+          <span className="signal-dot" /> A SAFE PLACE TO BEGIN
+        </span>
+        <span>U.S. support · Your choices come first</span>
+      </section>
       <section className="care-intro">
         <div className="care-intro-main">
           <div className="eyebrow">
             <ShieldCheck size={16} /> SUPPORT FOR WOMEN IN THE UNITED STATES
           </div>
           <h1>
-            Find the support
+            Your voice.
             <br />
-            you need.
+            Your way forward.
           </h1>
           <p>
             You deserve to feel safe and heard. Talk to an advocate, explore
@@ -308,6 +314,16 @@ function Home() {
               <LockKeyhole size={16} /> You choose what to share
             </span>
           </div>
+        </div>
+        <div className="support-constellation" aria-hidden="true">
+          <div className="orbit orbit-one" />
+          <div className="orbit orbit-two" />
+          <div className="voice-core">
+            <HeartHandshake size={58} strokeWidth={1.3} />
+          </div>
+          <span className="orbit-label label-one">Be heard</span>
+          <span className="orbit-label label-two">Find your options</span>
+          <span className="orbit-label label-three">Take your next step</span>
         </div>
         <div className="advocate-card">
           <div className="advocate-card-top">
@@ -345,6 +361,41 @@ function Home() {
             External service. Call or open chat only when it’s safe. HerVoice
             does not monitor or receive these conversations.
           </small>
+        </div>
+      </section>
+      <section className="journey-strip" aria-label="Ways to use HerVoice">
+        <div>
+          <span>01 / SHARE</span>
+          <strong>Your words, at your pace.</strong>
+          <p>
+            Write a request. Review every word. Choose a direct request or an
+            encrypted PNG.
+          </p>
+          <Link href="/help">
+            Create a request <ArrowUpRight size={16} />
+          </Link>
+        </div>
+        <div>
+          <span>02 / CONNECT</span>
+          <strong>A little room to breathe.</strong>
+          <p>
+            Talk things through with an AI companion, with optional voice and a
+            3D presence.
+          </p>
+          <Link href="/support">
+            Enter your support space <ArrowUpRight size={16} />
+          </Link>
+        </div>
+        <div>
+          <span>03 / UNDERSTAND</span>
+          <strong>More clarity. More choice.</strong>
+          <p>
+            Explore reviewed U.S. resources and source-backed information for
+            your next step.
+          </p>
+          <Link href="/rights">
+            Explore your options <ArrowUpRight size={16} />
+          </Link>
         </div>
       </section>
       <section className="choices care-choices">
@@ -1139,16 +1190,48 @@ function Requests({
 }
 function Chat() {
   const [messages, M] = useState<{ role: string; text: string }[]>([]);
+  const [remember, Remember] = useState(false);
   const [text, T] = useState("");
   const [busy, B] = useState(false);
   const [error, E] = useState("");
   const [avatar, A] = useState(false);
   const [speaking, S] = useState(false);
+  const [mouthShape, Mouth] = useState("");
+  const [studio, Studio] = useState("");
+  const [studioBusy, StudioBusy] = useState(false);
+  const cues = useRef<{ start: number; end: number; value: string }[]>([]);
+  const audio = useRef<HTMLAudioElement>(null);
+  const mediaJob = useRef("");
   const generation = useRef(0);
+  useEffect(() => {
+    api("/support/memory")
+      .then((d) => {
+        Remember(d.enabled);
+        if (d.enabled) M(d.messages);
+      })
+      .catch(() => {});
+  }, []);
+  async function toggleMemory() {
+    E("");
+    try {
+      if (!remember) await api("/support/session", {});
+      await api("/support/memory", { enabled: !remember }, "PUT");
+      Remember(!remember);
+    } catch (e) {
+      E((e as Error).message);
+    }
+  }
   useEffect(() => {
     function stop() {
       generation.current++;
       window.speechSynthesis?.cancel();
+      audio.current?.pause();
+      if (mediaJob.current)
+        void api(
+          "/support/media/" + mediaJob.current,
+          undefined,
+          "DELETE",
+        ).catch(() => {});
       M([]);
       T("");
     }
@@ -1181,6 +1264,42 @@ function Chat() {
       if (g === generation.current) B(false);
     }
   }
+  async function studioVoice() {
+    const last = [...messages].reverse().find((m) => m.role === "assistant");
+    if (!last || studioBusy) return;
+    StudioBusy(true);
+    E("");
+    const g = generation.current;
+    try {
+      await api("/support/session", {});
+      const job = await api("/support/media", { text: last.text });
+      mediaJob.current = job.id;
+      let state = job;
+      for (
+        let attempt = 0;
+        attempt < 60 && state.status !== "complete";
+        attempt++
+      ) {
+        if (g !== generation.current) return;
+        if (["failed", "canceled"].includes(state.status))
+          throw Error(
+            "Studio voice is unavailable. Use Read latest reply for browser speech.",
+          );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        state = await api("/support/media/" + job.id);
+      }
+      if (state.status !== "complete")
+        throw Error("Voice generation timed out. Text remains available.");
+      if (g !== generation.current) return;
+      const timing = await api("/support/media/" + job.id + "/results/1");
+      cues.current = timing.mouthCues || [];
+      Studio("/api/v1/support/media/" + job.id + "/results/0");
+    } catch (e) {
+      if (g === generation.current) E((e as Error).message);
+    } finally {
+      if (g === generation.current) StudioBusy(false);
+    }
+  }
   function speak() {
     const last = [...messages].reverse().find((m) => m.role === "assistant");
     if (!last) return;
@@ -1209,7 +1328,7 @@ function Chat() {
             service
           </small>
         </div>
-        <Badge>Memory off</Badge>
+        <Badge>{remember ? "24-hour memory on" : "Memory off"}</Badge>
       </div>
       <div className="chatbody" aria-live="polite">
         {!messages.length && (
@@ -1250,8 +1369,48 @@ function Chat() {
           <p>{DEMO ? "Preparing a demo response…" : "Preparing a reply…"}</p>
         )}
       </div>
-      {avatar && <Companion speaking={speaking} />}
+      {avatar && <Companion speaking={speaking} mouthShape={mouthShape} />}
+      {studio && (
+        <div className="panel">
+          <p>Studio voice · captions are in the conversation above.</p>
+          <audio
+            ref={audio}
+            controls
+            src={studio}
+            onPlay={() => S(true)}
+            onPause={() => {
+              S(false);
+              Mouth("X");
+            }}
+            onEnded={() => {
+              S(false);
+              Mouth("X");
+            }}
+            onTimeUpdate={(e) => {
+              const t = e.currentTarget.currentTime;
+              Mouth(
+                cues.current.find((c) => c.start <= t && c.end > t)?.value ||
+                  "",
+              );
+            }}
+          />
+        </div>
+      )}
       <div className="chattools">
+        <Button
+          secondary
+          disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
+          onClick={studioVoice}
+        >
+          {studioBusy
+            ? "Generating studio voice…"
+            : "Generate studio voice (ElevenLabs)"}
+        </Button>
+        <Button secondary onClick={toggleMemory}>
+          {remember
+            ? "Turn off & delete saved memory"
+            : "Allow 24-hour conversation memory"}
+        </Button>
         <Button secondary onClick={() => A(!avatar)}>
           {avatar ? "Text only" : "Enable 3D companion"}
         </Button>
@@ -1272,8 +1431,22 @@ function Chat() {
           secondary
           onClick={() => {
             generation.current++;
+            void api("/support/memory", undefined, "DELETE").catch(() =>
+              E("Could not delete saved memory. Please retry."),
+            );
+            Remember(false);
             M([]);
             B(false);
+            StudioBusy(false);
+            Studio("");
+            audio.current?.pause();
+            Mouth("");
+            if (mediaJob.current)
+              void api(
+                "/support/media/" + mediaJob.current,
+                undefined,
+                "DELETE",
+              ).catch(() => {});
             window.speechSynthesis?.cancel();
             S(false);
           }}
@@ -1313,14 +1486,18 @@ function Chat() {
         </button>
       </form>
       <p className="underform">
-        <LockKeyhole size={13} /> This conversation stays in memory. It is never
-        shared with responders.
+        <LockKeyhole size={13} />{" "}
+        {remember
+          ? "You allowed encrypted storage for 24 hours after your latest message. Turning memory off deletes the saved conversation."
+          : "Memory is off. Messages remain in this page until you leave. You can optionally allow encrypted 24-hour memory."}{" "}
+        Conversations are not shared with responders.
       </p>
     </section>
   );
 }
 function Rights() {
   const [q, Q] = useState("");
+  const [questions, Questions] = useState<string[]>([]);
   const [j, J] = useState("United States");
   const [state, SetState] = useState("");
   const [answer, A] = useState<any>(null);
@@ -1336,7 +1513,14 @@ function Rights() {
       </p>
       <div className="panel">
         <Field label="Jurisdiction">
-          <select value={j} onChange={(e) => J(e.target.value)}>
+          <select
+            value={j}
+            onChange={(e) => {
+              J(e.target.value);
+              Questions([]);
+              A(null);
+            }}
+          >
             <option>United States</option>
             <option>Other</option>
           </select>
@@ -1346,7 +1530,14 @@ function Rights() {
             label="State or territory (optional)"
             hint="National information is available without a location. State laws vary; coverage is limited to the sources shown."
           >
-            <select value={state} onChange={(e) => SetState(e.target.value)}>
+            <select
+              value={state}
+              onChange={(e) => {
+                SetState(e.target.value);
+                Questions([]);
+                A(null);
+              }}
+            >
               <option value="">National information / prefer not to say</option>
               {US_REGIONS.map((x) => (
                 <option key={x}>{x}</option>
@@ -1365,8 +1556,11 @@ function Rights() {
                   question: q,
                   jurisdiction: j,
                   state: state || null,
+                  previousQuestions: questions.slice(-4),
                 }),
               );
+              Questions([...questions, q].slice(-4));
+              Q("");
             } catch (e) {
               E((e as Error).message);
             } finally {
@@ -1374,6 +1568,23 @@ function Rights() {
             }
           }}
         >
+          {questions.length > 0 && (
+            <p className="notice">
+              You can ask a follow-up. Your last {questions.length} question
+              {questions.length === 1 ? "" : "s"} in this jurisdiction provide
+              context.{" "}
+              <button
+                type="button"
+                className="textbtn"
+                onClick={() => {
+                  Questions([]);
+                  A(null);
+                }}
+              >
+                Start a new topic
+              </button>
+            </p>
+          )}
           <Field label="What would you like to understand?">
             <textarea
               rows={4}
@@ -1893,6 +2104,7 @@ function CaseDetail({ id }: { id: string }) {
   const [assignment, A] = useState("");
   const [status, S] = useState("");
   const [related, D] = useState<any[]>([]);
+  const [analysis, Analysis] = useState<any>(null);
   const [info, I] = useState("");
   useEffect(() => {
     api("/cases/" + id)
@@ -1938,6 +2150,31 @@ function CaseDetail({ id }: { id: string }) {
               <div className="panel">
                 <h2>Their words</h2>
                 <p className="narrative">{c.narrative}</p>
+                <Button
+                  secondary
+                  onClick={() =>
+                    api("/cases/" + id + "/analysis")
+                      .then(Analysis)
+                      .catch((e) => E(e.message))
+                  }
+                >
+                  Analyze intake
+                </Button>
+                {analysis && (
+                  <div className="analysis-panel">
+                    <h3>Structured intake · review required</h3>
+                    <p>{analysis.summary}</p>
+                    <p>
+                      Location: {analysis.location} · {analysis.urgency}
+                    </p>
+                    <p>
+                      {analysis.reviewFlags.length
+                        ? analysis.reviewFlags.join(" · ")
+                        : "No keyword review flags. This does not establish safety."}
+                    </p>
+                    <small>{analysis.method}</small>
+                  </div>
+                )}
                 <small>
                   Support type: {c.category} · Created {date(c.created)}
                 </small>
@@ -2078,6 +2315,134 @@ function CaseDetail({ id }: { id: string }) {
     </>
   );
 }
+function FeedMonitor() {
+  const [data, Data] = useState<any>(null);
+  const [error, ErrorText] = useState("");
+  const [upload, UploadFile] = useState<File | null>(null);
+  const [busy, Busy] = useState(false);
+  async function refresh() {
+    try {
+      Data(await api("/monitor/feed"));
+    } catch (e) {
+      ErrorText((e as Error).message);
+    }
+  }
+  useEffect(() => {
+    void refresh();
+    const timer = setInterval(refresh, 10000);
+    return () => clearInterval(timer);
+  }, []);
+  if (!DEMO)
+    return (
+      <div className="panel monitor-panel">
+        <h2>Permitted image-feed monitoring</h2>
+        <p>
+          Your operator can configure a permitted HTTPS feed for #HerVoiceSignal
+          original PNGs. The scheduler checks configured feeds every 30 seconds.
+          HerVoice does not log into social accounts.
+        </p>
+        <p>{data?.items.length || 0} recent feed items</p>
+        {error && <p role="alert">{error}</p>}
+      </div>
+    );
+  return (
+    <div className="panel monitor-panel">
+      <div className="eyebrow">SIGNAL → VERIFIED CASE</div>
+      <h2>Image monitoring lab</h2>
+      <p>
+        Queue an original encoded PNG in the controlled{" "}
+        <strong>#HerVoiceSignal</strong> demo feed. The monitor scans every 30
+        seconds, verifies the message, and receives the matching request. No
+        social network is connected.
+      </p>
+      <Field label="PNG for demo feed">
+        <input
+          type="file"
+          accept="image/png"
+          onChange={(e) => UploadFile(e.target.files?.[0] || null)}
+        />
+      </Field>
+      <div className="chattools">
+        <Button
+          disabled={!upload || busy}
+          onClick={async () => {
+            Busy(true);
+            ErrorText("");
+            try {
+              const form = new FormData();
+              form.append("file", upload!);
+              const r = await fetch("/api/v1/monitor/feed", {
+                method: "POST",
+                body: form,
+              });
+              if (!r.ok)
+                throw Error(
+                  "Could not queue image. Use an original PNG under 8 MB.",
+                );
+              await refresh();
+            } catch (e) {
+              ErrorText((e as Error).message);
+            } finally {
+              Busy(false);
+            }
+          }}
+        >
+          Queue demo signal
+        </Button>
+        <Button
+          secondary
+          disabled={busy}
+          onClick={async () => {
+            Busy(true);
+            try {
+              await api("/monitor/scan", {});
+              await refresh();
+            } catch (e) {
+              ErrorText((e as Error).message);
+            } finally {
+              Busy(false);
+            }
+          }}
+        >
+          Scan now
+        </Button>
+      </div>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <div aria-live="polite">
+        {data?.items.map((item: any) => (
+          <div className="event" key={item.id}>
+            <span className="dot" />
+            <div>
+              <strong>
+                {item.status === "verified"
+                  ? "PNG verified · request received"
+                  : item.status === "rejected"
+                    ? "Image rejected · no request received"
+                    : "Queued · awaiting scan"}
+              </strong>
+              <p>{date(item.created)}</p>
+              {item.case_id && (
+                <Link href={"/responder/cases/" + item.case_id}>
+                  Open verified case <ArrowUpRight size={14} />
+                </Link>
+              )}
+            </div>
+          </div>
+        ))}
+        {data && !data.items.length && (
+          <p>
+            No signals queued yet. Start with an encoded PNG from a practice
+            request.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 function Intake() {
   const [file, F] = useState<File | null>(null);
   const [preview, P] = useState<any>(null);
@@ -2085,6 +2450,7 @@ function Intake() {
   const [busy, B] = useState(false);
   return (
     <>
+      <FeedMonitor />
       <div className="eyebrow">DISCREET IMAGE INTAKE</div>
       <h1>A message beneath the surface.</h1>
       <p>

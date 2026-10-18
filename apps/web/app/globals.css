@@ -2635,3 +2635,314 @@ footer .brand {
 .dialog-quick-exit:hover {
   background: #86292e;
 }
+
+/* HerVoice immersive care: high contrast, quiet motion, visible help. */
+:root {
+  --ink: #132a3d;
+  --accent: #095e63;
+}
+body {
+  background: #f4f8f9;
+}
+.signal-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 3%;
+  color: #27515b;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+}
+.signal-banner > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.signal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #087e78;
+  box-shadow: 0 0 0 5px #dcefe9;
+}
+.care-intro {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse at 73% 25%,
+    #19575d 0%,
+    #102f41 43%,
+    #101e35 85%
+  );
+  color: #f6ffff;
+  border-radius: 28px;
+  padding: 68px 5%;
+  gap: 34px;
+  box-shadow: 0 22px 65px #112e3d20;
+}
+.care-intro-main {
+  position: relative;
+  z-index: 2;
+}
+.care-intro .eyebrow {
+  color: #b2e5db;
+  letter-spacing: 0.12em;
+}
+.care-intro h1 {
+  color: #fff;
+  font-size: clamp(45px, 5.8vw, 80px);
+  line-height: 1.04;
+  letter-spacing: -0.055em;
+  max-width: 700px;
+}
+.care-intro-main > p {
+  color: #d0e1e7;
+  max-width: 500px;
+  font-size: 17px;
+  line-height: 1.8;
+}
+.care-intro .care-assurance {
+  color: #c1ddd9;
+}
+.care-intro .btn {
+  background: #c9f5d8;
+  color: #143b36;
+  border: 1px solid #c9f5d8;
+  box-shadow: 0 5px 24px #92edc01a;
+}
+.care-intro .btn.secondary {
+  color: white;
+  background: #ffffff0a;
+  border: 1px solid #ffffff70;
+}
+.care-intro .advocate-card {
+  position: relative;
+  z-index: 2;
+  background: #f7fcfb;
+  color: #203d48;
+  border: 1px solid #fff9;
+  box-shadow: 0 20px 65px #0003;
+  align-self: end;
+}
+.care-intro .advocate-card h2 {
+  color: #173b48;
+}
+.care-intro .advocate-card p,
+.care-intro .advocate-card small {
+  color: #3f5e68;
+}
+.care-intro .advocate-card .hotline-call {
+  background: #0a5e63;
+  color: #fff;
+  border-color: #0a5e63;
+}
+.care-intro .advocate-card .hotline-call small {
+  color: #e0f4f1;
+}
+.support-constellation {
+  position: absolute;
+  width: 440px;
+  height: 440px;
+  left: 42%;
+  top: -95px;
+  opacity: 0.38;
+  z-index: 0;
+  pointer-events: none;
+}
+.voice-core {
+  position: absolute;
+  inset: 135px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, #d3fff4, #65a9ab 45%, #194a64);
+  box-shadow:
+    inset -15px -14px 35px #0e2939,
+    0 0 90px #87e1d44d;
+  color: #102e3e;
+  animation: voice-float 9s ease-in-out infinite;
+}
+.orbit {
+  position: absolute;
+  inset: 35px;
+  border: 1px solid #b8f7ea50;
+  border-radius: 50%;
+  transform: rotate(-35deg) scaleX(1.05) scaleY(0.65);
+}
+.orbit-two {
+  inset: 5px;
+  transform: rotate(45deg) scaleY(0.75);
+  border-style: dashed;
+}
+.orbit-label {
+  position: absolute;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #c6f7ee77;
+  background: #123b4b;
+  color: #effffa;
+  font-size: 11px;
+}
+.label-one {
+  top: 92px;
+  left: 28px;
+}
+.label-two {
+  top: 250px;
+  right: 5px;
+}
+.label-three {
+  bottom: 48px;
+  left: 62px;
+}
+.journey-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 28px 0 10px;
+  border: 1px solid #cfdee3;
+  border-radius: 20px;
+  background: #fff;
+  overflow: hidden;
+}
+.journey-strip > div {
+  padding: 26px 28px;
+}
+.journey-strip > div + div {
+  border-left: 1px solid #dde7e9;
+}
+.journey-strip span {
+  display: block;
+  color: #496672;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.15em;
+  margin-bottom: 15px;
+}
+.journey-strip strong {
+  font-size: 19px;
+  letter-spacing: -0.03em;
+  color: #173d4b;
+}
+.journey-strip p {
+  font-size: 13px;
+  color: #4b626d;
+  line-height: 1.7;
+  margin: 10px 0 16px;
+}
+.journey-strip a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #075c61;
+  font-size: 12px;
+  font-weight: 750;
+}
+.choice {
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  border-radius: 20px !important;
+}
+.choice:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 35px #173b4812;
+}
+.chatpage {
+  background:
+    radial-gradient(ellipse at top right, #dcefe9, transparent 55%), #fff;
+  border-radius: 26px;
+  padding: 38px !important;
+  margin-top: 26px !important;
+  box-shadow: 0 15px 60px #173b4810;
+}
+.chatbar {
+  border-radius: 16px 16px 0 0 !important;
+  background: #153b4b !important;
+  color: #fff !important;
+}
+.chatbar small {
+  color: #d1e6e9 !important;
+}
+.chatbody {
+  background: linear-gradient(135deg, #f2f8f6, #f9fbfd);
+  border: 1px solid #dce8e8;
+  min-height: 330px;
+}
+.companion {
+  border-radius: 24px;
+  background: radial-gradient(ellipse, #183f50, #102336);
+  color: #e1f3f1;
+  overflow: hidden;
+}
+.companion small {
+  color: #d1e5e5 !important;
+}
+@keyframes voice-float {
+  50% {
+    transform: translateY(-12px) rotate(5deg);
+  }
+}
+@media (max-width: 760px) {
+  .signal-banner {
+    font-size: 9px;
+    padding: 16px 2px;
+  }
+  .signal-banner > span:last-child {
+    display: none;
+  }
+  .care-intro {
+    padding: 36px 24px;
+    border-radius: 22px;
+  }
+  .care-intro h1 {
+    font-size: 48px;
+  }
+  .care-intro-main > p {
+    font-size: 15px;
+  }
+  .support-constellation {
+    left: 25%;
+    top: -70px;
+    opacity: 0.18;
+  }
+  .journey-strip {
+    grid-template-columns: 1fr;
+  }
+  .journey-strip > div + div {
+    border-left: 0;
+    border-top: 1px solid #dde7e9;
+  }
+  .journey-strip > div {
+    padding: 23px;
+  }
+  .chatpage {
+    padding: 22px 16px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-core {
+    animation: none;
+  }
+  .choice {
+    transition: none;
+  }
+  .choice:hover {
+    transform: none;
+  }
+}
+.support-constellation .orbit-label {
+  display: none;
+}
+.analysis-panel {
+  margin-top: 20px;
+  padding: 20px;
+  background: #edf5f3;
+  border: 1px solid #c9ded9;
+  border-radius: 14px;
+}
+.monitor-panel {
+  border-top: 4px solid #12676c !important;
+  background: linear-gradient(135deg, #f0f8f5, #fff) !important;
+}

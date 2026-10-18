@@ -2,7 +2,13 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useRef, useState, Component, ReactNode } from "react";
 import * as THREE from "three";
-function Friend({ speaking }: { speaking: boolean }) {
+function Friend({
+  speaking,
+  mouthShape = "",
+}: {
+  speaking: boolean;
+  mouthShape?: string;
+}) {
   const group = useRef<THREE.Group>(null);
   const mouth = useRef<THREE.Mesh>(null);
   const eyes = useRef<THREE.Group>(null);
@@ -10,7 +16,21 @@ function Friend({ speaking }: { speaking: boolean }) {
     const t = clock.elapsedTime;
     if (group.current) group.current.rotation.y = Math.sin(t * 0.5) * 0.12;
     if (mouth.current)
-      mouth.current.scale.y = speaking ? 1 + Math.abs(Math.sin(t * 12)) * 3 : 1;
+      mouth.current.scale.y = mouthShape
+        ? {
+            A: 0.3,
+            B: 1.2,
+            C: 2,
+            D: 3,
+            E: 1.5,
+            F: 0.8,
+            G: 0.6,
+            H: 0.5,
+            X: 0.2,
+          }[mouthShape] || 1
+        : speaking
+          ? 1 + Math.abs(Math.sin(t * 12)) * 3
+          : 1;
     if (eyes.current) eyes.current.scale.y = t % 4 < 0.12 ? 0.1 : 1;
   });
   return (
@@ -51,7 +71,13 @@ class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
     );
   }
 }
-export default function Companion({ speaking }: { speaking: boolean }) {
+export default function Companion({
+  speaking,
+  mouthShape = "",
+}: {
+  speaking: boolean;
+  mouthShape?: string;
+}) {
   return (
     <Boundary>
       <div
@@ -69,11 +95,11 @@ export default function Companion({ speaking }: { speaking: boolean }) {
         >
           <ambientLight intensity={2} />
           <directionalLight position={[3, 4, 5]} intensity={3} />
-          <Friend speaking={speaking} />
+          <Friend speaking={speaking} mouthShape={mouthShape} />
         </Canvas>
         <small>
-          Original demo companion · mouth animation follows playback state, not
-          phonemes
+          Original 3D companion · timed mouth cues when available; playback
+          animation otherwise
         </small>
       </div>
     </Boundary>

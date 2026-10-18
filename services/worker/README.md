@@ -4,6 +4,6 @@
 
 Media processing uses unique temporary directories, `ffmpeg` discovered on PATH, and optional `RHUBARB_PATH`. Both subprocesses have 30-second timeouts, captured output, no shell interpolation and temporary-directory cleanup. Text is available independently of audio. ElevenLabs requires its own key, voice and model; it does not require an unrelated provider key.
 
-Demo uses explicit opt-in browser speech and an original code-generated R3F companion. Mouth motion follows playback state, not precise phoneme timing. Server voice jobs and Rhubarb cues are adapter paths and require live verification. This limitation is visible in the companion UI.
+Demo uses explicit opt-in browser speech and an original code-generated R3F companion. Browser speech uses playback-state mouth animation. The visible studio voice player consumes scoped ElevenLabs audio and timed Rhubarb mouth cues when configured, with a playback-state fallback when cues are unavailable. Live provider credentials are still required for integration verification.
 
 Live result storage requires a private S3 bucket and SSE; demo uses `.data/jobs`. Configure an S3 `jobs/` lifecycle rule to expire all objects after one day. API job reads expire after one hour. Never expose the local data directory or S3 bucket publicly.

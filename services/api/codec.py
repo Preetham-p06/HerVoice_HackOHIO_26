@@ -1,7 +1,7 @@
 """Versioned UTF-8 AES-GCM PNG transport. LSB is transport, not encryption."""
 
 import io, struct, hashlib, secrets
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageDraw, UnidentifiedImageError
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 MAGIC = b"HV01"
@@ -33,6 +33,40 @@ def cover(style=0):
         for x in range(640):
             f = (x / 640 + y / 480) / 2
             p[x, y] = tuple(min(255, int(v + f * 30)) for v in c)
+    draw = ImageDraw.Draw(im)
+    if style % 3 == 0:
+        # Original procedural botanical illustration; no external image assets.
+        for x, y, scale in [(175, 220, 1), (340, 155, 1.2), (475, 260, 0.8)]:
+            draw.line((x, y, x - 20, 480), fill="#466950", width=6)
+            draw.ellipse((x - 65, y + 70, x, y + 100), fill="#698b65")
+            for dx, dy in [(0, -36), (34, -12), (22, 26), (-22, 26), (-34, -12)]:
+                r = int(29 * scale)
+                draw.ellipse(
+                    (x + dx - r, y + dy - r, x + dx + r, y + dy + r), fill="#f4d8c7"
+                )
+            draw.ellipse((x - 17, y - 17, x + 17, y + 17), fill="#bc8c43")
+    elif style % 3 == 1:
+        draw.ellipse((435, 65, 525, 155), fill="#f6e3ae")
+        draw.polygon([(0, 350), (170, 145), (340, 350)], fill="#728c9e")
+        draw.polygon([(190, 370), (410, 170), (640, 365)], fill="#496b80")
+        draw.polygon(
+            [(0, 365), (220, 295), (460, 370), (640, 320), (640, 480), (0, 480)],
+            fill="#628d7e",
+        )
+        draw.polygon([(280, 350), (350, 350), (500, 480), (100, 480)], fill="#a9ccd1")
+    else:
+        draw.ellipse((120, 85, 520, 425), fill="#eee9dc", outline="#ad9983", width=5)
+        draw.ellipse((160, 120, 480, 390), fill="#ede0bd")
+        for x, y in [
+            (225, 200),
+            (320, 170),
+            (390, 240),
+            (290, 290),
+            (220, 310),
+            (360, 335),
+        ]:
+            draw.ellipse((x - 33, y - 25, x + 33, y + 25), fill="#749464")
+            draw.ellipse((x - 18, y - 18, x + 12, y + 15), fill="#bf5f49")
     out = io.BytesIO()
     im.save(out, format="PNG")
     return out.getvalue()
