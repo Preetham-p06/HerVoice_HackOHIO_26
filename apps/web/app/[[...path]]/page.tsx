@@ -7,6 +7,7 @@ import { useDiscreetSession } from "../../components/DiscreetSession";
 import dynamic from "next/dynamic";
 import HelpOptions from "../../components/HelpOptions";
 import VoiceInput from "../../components/VoiceInput";
+import CaseMap from "../../components/CaseMap";
 import { US_REGIONS } from "../../components/us-regions";
 const DevAudit = dynamic(() => import("../../components/DevAudit"), {
   ssr: false,
@@ -424,226 +425,41 @@ export default function App() {
 }
 function Home() {
   return (
-    <>
-      <section className="signal-banner" aria-label="Your space, your pace">
-        <span>
-          <span className="signal-dot" /> A SAFE PLACE TO BEGIN
-        </span>
-        <span>U.S. support · Your choices come first</span>
+    <div className="home-simple">
+      <section className="home-welcome">
+        <div className="eyebrow">YOUR VOICE. YOUR CHOICES.</div>
+        <h1>A little support.<br />A way forward.</h1>
+        <p>Share what’s happening, talk things through, or explore your options. Start wherever feels right.</p>
+        <div className="actions">
+          <button className="btn" onClick={() => window.dispatchEvent(new Event("hervoice-open-help"))}>
+            <HeartHandshake size={20} /> Get help now <ArrowRight size={18} />
+          </button>
+          <Link className="btn secondary" href="/help">Create a post <ArrowRight size={18} /></Link>
+        </div>
+        <small>No account needed · You choose what to share</small>
       </section>
-      <section className="care-intro">
-        <div className="care-intro-main">
-          <div className="eyebrow">
-            <ShieldCheck size={16} /> SUPPORT FOR WOMEN IN THE UNITED STATES
-          </div>
-          <h1>
-            Your voice.
-            <br />
-            Your way forward.
-          </h1>
-          <p>
-            You deserve to feel safe and heard. Talk to an advocate, explore
-            your options, or write down what’s happening. We’ll help you find a
-            place to start.
-          </p>
-          <div className="care-actions">
-            <button
-              className="btn"
-              onClick={() =>
-                window.dispatchEvent(new Event("hervoice-open-help"))
-              }
-            >
-              <HeartHandshake size={21} /> Get help now <ArrowRight size={20} />
-            </button>
-            <Link className="btn secondary" href="/resources">
-              Find U.S. resources <ArrowUpRight size={19} />
-            </Link>
-          </div>
-          <div className="care-assurance">
-            <span>
-              <Check size={17} /> No account needed
-            </span>
-            <span>
-              <LockKeyhole size={16} /> You choose what to share
-            </span>
-          </div>
-        </div>
-        <div className="support-constellation" aria-hidden="true">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="voice-core">
-            <HeartHandshake size={58} strokeWidth={1.3} />
-          </div>
-          <span className="orbit-label label-one">Be heard</span>
-          <span className="orbit-label label-two">Find your options</span>
-          <span className="orbit-label label-three">Take your next step</span>
-        </div>
-        <div className="advocate-card">
-          <div className="advocate-card-top">
-            <span className="care-symbol">
-              <Phone size={25} />
-            </span>
-            <span className="badge">REAL U.S. SUPPORT · 24/7</span>
-          </div>
-          <h2>
-            You don’t have to
-            <br />
-            figure this out alone.
-          </h2>
-          <p>
-            The National Domestic Violence Hotline can help you talk through
-            options and find support near you.
-          </p>
-          <a className="btn hotline-call" href="tel:18007997233">
-            <Phone size={21} />
-            <span>
-              Call 800-799-7233<small>National Domestic Violence Hotline</small>
-            </span>
-            <ArrowUpRight size={20} />
-          </a>
-          <a
-            className="advocate-chat"
-            href="https://www.thehotline.org/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <MessageCircle size={20} /> Prefer to type? Open advocate chat{" "}
-            <ArrowUpRight size={18} />
-          </a>
-          <small>
-            External service. Call or open chat only when it’s safe. HerVoice
-            does not monitor or receive these conversations.
-          </small>
-        </div>
-      </section>
-      <section className="journey-strip" aria-label="Ways to use HerVoice">
-        <div>
-          <span>01 / SHARE</span>
-          <strong>Your words, at your pace.</strong>
-          <p>
-            Write a request. Review every word. Choose a direct request or an
-            encrypted PNG.
-          </p>
-          <Link href="/help">
-            Create a request <ArrowUpRight size={16} />
+      <section className="home-paths" aria-label="Choose your next step">
+        {[
+          { icon: MessageCircle, title: "Talk to Maya", text: "A friendly AI companion, with text and optional voice.", href: "/support", label: "Open Therapy bot" },
+          { icon: BookOpen, title: "Understand your options", text: "Explore U.S. legal information and support resources.", href: "/rights", label: "Open Law bot" },
+          { icon: Phone, title: "Talk to an advocate", text: "Find real U.S. services and someone to talk to.", href: "/resources", label: "Find support near you" },
+        ].map((item) => (
+          <Link className="home-path" href={item.href} key={item.title}>
+            <span className="iconbox"><item.icon size={23} /></span>
+            <h2>{item.title}</h2><p>{item.text}</p>
+            <span className="cardlink">{item.label}<ArrowRight size={18} /></span>
           </Link>
-        </div>
-        <div>
-          <span>02 / CONNECT</span>
-          <strong>A little room to breathe.</strong>
-          <p>
-            Talk things through with an AI companion, with optional voice and a
-            illustrated companion.
-          </p>
-          <Link href="/support">
-            Enter your support space <ArrowUpRight size={16} />
-          </Link>
-        </div>
-        <div>
-          <span>03 / UNDERSTAND</span>
-          <strong>More clarity. More choice.</strong>
-          <p>
-            Explore reviewed U.S. resources and source-backed information for
-            your next step.
-          </p>
-          <Link href="/rights">
-            Explore your options <ArrowUpRight size={16} />
-          </Link>
-        </div>
+        ))}
       </section>
-      <section className="choices care-choices">
-        <div className="sectionHeading">
-          <div>
-            <div className="eyebrow">YOUR NEXT STEP</div>
-            <h2>How can we help you today?</h2>
-          </div>
-          <p>You’re in control of where to start.</p>
-        </div>
-        <div className="cardgrid">
-          {[
-            {
-              icon: HeartHandshake,
-              n: "01",
-              title: "Request support",
-              text: "Share your situation in your own words. Choose a safe way to be contacted.",
-              link: "/help",
-              cta: DEMO ? "Open practice request" : "Start a support request",
-            },
-            {
-              icon: MessageCircle,
-              n: "02",
-              title: "Talk things through",
-              text: "A quiet space to reflect with an AI companion. Text first, at your pace.",
-              link: "/support",
-              cta: "Open AI support chat",
-            },
-            {
-              icon: BookOpen,
-              n: "03",
-              title: "Understand your options",
-              text: "Find U.S. information, state resources, and a starting point for legal help.",
-              link: "/rights",
-              cta: "Explore your rights",
-            },
-          ].map((c) => (
-            <Link className="choice" key={c.n} href={c.link}>
-              <div className="choiceTop">
-                <span className="iconbox">
-                  <c.icon size={25} />
-                </span>
-                <span>{c.n}</span>
-              </div>
-              <h3>{c.title}</h3>
-              <p>{c.text}</p>
-              <span className="cardlink">
-                {c.cta}
-                <ArrowRight size={19} />
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <section className="care-emergency">
-        <ShieldCheck size={25} />
-        <div>
-          <h3>Need immediate help?</h3>
-          <p>
-            For immediate danger or a medical emergency in the U.S., call{" "}
-            <a href="tel:911">911</a> if it’s safe. HerVoice cannot dispatch
-            emergency help.
-          </p>
-        </div>
-        <a
-          className="btn secondary"
-          href="https://womenshealth.gov/relationships-and-safety/get-help"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Support information <ArrowUpRight size={17} />
-        </a>
-      </section>
-      <section className="reassure">
-        <span className="iconbox">
-          <LockKeyhole size={25} />
-        </span>
-        <div>
-          <h3>Your safety. Your choices.</h3>
-          <p>
-            Share as much or as little as you want. Back to reading is always at
-            the top.
-            <br />
-            Learn what this site saves and what leaving can’t erase.
-          </p>
-        </div>
-        <Link href="/privacy-safety">
-          Privacy & safety <ArrowRight size={18} />
-        </Link>
-      </section>
-      <ProcessOverview />
-      <section className="softnote">
-        <p>You deserve care, respect, and a choice in what comes next.</p>
-      </section>
-    </>
+      <div className="home-support-line">
+        <p>National Domestic Violence Hotline <a href="tel:18007997233">800-799-7233</a></p>
+        <Link href="/privacy-safety">Privacy & safety <ArrowUpRight size={16} /></Link>
+      </div>
+      <details className="home-how">
+        <summary>How discreet image sharing works</summary>
+        <ProcessOverview />
+      </details>
+    </div>
   );
 }
 function ProcessOverview() {
@@ -3046,11 +2862,12 @@ function CaseDetail({ id }: { id: string }) {
                   ? analysis.nature.join(" · ")
                   : c.category}
               </p>
-              <span
-                className={"severity-pill " + (c.urgent ? "high" : "normal")}
-              >
-                {c.urgent ? "Immediate danger reported" : "No urgency selected"}
+              <span className={"severity-pill " + (c.severity || (c.urgent ? "high" : "normal"))}>
+                {c.severity && c.severity !== "unreviewed"
+                  ? "Reviewed severity: " + (c.severity === "critical" ? "Very high" : c.severity)
+                  : "Severity not reviewed"}
               </span>
+              <small>{c.urgent ? "Immediate danger reported by the person" : "No immediate danger selected"}</small>
             </article>
             <article className="panel">
               <Search size={20} />
@@ -3074,7 +2891,7 @@ function CaseDetail({ id }: { id: string }) {
                   Open location in Google Maps ↗
                 </a>
               )}
-              <small>External map opens only when selected.</small>
+              <small>Reported location; accuracy has not been independently verified.</small>
             </article>
             <article className="panel">
               <LayoutDashboard size={20} />
@@ -3083,6 +2900,22 @@ function CaseDetail({ id }: { id: string }) {
               <p>{c.assignment || "No responder assigned"}</p>
               <small>Updated {date(c.updated || c.created)}</small>
             </article>
+          </div>
+          <div className="case-overview-row">
+            <CaseMap key={c.id + c.location} location={c.location} />
+            <section className="panel case-activity" aria-labelledby="recent-activities-title">
+              <h2 id="recent-activities-title">Recent Activities</h2>
+              {[...c.events].reverse().map((event) => (
+                <div className="event" key={event.id}>
+                  <span className="dot" />
+                  <div>
+                    <strong>{event.type.replaceAll("_", " ")}</strong>
+                    <p>{event.note}</p>
+                    <small>{event.actor} · {date(event.time)}</small>
+                  </div>
+                </div>
+              ))}
+            </section>
           </div>
           <dialog
             ref={matches}
@@ -3351,21 +3184,7 @@ function CaseDetail({ id }: { id: string }) {
                   </p>
                 )}
               </div>
-              <div className="panel">
-                <h2>Recent Activities</h2>
-                {[...c.events].reverse().map((e) => (
-                  <div className="event" key={e.id}>
-                    <span className="dot" />
-                    <div>
-                      <strong>{e.type.replaceAll("_", " ")}</strong>
-                      <p>{e.note}</p>
-                      <small>
-                        {e.actor} · {date(e.time)}
-                      </small>
-                    </div>
-                  </div>
-                ))}
-              </div>
+
             </div>
           </div>
         </>

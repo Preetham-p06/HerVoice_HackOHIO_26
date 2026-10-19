@@ -71,8 +71,19 @@ test("guest image request → verified intake → real case event", async ({
   await page.getByRole("button", { name: "Confirm intake" }).click();
   await expect(page).toHaveURL(new RegExp("/workspace/cases/" + cid));
   await expect(
-    page.getByText("39.9612, -82.9988", { exact: true }),
+    page.locator(".case-summary-grid").getByText("39.9612, -82.9988", { exact: true }),
   ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Recent Activities", exact: true })).toBeVisible();
+  await expect(page.locator('iframe[title="Google map of reported location"]')).toHaveCount(0);
+  // Verify the location-specific embed without sending case data to Google in CI.
+  await page.route("https://www.google.com/maps?**", (route) => route.fulfill({
+    contentType: "text/html",
+    body: "<html><body>Synthetic map fixture</body></html>",
+  }));
+  await page.getByRole("button", { name: "Load Google map", exact: true }).click();
+  await expect(page.locator('iframe[title="Google map of reported location"]')).toHaveAttribute(
+    "src", "https://www.google.com/maps?q=39.9612%2C%20-82.9988&z=14&output=embed",
+  );
   await page
     .getByLabel("Private case note")
     .fill("Synthetic test note: review completed.");
