@@ -2630,18 +2630,18 @@ function Queue({ overview }: { overview: boolean }) {
                 )
                 .map((c: Case, index: number) => (
                   <tr key={c.id}>
-                    <td>{(page - 1) * 6 + index + 1}</td>
-                    <td>
+                    <td data-label="S.No">{(page - 1) * 6 + index + 1}</td>
+                    <td data-label="Name">
                       <Link href={"/responder/cases/" + c.id}>
                         <strong>{c.alias || "Guest request"}</strong>
                         <small>{c.id.slice(0, 8)}</small>
                       </Link>
                     </td>
                     {visible("Location") && (
-                      <td>{c.location || "Not shared"}</td>
+                      <td data-label="Location">{c.location || "Not shared"}</td>
                     )}
                     {visible("Severity") && (
-                      <td>
+                      <td data-label="Severity">
                         <span
                           className={
                             "severity-pill " +
@@ -2658,13 +2658,13 @@ function Queue({ overview }: { overview: boolean }) {
                         </span>
                       </td>
                     )}
-                    {visible("Issue") && <td>{c.category}</td>}
+                    {visible("Issue") && <td data-label="Issue">{c.category}</td>}
                     {visible("Status") && (
-                      <td>
+                      <td data-label="Status">
                         <Badge>{c.status.replaceAll("_", " ")}</Badge>
                       </td>
                     )}
-                    <td>
+                    <td data-label="Actions">
                       <details className="row-actions">
                         <summary
                           aria-label={"Actions for " + (c.alias || "request")}

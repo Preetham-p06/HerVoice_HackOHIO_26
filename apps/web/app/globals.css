@@ -4501,3 +4501,19 @@ html[data-covering="true"] body::after {
   padding: 4px 0;
   scroll-margin-top: 80px;
 }
+@media (max-width: 600px) {
+  .live-table { overflow: visible; padding-bottom: 0; }
+  .live-table table { min-width: 0; white-space: normal; display: block; }
+  .live-table thead, .live-table tbody { display: block; }
+  .live-table thead tr { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+  .live-table th { padding: 4px 8px; border: 0; background: transparent; }
+  .live-table tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #d6e2eb; border-radius: 12px; padding: 8px; margin-bottom: 16px; background: white; }
+  .live-table td { display: block; padding: 12px; min-width: 0; overflow-wrap: anywhere; border: 0; }
+  .live-table td::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; color: #526976; margin-bottom: 6px; }
+  .live-table td[data-label="Name"] { grid-column: 1 / -1; grid-row: 1; border-bottom: 1px solid #e2e9ee; }
+  .live-table td[data-label="S.No"] { display: none; }
+  .live-table td[data-label="Actions"] { grid-column: 1 / -1; }
+  .live-table .row-actions summary { justify-content: start; padding-left: 8px; }
+  .live-table .row-actions > div { position: static; width: 100%; }
+  .live-table:has(.row-actions[open]) { padding-bottom: 0; }
+}
