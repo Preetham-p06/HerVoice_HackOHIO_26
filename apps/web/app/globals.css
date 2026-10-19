@@ -4826,7 +4826,7 @@ html[data-covering="true"] body::after {
 .edition-music .everyday-hero .feature-art { background: #ddd5c9; }
 .edition-books .everyday-hero .feature-art { background: #e6d5bb; }
 .studio-room .therapy-scene, .studio-room .therapy-scene.with-avatar {
-  background: radial-gradient(ellipse at 50% 43%, #fff9ec 0, transparent 56%), radial-gradient(ellipse at 12% 90%, #e6d7c1 0, transparent 58%), #e0e9e6;
+  background: linear-gradient(19deg, #ffcc7e 0%, #ddd6f3 100%);
   border-color: #d5dfda;
 }
 .studio-room .companion-name { background: #fffffff0; border-color: #dbe4df; box-shadow: 0 8px 30px #304d4410; }

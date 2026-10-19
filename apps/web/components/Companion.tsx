@@ -39,6 +39,6 @@ export default function Companion({ speaking, expression, busy, level, audio, cu
     </div>
     <div className="companion-caption" role="status"><span className="voice-bars" aria-hidden="true"><i/><i/><i/><i/></span>{speaking ? "Speaking" : busy ? "Taking a moment to reply" : "Ready when you are"}</div>
     <small className="portrait-note">AI companion · not a therapist</small>
-    {!still && <a className="avatar-credit" href="/models/maya-studio.LICENSE.txt" target="_blank" rel="noreferrer">Avatar credits</a>}
+    {!still && <a className="avatar-credit" href="/models/maya-reference.LICENSE.txt" target="_blank" rel="noreferrer">Avatar credits</a>}
   </div>;
 }

@@ -7,12 +7,10 @@ import {
   Bone,
   MathUtils,
   Mesh,
-  MeshStandardMaterial,
   Quaternion,
   Euler,
   Vector3,
 } from "three";
-import { styleMaya } from "./mayaStyling";
 import type { RefObject } from "react";
 export type AvatarMotion = {
   speaking: boolean;
@@ -31,7 +29,7 @@ function Character({
   cues,
   onReady,
 }: AvatarMotion & { onReady: () => void }) {
-  const { scene } = useGLTF("/models/maya-studio.glb");
+  const { scene } = useGLTF("/models/maya-reference.glb");
   const model = useMemo(() => clone(scene), [scene]);
   const rig = useMemo(() => {
     const faces: Mesh[] = [];
@@ -39,20 +37,7 @@ function Character({
       const mesh = node as Mesh;
       if (mesh.morphTargetInfluences) faces.push(mesh);
       if (node.name === "Wolf3D_Glasses") node.visible = false;
-      if (
-        node.name === "Wolf3D_Outfit_Top" ||
-        node.name === "Wolf3D_Outfit_Bottom"
-      ) {
-        const material = (mesh.material as MeshStandardMaterial).clone();
-        material.map = null;
-        material.color.set(
-          node.name === "Wolf3D_Outfit_Top" ? "#9dbdd8" : "#354354",
-        );
-        material.roughness = 0.86;
-        material.metalness = 0;
-        material.needsUpdate = true;
-        mesh.material = material;
-      }
+
     });
     // Relax the reference pose so the shoulders and arms rest naturally.
     for (const side of ["Left", "Right"]) {
@@ -66,7 +51,6 @@ function Character({
       world.premultiply(new Quaternion().setFromUnitVectors(direction, target));
       arm.quaternion.copy(arm.parent.getWorldQuaternion(new Quaternion()).invert().multiply(world));
     }
-    styleMaya(model as import("three").Group);
     const head = model.getObjectByName("Head") as Bone;
     const spine = model.getObjectByName("Spine1") as Bone;
     return {
@@ -154,8 +138,8 @@ function Character({
 function Camera({ close }: { close: boolean }) {
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 1.56, close ? 1.3 : 1.65);
-    camera.lookAt(0, close ? 1.62 : 1.48, 0);
+    camera.position.set(0, 1.56, close ? 1.25 : 1.5);
+    camera.lookAt(0, close ? 1.62 : 1.49, 0);
   }, [camera, close]);
   return null;
 }
@@ -166,7 +150,7 @@ export default function AvatarScene({
 }: AvatarMotion & { close: boolean; onReady: () => void }) {
   return (
     <Canvas
-      camera={{ position: [0, 1.52, 1.5], fov: 32 }}
+      camera={{ position: [0, 1.52, 1.5], fov: 30 }}
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: true }}
     >

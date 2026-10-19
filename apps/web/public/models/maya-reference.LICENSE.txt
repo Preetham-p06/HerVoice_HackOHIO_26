@@ -1,0 +1,15 @@
+Ready Player Me reference character
+
+Creator/copyright: Ready Player Me (Wolf3D), also identified in the GLB asset metadata.
+Source model: 6732180e5415f67e067badca.glb
+Source: https://github.com/annu12340/Haven/blob/main/ai-avatar/ai-avatar-frontend/public/models/6732180e5415f67e067badca.glb
+
+Ready Player Me permits non-commercial use of website-created avatars with attribution under Creative Commons 4.0:
+https://dev.to/readyplayerme/how-to-get-started-with-ready-player-me-unreal-engine-4-avatar-sdk-4846 (Using Ready Player Me avatars for commercial projects)
+CC BY-NC 4.0: https://creativecommons.org/licenses/by-nc/4.0/
+
+Included for the non-commercial HerVoice hackathon demo. This asset is separate from application code licensing. Commercial use requires appropriate rights or a replacement. No endorsement is implied.
+
+Changes: renamed file; original mesh and textures preserved. HerVoice supplies runtime idle motion, pose, expressions, lip movement, camera and lighting. No code or animation files from the source project are included.
+
+SHA-256: a9fba2a306434b82ea0269f57605c1d069217d335558efdf3ae2933417afbd97

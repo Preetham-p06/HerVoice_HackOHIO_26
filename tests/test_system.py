@@ -559,7 +559,7 @@ def test_bundled_companion_glb_has_rig_face_targets_and_attribution():
     import json
     import struct
     from pathlib import Path
-    data = Path("apps/web/public/models/maya-studio.glb").read_bytes()
+    data = Path("apps/web/public/models/maya-reference.glb").read_bytes()
     magic, version, length = struct.unpack_from("<III", data)
     assert magic == 0x46546C67 and version == 2 and length == len(data)
     json_length, chunk_type = struct.unpack_from("<II", data, 12)
@@ -570,7 +570,7 @@ def test_bundled_companion_glb_has_rig_face_targets_and_attribution():
     assert document["skins"] and document["images"]
     targets = {name for mesh in document["meshes"] for name in mesh.get("extras", {}).get("targetNames", [])}
     assert {"jawOpen", "mouthSmileLeft", "viseme_aa", "eyeBlinkLeft", "eyeBlinkRight"} <= targets
-    assert "CC BY-NC" in Path("apps/web/public/models/maya-studio.LICENSE.txt").read_text()
+    assert "CC BY-NC" in Path("apps/web/public/models/maya-reference.LICENSE.txt").read_text()
     assert all("uri" not in buffer for buffer in document["buffers"])
 
 
