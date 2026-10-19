@@ -4443,7 +4443,7 @@ html[data-covering="true"] body::after {
 }
 
 /* Clear entry page and case overview. */
-.home-simple { max-width: 1120px; margin: 0 auto; }
+.home-simple { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 .home-welcome { max-width: 760px; padding: 60px 0 44px; }
 .home-welcome h1 { font-size: clamp(38px, 5vw, 66px); line-height: 1.12; letter-spacing: -.045em; margin: 20px 0; }
 .home-welcome > p { font-size: 19px; line-height: 1.7; max-width: 600px; color: #4d6572; }
@@ -4488,3 +4488,5 @@ html[data-covering="true"] body::after {
   .home-path h2 { margin-top: 14px; }
   .case-activity { max-height: none; }
 }
+
+@media (max-width: 550px) { .home-simple { padding-inline: 18px; } }
