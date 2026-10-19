@@ -55,5 +55,5 @@ def test_companion_speech_uses_gentle_feminine_voice(monkeypatch):
         return b"synthetic-audio"
     monkeypatch.setattr(openai_provider, "request", request)
     assert openai_provider.speech("Synthetic welcome") == b"synthetic-audio"
-    assert seen["voice"] == "shimmer"
+    assert seen["voice"] == "nova"
     assert "feminine" in seen["instructions"]

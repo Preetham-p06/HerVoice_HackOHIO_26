@@ -20,4 +20,4 @@ Without consent, conversation text stays in the current page and is sent as cont
 
 Use synthetic messages to check text, voice, mouth movement during playback, pause/resume, still-image fallback, text-only mode, and memory consent/deletion. Test microphone denial and device/browser fallbacks. This prototype does not guarantee continuous availability, privacy on a monitored device, clinical efficacy, or emergency intervention.
 
-Maya uses the OpenAI `shimmer` voice by default, with calm feminine delivery instructions. The browser speech option selects a known feminine English device voice, or directs the user to AI speech if none is available. The rig uses relaxed shoulder/arm positioning and a modest resting smile.
+Maya uses the OpenAI `nova` voice by default, with calm feminine delivery instructions. The browser speech option selects a known feminine English device voice, or directs the user to AI speech if none is available. The rig uses relaxed shoulder/arm positioning and a modest resting smile.

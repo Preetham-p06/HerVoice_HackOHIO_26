@@ -11,7 +11,7 @@ One server-only `OPENAI_API_KEY` powers all configured AI features. Create a pro
 | Chat, rewriting, encouragement, legal synthesis | `TEXT_PROVIDER=openai`, `OPENAI_TEXT_MODEL=gpt-4.1-mini` |
 | Generated image covers | `IMAGE_PROVIDER=openai`, `OPENAI_IMAGE_MODEL=gpt-image-1.5` |
 | Voice input | `OPENAI_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe` (optional override; uses the same OpenAI key) |
-| Generated speech | `SPEECH_PROVIDER=openai`, `OPENAI_TTS_MODEL=gpt-4o-mini-tts`, `OPENAI_TTS_VOICE=shimmer` |
+| Generated speech | `SPEECH_PROVIDER=openai`, `OPENAI_TTS_MODEL=gpt-4o-mini-tts`, `OPENAI_TTS_VOICE=nova` |
 | Optional Atlas semantic vectors | `EMBEDDING_PROVIDER=openai`, `OPENAI_EMBEDDING_MODEL=text-embedding-3-small`; 768-dimensional index, `MATCH_PROVIDER=atlas` for live MongoDB, or `MATCH_PROVIDER=openai_local` for real embeddings with synthetic local storage |
 
 Text requests use the Responses API with strict structured output and `store=false`. Only the cover prompt is sent to image generation. Images are generated at 1024×1024, low quality, three choices per job. Voice is opt-in and generated audio is labelled AI. A generation attempt consumes the configured OpenAI project's API usage. The app reports provider errors rather than falling back to fabricated results. Gemini, Bedrock and ElevenLabs adapters remain available for explicit legacy configuration, but are not used when these OpenAI selectors are set. Restart the API after editing its environment.
