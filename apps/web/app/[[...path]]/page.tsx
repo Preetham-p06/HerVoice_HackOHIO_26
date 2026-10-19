@@ -766,18 +766,23 @@ Take it at your own pace.`),
   const working = busy || (job && ["queued", "running"].includes(job.status));
   return (
     <section className="page formpage post-flow">
-      <div className="eyebrow">CREATE A POST · ONE STEP AT A TIME</div>
-      <h1>Create a post.</h1>
-      <p className="intro">
-        Your words. An everyday image. A next step you choose.
-      </p>
-      <div className="journey-caption">
-        <ShieldCheck size={18} />
-        <span>01 Write your message</span>
-        <ArrowRight size={14} />
-        <span>02 Create an everyday image</span>
-        <ArrowRight size={14} />
-        <span>03 Choose how to share</span>
+      <div className="post-welcome">
+        <div>
+          <div className="eyebrow">CREATE A POST · AT YOUR OWN PACE</div>
+          <h1>A little support starts with your words.</h1>
+          <p className="intro">
+            Share what you feel ready to share. We’ll help you prepare a
+            message, choose an everyday image, and decide what happens next.
+          </p>
+        </div>
+        <div className="post-reassurance">
+          <HeartHandshake size={24} aria-hidden="true" />
+          <strong>You’re in control.</strong>
+          <p>
+            A few words are enough. You can review and edit your message before
+            choosing how to share it.
+          </p>
+        </div>
       </div>
       <ol className="steps">
         {[
@@ -817,7 +822,17 @@ Take it at your own pace.`),
             disabled={busy}
             aria-label="Situation and safe contact"
           >
-            <p>Share only what feels comfortable. A few words are enough.</p>
+            <p className="post-section-intro">
+              There is no right way to begin. Use your own words, and leave out
+              anything you prefer to keep to yourself.
+            </p>
+            <div className="post-section-label">
+              <span>01</span>
+              <div>
+                <h3>Your message</h3>
+                <p>Start with what you would like someone to understand.</p>
+              </div>
+            </div>
             <Field label="What’s on your mind?">
               <textarea
                 rows={5}
@@ -912,7 +927,17 @@ Take it at your own pace.`),
                 person.
               </p>
             )}
-            <Field label="Safe contact preference">
+            <div className="post-section-label post-contact-heading">
+              <span>02</span>
+              <div>
+                <h3>Contact &amp; location</h3>
+                <p>Choose whether and how someone may contact you.</p>
+              </div>
+            </div>
+            <Field
+              label="Safe contact preference"
+              hint="Choose a method only if it feels safe. You can leave this set to ‘Do not contact me’."
+            >
               <select
                 value={f.method}
                 onChange={(e) => {
@@ -1229,7 +1254,7 @@ Take it at your own pace.`),
         {step === 0 && (
           <div className="generate-brief">
             <div>
-              <strong>Turn a few words into your message.</strong>
+              <strong>A little help finding the words.</strong>
               <p>
                 AI expands the details you supplied. You review every word
                 before anything is shared.
