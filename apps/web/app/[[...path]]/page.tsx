@@ -3089,15 +3089,16 @@ function CaseDetail({ id }: { id: string }) {
             <div className="sectionHeading">
               <div>
                 <div className="eyebrow">COMPARE REPORTED DETAILS</div>
-                <h2 id="match-title">Reported person matches</h2>
-                <p>Compare descriptions across related cases.</p>
+                <h2 id="match-title">Reported person information</h2>
+                <p>Similar physical and behavioral descriptions from reported cases.</p>
               </div>
               <Button secondary onClick={() => matches.current?.close()}>
                 Close
               </Button>
             </div>{" "}
             <div className="panel">
-              <h3>Search settings</h3>
+              <details className="match-settings">
+                <summary>Adjust result count and similarity threshold</summary>
               <div className="match-filters">
                 <Field label="Maximum related reports">
                   <select
@@ -3135,6 +3136,7 @@ function CaseDetail({ id }: { id: string }) {
                   ? "Finding related reports…"
                   : "Find related reports"}
               </Button>
+              </details>
               {error && (
                 <p className="error" role="alert">
                   {error}
@@ -3148,11 +3150,14 @@ function CaseDetail({ id }: { id: string }) {
               {searched && !matchingBusy && related.length === 0 && (
                 <p>No reports met this similarity threshold.</p>
               )}
+              {searched && !matchingBusy && related.length > 0 && (
+                <p role="status" className="match-summary">{related.length} results · Highest similarity first. Scores compare descriptions, not identity.</p>
+              )}
               {!matchingBusy &&
                 related.map((r, index) => (
                   <article className="related match-result" key={r.id}>
                     <div className="match-result-heading">
-                      <h3>Match {index + 1}</h3>
+                      <h3>{index === 0 ? "Closest description" : `Similar description ${index + 1}`}</h3>
                       <span className="match-score">
                         {(r.score * 100).toFixed(1)}% <small>similarity</small>
                       </span>
@@ -3170,7 +3175,7 @@ function CaseDetail({ id }: { id: string }) {
                         </dd>
                       </div>
                       <div>
-                        <dt>Person details</dt>
+                        <dt>Reported description</dt>
                         <dd>
                           {r.personDescription ||
                             "No person description supplied. This comparison uses the report narrative."}

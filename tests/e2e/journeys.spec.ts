@@ -379,10 +379,29 @@ test("dashboard columns, row actions, related dialog and companion zoom", async 
   await expect(
     page.getByRole("heading", { name: "Preferred way of contact" }),
   ).toBeVisible();
+  const initialMatches = page.waitForResponse(response => response.url().endsWith("/related") && response.request().method() === "POST");
   await page.getByRole("button", { name: "Find Match", exact: true }).click();
   await expect(
-    page.getByRole("dialog", { name: "Reported person matches" }),
+    page.getByRole("dialog", { name: "Reported person information" }),
   ).toBeVisible();
+  const initialResponse = await initialMatches;
+  expect(initialResponse.ok()).toBeTruthy();
+  const initialRows = await initialResponse.json();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.locator(".match-result")).toHaveCount(initialRows.length);
+  await dialog.locator(".match-settings summary").click();
+  await dialog.getByLabel("Maximum related reports").selectOption("8");
+  await dialog.getByLabel("Minimum cosine similarity").selectOption("0.9");
+  const filteredMatches = page.waitForResponse(response => response.url().endsWith("/related") && response.request().method() === "POST");
+  await dialog.getByRole("button", { name: "Find related reports", exact: true }).click();
+  const filteredResponse = await filteredMatches;
+  expect(filteredResponse.ok()).toBeTruthy();
+  expect(filteredResponse.request().postDataJSON()).toEqual({ limit: 8, threshold: 0.9 });
+  const filteredRows = await filteredResponse.json();
+  expect(filteredRows.length).toBeLessThanOrEqual(8);
+  expect(filteredRows.every((row: { score: number }) => row.score >= 0.9)).toBeTruthy();
+  await expect(dialog.locator(".match-result")).toHaveCount(filteredRows.length);
+  if (!filteredRows.length) await expect(dialog.getByText("No reports met this similarity threshold.")).toBeVisible();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Close", exact: true })

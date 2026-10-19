@@ -4908,3 +4908,10 @@ html[data-covering="true"] body::after {
     padding: 20px;
   }
 }
+
+/* Keep matching results central, with optional search controls. */
+.match-settings summary { cursor: pointer; padding: 14px 0; font-weight: 600; }
+.match-settings[open] summary { margin-bottom: 12px; }
+.match-summary { margin: 20px 0 4px; color: #465b69; }
+.match-facts dd small { display: block; color: #526575; }
+.match-dialog .match-result { box-shadow: none; }
