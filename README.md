@@ -33,7 +33,7 @@ Compose binds both exposed ports to localhost and persists demo data in a named 
 5. Change status, assignment or notes. Activity comes from stored events. Closing requires a reason; stale updates are rejected.
 6. Explore support chat, opt-in voice and the bundled rigged 3D companion. Nothing starts playing automatically. **Know your rights** defaults to United States; try “protection order forms” and optionally choose Ohio. Unsupported questions and jurisdictions abstain.
 
-The initial dataset contains 16 synthetic cases across two organizations. No source-repository personal data, avatars, secrets or history were copied.
+The initial dataset contains 16 synthetic cases across two organizations. No personal data, secrets or history were imported from the reference project. The studio uses a separately attributed, non-commercial demo character; see [companion details](docs/companion.md) and its asset license.
 
 ## Structure
 

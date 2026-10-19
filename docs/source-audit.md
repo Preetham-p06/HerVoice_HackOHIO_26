@@ -35,3 +35,7 @@ India Code PDF downloads timed out in this development environment. An official 
 ## Boundaries
 
 No live case data was accessed. No external dispatch, reports, social publication or public deployment was performed. External providers are code adapters with documented official contracts; live calls were not made with paid credentials. See feature-parity.md for capabilities still unavailable.
+
+## Subsequent companion studio redesign
+
+The reference-project audit above is historical. The current studio replaces the initial procedural character with a Ready Player Me example character distributed through met4citizen/TalkingHead under CC BY-NC 4.0. This separately sourced asset is attributed in `apps/web/public/models/maya-studio.LICENSE.txt`, including the asset-specific licensing statement, public-redistribution terms, source and change notice. It is included for the non-commercial hackathon demo; it is not original HerVoice character artwork and is not imported from the reference project. Current interaction, voice and consent behavior is documented in `companion.md`.

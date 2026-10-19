@@ -34,7 +34,7 @@ LSB transport is not encryption; AES-GCM is server-readable encryption. No end-t
 
 `jobs.py` uses a bounded two-thread executor, durable metadata, random IDs, owner scope, status/progress, cancellation, one bounded attempt, expiry, temporary-directory cleanup and sanitized failures. Nova Canvas uses Bedrock InvokeModel; S3 uses private objects with SSE and authenticated API reads. Optional media processing discovers FFmpeg on PATH and uses configured Rhubarb with unique directories and timeouts. A dedicated external queue/worker is an operational extension; interrupted jobs do not auto-recover.
 
-Current speech jobs are API adapters. The visible player uses explicitly initiated browser speech and an original code-generated R3F companion with neutral fallback; it does not claim exact viseme alignment. WebGL is lazy and an error boundary preserves text fallback. Persistent memory and microphone capture are not enabled.
+Speech jobs use private, scoped API adapters, with OpenAI voice configured for the current demo and opt-in browser speech as a fallback. The studio renders a separately licensed rigged GLB character with approximate audio-driven mouth motion and optional Rhubarb visemes; it does not claim exact default phoneme alignment. WebGL is lazy and an error boundary preserves text/still-image fallback. Microphone input starts only after a deliberate click and creates an editable transcript. Encrypted 24-hour conversation memory is off by default and requires explicit consent; deletion invalidates late in-flight writes. See `companion.md` for current behavior and asset attribution.
 
 Provider contracts checked against official documentation on 18 October 2026:
 

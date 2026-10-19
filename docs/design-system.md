@@ -16,7 +16,7 @@ A U.S.-first care-service interface with blue-and-white surfaces, direct help ch
 | Body | System sans serif, 16px, 1.65 line height |
 | Display | Local system sans serif; no external font requests |
 
-Shared Button, Field, Badge, public/staff shells, table, event row, source card, error/notice, progress steps and composer establish consistency. Lucide is the single icon family. Botanical artwork is original CSS; the R3F companion uses original code geometry.
+Shared Button, Field, Badge, public/staff shells, table, event row, source card, error/notice, progress steps and composer establish consistency. Lucide is the single icon family. Botanical artwork is original CSS; the R3F studio uses an attributed rigged character, with its separate asset license documented in `companion.md`.
 
 Public maximum width is 1120px; requests 760px including padding; chats 840px. Below 650px, task cards and details stack, staff navigation becomes a compact horizontal group, and tables scroll inside their own region. Touch controls generally use 44px minimum targets, with visible focus rings, skip navigation, associated field labels and status announcements. Wizard headings receive focus when advancing. Reduced motion disables transitions and continuous 3D frames.
 
