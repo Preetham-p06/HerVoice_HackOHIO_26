@@ -4534,3 +4534,126 @@ html[data-covering="true"] body::after {
 .animated-companion .avatar-canvas { height: 100%; }
 
 .therapy-scene.with-avatar .chatbody { overflow-y: auto; overscroll-behavior: contain; }
+
+/* Avatar-first conversation studio. */
+.private-shell:has(.studio-room) .help-launcher { display: none; }
+.studio-room.page { max-width: 1560px; padding: 22px 24px 30px !important; margin: 0 auto !important; border-radius: 0; box-shadow: none; background: transparent; }
+.room-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
+.studio-room .room-heading h1 { margin:0; font-size:25px; letter-spacing:-.025em; }
+.room-heading p { margin:3px 0 0; color:#60717d; font-size:14px; }
+.room-heading .btn { padding:10px 14px; font-size:12px; }
+.studio-room .therapy-scene, .studio-room .therapy-scene.with-avatar { display:block; position:relative; height: min(820px, calc(100dvh - 210px)); min-height:640px; border-radius:24px; background:radial-gradient(ellipse at 24% 82%,#ffdea8 0,transparent 52%),radial-gradient(ellipse at 95% 10%,#dddff8 0,transparent 64%),#f3ded2; border:1px solid #e0d9d4; overflow:hidden; isolation:isolate; }
+.studio-room .therapy-scene .portrait-companion { position:absolute; inset:0; width:100%; height:100%; min-height:0; border-radius:0; }
+.studio-room .avatar-canvas { height:100%; width:100%; }
+.studio-room .companion-name { left:28px; top:26px; padding:16px 20px; background:#fffaf2cf; border:1px solid #fff8; border-radius:16px; box-shadow:0 8px 40px #67453909; max-width:240px; }
+.studio-room .companion-name .eyebrow { font-size:10px; letter-spacing:.14em; color:#637078; }
+.studio-room .companion-name strong { font-size:27px; margin-top:5px; color:#263e4c; }
+.studio-room .companion-name small { color:#5e646a !important; font-size:12px; }
+.studio-room .avatar-controls { right:24px; top:96px; }
+.studio-room .avatar-controls button { background:#fffaf0d9; backdrop-filter:blur(14px); box-shadow:0 4px 18px #513e4e08; }
+.studio-room .portrait-halo { display:none; }
+.studio-room .companion-caption { left:28px; top:167px; bottom:auto; transform:none; padding:7px 12px; font-size:12px; box-shadow:none; background:#fffc; border-color:#fff9; }
+.studio-room .portrait-note { width:auto; bottom:14px; left:24px; padding:0; font-size:10px; background:none; color:#4c505b !important; }
+.avatar-credit { position:absolute; z-index:4; bottom:14px; right:24px; font-size:10px; text-decoration:underline; color:#59515d; }
+.studio-room .therapy-scene .chatbody { position:absolute; z-index:6; top:85px; right:80px; left:auto; bottom:225px; width:300px; min-height:0; max-height:none; margin:0; padding:18px; border:1px solid #ffffffb3; border-radius:18px; background:#fffc; backdrop-filter:blur(18px); box-shadow:0 8px 36px #67453910; overflow-y:auto; overscroll-behavior:contain; }
+.studio-room .chatbody[hidden] { display:none; }
+.thread-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; color:#455965; font-size:12px; }
+.thread-heading button { display:grid; place-items:center; background:transparent; border:0; width:32px; height:32px; color:#546772; cursor:pointer; }
+.studio-room .chatbody .message { padding:13px; margin-bottom:12px; max-width:100%; font-size:13px; border-radius:12px; }
+.studio-room .chatbody .message p { line-height:1.65; }
+.studio-room .chatbody .message small { font-size:10px; }
+.room-settings { position:absolute; top:26px; right:24px; z-index:12; }
+.room-settings > summary { cursor:pointer; padding:12px 16px; border:1px solid #fff9; background:#fffc; border-radius:12px; color:#405461; font-size:12px; font-weight:700; }
+.room-settings[open] { width:min(320px,calc(100% - 48px)); border-radius:14px; background:#fffffff5; box-shadow:0 12px 50px #40334325; }
+.room-settings .chattools { display:flex; flex-direction:column; gap:8px; margin:0; padding:14px; }
+.room-settings .chattools .btn { width:100%; padding:10px 12px; font-size:12px; justify-content:flex-start; }
+.room-dock { position:absolute; z-index:9; left:50%; bottom:38px; transform:translateX(-50%); width:min(880px,calc(100% - 120px)); padding:14px; border-radius:20px; background:#fffaf0b3; border:1px solid #fff9; backdrop-filter:blur(24px); box-shadow:0 14px 50px #66555517; }
+.room-compose-row { display:flex; gap:10px; align-items:flex-start; }
+.studio-room .composer { display:flex; align-items:center; gap:12px; flex:1; margin:0; padding:10px 12px 10px 18px; border:1px solid #fff; border-radius:14px; background:#fffefbf0; box-shadow:none; }
+.studio-room .composer textarea { height:44px; min-height:44px; resize:none; padding:9px 0; border:0; background:transparent; font-size:15px; }
+.studio-room .composer button { display:grid; place-items:center; width:46px; height:46px; min-width:46px; border-radius:12px; padding:0; background:#275b79; color:white; }
+.studio-room .voice-input.compact { margin:0; padding:0; border:0; background:transparent; }
+.voice-input.compact .actions > button:first-child { width:66px; height:66px; padding:0; display:grid; place-items:center; border:1px solid #fff; background:#fffefbed; border-radius:14px; color:#275b79; }
+.voice-input.compact small { position:absolute; top:-45px; right:0; padding:8px 12px; border-radius:10px; background:#fff; max-width:350px; font-size:11px; }
+.voice-input.compact:not(:has(.actions > button:nth-child(2))) small { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); padding:0; }
+.voice-input.compact .actions { margin:0; flex-direction:column; }
+.voice-input.compact .actions > button:nth-child(2) { position:absolute; right:0; top:-45px; padding:7px 10px; font-size:11px; }
+.room-quick-controls { display:flex; justify-content:center; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.room-quick-controls .btn { min-height:32px; padding:6px 10px; border:0; border-radius:8px; background:transparent; color:#344f60; font-size:11px; }
+.room-quick-controls .btn:hover { background:#fff9; }
+.room-quick-controls .btn[aria-pressed="true"] { background:#ffffffa8; }
+.room-voice-disclosure { display:block; text-align:center; margin-top:6px; color:#5c6069; font-size:10px; line-height:1.5; }
+.room-audio { display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap; padding:12px 0; }
+.room-audio p { margin:0; font-size:12px; color:#526976; }
+.room-audio audio { height:36px; max-width:100%; }
+.room-prompts { margin:14px 0; font-size:13px; color:#526976; }
+.room-prompts summary { cursor:pointer; padding:10px 0; }
+.studio-room .underform { font-size:11px; max-width:850px; margin-top:14px; }
+.studio-room:fullscreen { overflow:auto; background:#f6f5f2; }
+.studio-room:fullscreen .therapy-scene { height:calc(100dvh - 115px); min-height:500px; }
+.studio-room .therapy-scene:not(.with-avatar) .chatbody { inset:20px 24px 225px; width:auto; display:block; }
+@media (max-width:900px) {
+  .studio-room.page { padding:16px 12px 24px !important; }
+  .studio-room .therapy-scene .chatbody { top:auto; right:18px; left:18px; bottom:225px; width:auto; height:155px; border-radius:14px; padding:12px; }
+  .studio-room .companion-name { left:18px; top:18px; padding:12px 16px; }
+  .studio-room .companion-caption { left:18px; top:147px; }
+  .room-settings { right:18px; top:18px; }
+  .room-dock { width:calc(100% - 36px); bottom:36px; padding:10px; }
+  .room-heading { align-items:flex-start; }
+  .room-heading .actions { justify-content:flex-end; }
+  .room-heading .badge { display:none; }
+  .studio-room .room-heading h1 { font-size:22px; }
+}
+@media (max-width:550px) {
+  .studio-room .therapy-scene, .studio-room .therapy-scene.with-avatar { min-height:740px; }
+  .studio-room .companion-name { top:18px; max-width:180px; }
+  .studio-room .companion-name strong { font-size:24px; }
+  .room-settings > summary { padding:10px; max-width:125px; font-size:11px; }
+  .studio-room .avatar-controls { right:18px; top:80px; }
+  .room-dock { width:calc(100% - 24px); bottom:37px; }
+  .room-quick-controls { gap:2px; }
+  .room-quick-controls .btn { font-size:10px; padding:5px 7px; }
+  .studio-room .composer { gap:6px; padding-left:12px; }
+  .voice-input.compact .actions > button:first-child { width:52px; }
+  .studio-room .therapy-scene .chatbody { bottom:230px; }
+  .avatar-credit { right:15px; font-size:9px; }
+  .studio-room .portrait-note { left:15px; font-size:9px; }
+}
+.room-quick-controls .btn { min-height:44px; font-size:12px; }
+.thread-heading button { width:44px; height:44px; }
+@media (max-width:900px) { .room-heading .badge { display:inline-flex; font-size:10px; } }
+@media (max-width:550px) {
+ .studio-room .therapy-scene, .studio-room .therapy-scene.with-avatar { min-height:620px; }
+ .room-quick-controls .btn { min-height:40px; font-size:11px; }
+ .room-voice-disclosure { font-size:10px; }
+ .studio-room .therapy-scene .chatbody { bottom:250px; height:130px; }
+}
+.room-voice-disclosure { font-size:11px; }
+@media (max-width:550px) { .room-quick-controls .btn { min-height:44px; } }
+.studio-room.expanded-room { position:fixed; inset:0; z-index:1200; width:100%; max-width:none; height:100dvh; overflow:auto; background:#f8f5f0; padding:14px 18px !important; }
+.studio-room.expanded-room .room-heading { margin-bottom:12px; }
+.studio-room.expanded-room .therapy-scene { height:calc(100dvh - 105px); min-height:500px; }
+@media (max-width:550px) {
+ .studio-room.expanded-room { padding:10px !important; }
+ .studio-room.expanded-room .room-heading { gap:8px; }
+ .studio-room.expanded-room .room-heading h1 { font-size:18px; }
+ .studio-room.expanded-room .room-heading p { display:none; }
+ .studio-room.expanded-room .room-heading .badge { display:none; }
+ .studio-room.expanded-room .therapy-scene { height:calc(100dvh - 110px); min-height:500px; }
+}
+.room-settings[open] { max-height:calc(100% - 52px); overflow:auto; }
+.room-settings .room-audio, .room-settings > .panel, .room-settings .room-prompts, .room-settings .underform { margin:0; padding:12px 14px; }
+.room-settings .room-audio audio { width:100%; }
+.room-settings .room-audio p { font-size:11px; }
+.room-settings .underform { font-size:11px; line-height:1.6; }
+.room-settings .support-starters { margin:8px 0; }
+.room-settings .support-starters .btn { width:100%; }
+.room-dock .notice, .room-dock .error { margin:6px 0 0; padding:4px 8px; font-size:11px; line-height:1.5; max-height:60px; overflow:auto; }
+.studio-room.expanded-room { overflow:hidden; }
+@media (max-width:550px) {
+ .studio-room.expanded-room .room-heading > div:first-child { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+ .studio-room.expanded-room .room-heading { justify-content:flex-end; height:52px; margin-bottom:10px; }
+ .studio-room.expanded-room .room-heading .badge { display:inline-flex; padding:5px; font-size:9px; }
+ .studio-room.expanded-room .therapy-scene { height:calc(100dvh - 82px); }
+}
+.room-settings > summary { position:sticky; top:0; z-index:2; }

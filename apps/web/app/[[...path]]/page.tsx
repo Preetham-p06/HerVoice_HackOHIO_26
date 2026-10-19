@@ -1606,6 +1606,26 @@ function Chat() {
   const [busy, B] = useState(false);
   const [error, E] = useState("");
   const [avatar, A] = useState(true);
+  const [transcript, Transcript] = useState(true);
+  const room = useRef<HTMLElement>(null);
+  const [fullRoom, FullRoom] = useState(false);
+  useEffect(() => {
+    if (!fullRoom) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    room.current?.querySelector<HTMLButtonElement>("[data-expand-toggle]")?.focus();
+    function key(event: KeyboardEvent) {
+      if (event.key === "Escape") { FullRoom(false); return; }
+      if (event.key !== "Tab") return;
+      const items = Array.from(room.current?.querySelectorAll<HTMLElement>('a[href],button,textarea,input,select,summary,[tabindex="0"]') || []).filter(element => element.getClientRects().length && !element.hasAttribute("disabled"));
+      const first = items[0], last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    }
+    document.addEventListener("keydown", key);
+    return () => { document.body.style.overflow = overflow; document.removeEventListener("keydown", key); if (previous?.isConnected) previous.focus(); };
+  }, [fullRoom]);
   const [speaking, S] = useState(false);
   const [mouthShape, Mouth] = useState("");
   const [expression, Expression] = useState("neutral");
@@ -1683,6 +1703,8 @@ function Chat() {
       if (!remember) await api("/support/session", {});
       await api("/support/memory", { enabled: !remember }, "PUT");
       Remember(!remember);
+      const controls = room.current?.querySelector<HTMLDetailsElement>(".room-settings");
+      if (controls) controls.open = false;
     } catch (e) {
       E((e as Error).message);
     }
@@ -1822,25 +1844,18 @@ function Chat() {
     window.speechSynthesis?.speak(s);
   }
   return (
-    <section className="page chatpage">
-      <div className="eyebrow">THERAPY BOT · A LITTLE SPACE TO BE HEARD</div>
-      <h1>Let’s talk things through.</h1>
-      <p className="intro">No perfect words needed. Start wherever you are.</p>
-      <div className="chatbar">
-        <span className="avatarSmall">
-          <Leaf size={20} />
-        </span>
-        <div>
-          <strong>Your support space</strong>
-          <small>
-            AI {liveAI ? "" : "demo "}companion · not a therapist or emergency
-            service
-          </small>
+    <section ref={room} className={"page chatpage studio-room" + (fullRoom ? " expanded-room" : "")} role={fullRoom ? "dialog" : undefined} aria-modal={fullRoom ? true : undefined} aria-labelledby="maya-room-title">
+      <div className="room-heading">
+        <div><h1 id="maya-room-title">Your space with Maya.</h1><p>AI support, at your pace.</p></div>
+        <div className="actions">
+          {fullRoom && <button className="btn" onClick={() => window.dispatchEvent(new Event("hervoice-cover"))}>Back to reading</button>}
+          <Badge>{remember ? "24-hour memory on" : "Memory off"}</Badge>
+          <button data-expand-toggle className="btn secondary" onClick={() => FullRoom(!fullRoom)}>{fullRoom ? "Exit expanded view" : "Expand companion"}</button>
         </div>
-        <Badge>{remember ? "24-hour memory on" : "Memory off"}</Badge>
       </div>
-      <div className={"therapy-scene" + (avatar ? " with-avatar" : "")}>
-        <div className="chatbody" aria-live="polite">
+      <div className={"therapy-scene" + (avatar ? " with-avatar" : "") + (!transcript ? " thread-hidden" : "")}>
+        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} expression={expression} busy={busy} level={voiceLevel} audio={audio} cues={cues} />}        <div className="chatbody" aria-live="polite" hidden={avatar && (!transcript || (!messages.length && !busy))}>
+          <div className="thread-heading"><strong>Conversation</strong><button type="button" onClick={() => Transcript(false)} aria-label="Close conversation panel"><X size={17}/></button></div>
           {!messages.length && (
             <div className="welcome">
               <span className="iconbox">
@@ -1883,11 +1898,91 @@ function Chat() {
           )}
           <div ref={chatEnd} />
         </div>
-        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} expression={expression} busy={busy} level={voiceLevel} audio={audio} cues={cues} />}
+
+        <details className="room-settings">
+          <summary>Conversation settings</summary>
+      <div className="chattools">
+        {!speaking && (<Button
+          secondary
+          disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
+          onClick={() => {
+            if (speaking) {
+              window.speechSynthesis?.cancel();
+              audio.current?.pause();
+              S(false);
+            } else speak();
+          }}
+        >
+          {speaking ? <VolumeX size={16} /> : <Volume2 size={16} />}{" "}
+          {speaking ? "Stop voice" : "Read latest reply"}
+        </Button>)}
+        <Button
+          secondary
+          disabled={busy}
+          onClick={async () => {
+            B(true);
+            E("");
+            try {
+              const d = await api("/encouragement", {
+                text: text.trim() || "A quiet moment of encouragement",
+              });
+              Verse(d.text);
+            } catch (e) {
+              E((e as Error).message);
+            } finally {
+              B(false);
+            }
+          }}
+        >
+          A few words of encouragement
+        </Button>
+        <Button secondary onClick={toggleMemory}>
+          {remember
+            ? "Turn off & delete saved memory"
+            : "Allow 24-hour conversation memory"}
+        </Button>
+        <Button secondary onClick={() => { A(!avatar); const controls=room.current?.querySelector<HTMLDetailsElement>(".room-settings"); if(controls) controls.open=false; }}>
+          {avatar ? "Text only" : "Show Maya"}
+        </Button>
+        <Button
+          secondary
+          onClick={async () => {
+            if (remember) {
+              try { await api("/support/memory", undefined, "DELETE"); }
+              catch { E("Could not delete saved memory. Please retry."); const controls=room.current?.querySelector<HTMLDetailsElement>(".room-settings"); if(controls) controls.open=false; return; }
+            }
+            generation.current++;
+            window.dispatchEvent(new Event("hervoice-reset"));
+            playRequested.current = false;
+            VoiceInfo("");
+            T("");
+            Remember(false);
+            const controls=room.current?.querySelector<HTMLDetailsElement>(".room-settings"); if(controls) controls.open=false;
+            Expression("neutral");
+            M([]);
+            Verse("");
+            B(false);
+            StudioBusy(false);
+            Studio("");
+            audio.current?.pause();
+            Mouth("");
+            if (mediaJob.current)
+              void api(
+                "/support/media/" + mediaJob.current,
+                undefined,
+                "DELETE",
+              ).catch(() => {});
+            window.speechSynthesis?.cancel();
+            S(false);
+          }}
+        >
+          Clear conversation
+        </Button>
       </div>
+
       {studio && (
-        <div className="panel">
-          <p>AI-generated voice · captions are in the conversation above.</p>
+        <div className="room-audio">
+          <p>AI-generated voice · transcript available in Conversation.</p>
           <audio
             ref={audio}
             controls
@@ -1935,125 +2030,27 @@ function Chat() {
           <small>Encouragement, not a promise of assistance.</small>
         </div>
       )}
-      <div className="chattools">
-        <button className="btn secondary" aria-pressed={autoVoice} onClick={() => {
-          if (!autoVoice) {
-            try { voiceContext.current ||= new AudioContext(); void voiceContext.current.resume().catch(() => {}); } catch {}
-          }
-          if (autoVoice) { playRequested.current = false; audio.current?.pause(); window.speechSynthesis?.cancel(); S(false); }
-          AutoVoice(!autoVoice);
-        }}>{autoVoice ? "Speak replies: on" : "Speak replies: off"}</button>
-        <Button
-          secondary
-          disabled={busy}
-          onClick={async () => {
-            B(true);
-            E("");
-            try {
-              const d = await api("/encouragement", {
-                text: text.trim() || "A quiet moment of encouragement",
-              });
-              Verse(d.text);
-            } catch (e) {
-              E((e as Error).message);
-            } finally {
-              B(false);
-            }
-          }}
-        >
-          A few words of encouragement
-        </Button>
-        <Button
-          secondary
-          disabled={
-            !messages.some((m) => m.role === "assistant") || studioBusy || busy
-          }
-          onClick={studioVoice}
-        >
-          {studioBusy ? "Preparing voice…" : "Listen to reply"}
-        </Button>
-        <Button secondary onClick={toggleMemory}>
-          {remember
-            ? "Turn off & delete saved memory"
-            : "Allow 24-hour conversation memory"}
-        </Button>
-        <Button secondary onClick={() => A(!avatar)}>
-          {avatar ? "Text only" : "Show Maya"}
-        </Button>
-        <Button
-          secondary
-          disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
-          onClick={() => {
-            if (speaking) {
-              window.speechSynthesis?.cancel();
-              audio.current?.pause();
-              S(false);
-            } else speak();
-          }}
-        >
-          {speaking ? <VolumeX size={16} /> : <Volume2 size={16} />}{" "}
-          {speaking ? "Stop voice" : "Read latest reply"}
-        </Button>
-        <Button
-          secondary
-          onClick={async () => {
-            if (remember) {
-              try { await api("/support/memory", undefined, "DELETE"); }
-              catch { E("Could not delete saved memory. Please retry."); return; }
-            }
-            generation.current++;
-            window.dispatchEvent(new Event("hervoice-reset"));
-            playRequested.current = false;
-            VoiceInfo("");
-            T("");
-            Remember(false);
-            Expression("neutral");
-            M([]);
-            Verse("");
-            B(false);
-            StudioBusy(false);
-            Studio("");
-            audio.current?.pause();
-            Mouth("");
-            if (mediaJob.current)
-              void api(
-                "/support/media/" + mediaJob.current,
-                undefined,
-                "DELETE",
-              ).catch(() => {});
-            window.speechSynthesis?.cancel();
-            S(false);
-          }}
-        >
-          Clear conversation
-        </Button>
-      </div>
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      {voiceInfo && (
-        <p role="status" className="notice">
-          {voiceInfo}
-        </p>
-      )}
+
+      <details className="room-prompts"><summary>Need a starting point?</summary>
       <div className="support-starters" aria-label="Conversation starters">
         {["I’d like a grounding exercise.", "I’m blaming myself for what happened.", "I want to talk about boundaries safely.", "Help me think about one small next step."].map(prompt => (
           <button key={prompt} className="btn secondary" disabled={busy} onClick={() => { T(prompt); document.getElementById("chat")?.focus(); }}>{prompt}</button>
         ))}
       </div>
-      <VoiceInput
-        onText={(words) => {
-          T((current) =>
-            (current ? current + " " + words : words).slice(0, 4000),
-          );
-          VoiceInfo(
-            "Your voice note is ready to review. Edit it if needed, then choose Send.",
-          );
-        }}
-        onError={E}
-      />
+
+      </details>
+      <p className="underform">
+        <LockKeyhole size={13} />{" "}
+        {remember
+          ? "You allowed encrypted storage for 24 hours after your latest message. Turning memory off deletes the saved conversation."
+          : "Memory is off. Messages remain in this page until you leave. You can optionally allow encrypted 24-hour memory."}{" "}
+        Conversations are not shared with responders.
+      </p>
+
+
+        </details>
+        <div className="room-dock">
+          <div className="room-compose-row">
       <form
         className="composer"
         onSubmit={(e) => {
@@ -2080,16 +2077,70 @@ function Chat() {
           <ArrowRight size={20} />
         </button>
       </form>
-      <p className="underform">
-        <LockKeyhole size={13} />{" "}
-        {remember
-          ? "You allowed encrypted storage for 24 hours after your latest message. Turning memory off deletes the saved conversation."
-          : "Memory is off. Messages remain in this page until you leave. You can optionally allow encrypted 24-hour memory."}{" "}
-        Conversations are not shared with responders.
-      </p>
+      <VoiceInput compact
+        onText={(words) => {
+          T((current) =>
+            (current ? current + " " + words : words).slice(0, 4000),
+          );
+          VoiceInfo(
+            "Your voice note is ready to review. Edit it if needed, then choose Send.",
+          );
+        }}
+        onError={E}
+      />
+
+          </div>
+          <div className="room-quick-controls">
+        <button className="btn secondary" aria-pressed={autoVoice} onClick={() => {
+          if (!autoVoice) {
+            try { voiceContext.current ||= new AudioContext(); void voiceContext.current.resume().catch(() => {}); } catch {}
+          }
+          if (autoVoice) { playRequested.current = false; audio.current?.pause(); window.speechSynthesis?.cancel(); S(false); }
+          AutoVoice(!autoVoice);
+        }}>{autoVoice ? "Speak replies: on" : "Speak replies: off"}</button>
+        <Button
+          secondary
+          disabled={
+            !messages.some((m) => m.role === "assistant") || studioBusy || busy
+          }
+          onClick={studioVoice}
+        >
+          {studioBusy ? "Preparing voice…" : "Listen to reply"}
+        </Button>
+        {speaking && (<Button
+          secondary
+          disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
+          onClick={() => {
+            if (speaking) {
+              window.speechSynthesis?.cancel();
+              audio.current?.pause();
+              S(false);
+            } else speak();
+          }}
+        >
+          {speaking ? <VolumeX size={16} /> : <Volume2 size={16} />}{" "}
+          {speaking ? "Stop voice" : "Read latest reply"}
+        </Button>)}
+            <button type="button" className="btn secondary" aria-pressed={transcript} onClick={() => Transcript(!transcript)}>{transcript ? "Hide conversation" : "Show conversation"}</button>
+          </div>
+          <small className="room-voice-disclosure">AI-generated voice. Voice input uses OpenAI; review your words before sending.</small>
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+      {voiceInfo && (
+        <p role="status" className="notice">
+          {voiceInfo}
+        </p>
+      )}
+
+        </div>
+      </div>
     </section>
   );
 }
+
 function Rights() {
   const [q, Q] = useState("");
   const [questions, Questions] = useState<string[]>([]);

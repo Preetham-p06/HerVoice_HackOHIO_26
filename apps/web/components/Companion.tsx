@@ -27,7 +27,7 @@ export default function Companion({ speaking, expression, busy, level, audio, cu
     <div className="companion-name"><span className="eyebrow">YOUR AI COMPANION</span><strong>Maya</strong><small>One moment at a time.</small></div>
     <div className="portrait-halo" />
     {still ? portrait : <AvatarBoundary fallback={<div className="avatar-fallback">{portrait}<span>3D is unavailable here. Text and voice still work.</span></div>}>
-      <div className="avatar-canvas" role="img" aria-label="Maya, an animated 3D AI companion in a blue shirt">
+      <div className="avatar-canvas" role="img" aria-label="Maya, an animated 3D AI companion">
         <Scene speaking={speaking} expression={expression} paused={paused} level={level} audio={audio} cues={cues} close={close} onReady={onReady}/>
       </div>
       {!ready && <p className="avatar-loading" role="status">Getting Maya ready…</p>}
@@ -39,5 +39,6 @@ export default function Companion({ speaking, expression, busy, level, audio, cu
     </div>
     <div className="companion-caption" role="status"><span className="voice-bars" aria-hidden="true"><i/><i/><i/><i/></span>{speaking ? "Speaking" : busy ? "Taking a moment to reply" : "Ready when you are"}</div>
     <small className="portrait-note">AI companion · not a therapist</small>
+    <a className="avatar-credit" href="/models/maya-studio.LICENSE.txt" target="_blank" rel="noreferrer">Avatar credits</a>
   </div>;
 }

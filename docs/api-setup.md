@@ -1,6 +1,6 @@
 # HerVoice API credentials
 
-The entire synthetic demo, dashboard, avatar, original cover illustrations, browser speech, and PNG verification work without paid API keys. Maya is a bundled original GLB character with mouth/blink morph targets and Idle/Talking clips, loaded with useGLTF. No avatar API key is required. OpenAI audio drives mouth opening through a browser audio analyser; optional Rhubarb cues select timed visemes. The default is approximate audio-reactive animation, not phoneme-accurate lip sync. A still illustration remains available as a fallback.
+The entire synthetic demo, dashboard, avatar, original cover illustrations, browser speech, and PNG verification work without paid API keys. Maya uses an attributed Ready Player Me demo character with detailed textures, facial morph targets and a skeleton, loaded with useGLTF. The character asset is CC BY-NC 4.0 for non-commercial demonstrations; see `apps/web/public/models/maya-studio.LICENSE.txt`. No avatar API key is required. OpenAI audio drives mouth opening through a browser audio analyser; optional Rhubarb cues select timed visemes. The default is approximate audio-reactive animation, not phoneme-accurate lip sync. A still illustration remains available as a fallback.
 
 ## AI features — OpenAI
 

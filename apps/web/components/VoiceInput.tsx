@@ -5,7 +5,9 @@ import { Mic, Square, X } from "lucide-react";
 export default function VoiceInput({
   onText,
   onError,
+  compact = false,
 }: {
+  compact?: boolean;
   onText: (text: string) => void;
   onError: (message: string) => void;
 }) {
@@ -145,20 +147,22 @@ export default function VoiceInput({
     }
   }
   return (
-    <div className="voice-input">
+    <div className={"voice-input" + (compact ? " compact" : "")}>
       <div className="actions">
         <button
           type="button"
           className={"btn secondary" + (recording ? " recording" : "")}
           disabled={!available || busy}
+          aria-label={recording ? "Stop recording" : busy ? "Transcribing…" : "Speak your message"}
+          title={recording ? "Stop recording" : "Speak your message"}
           onClick={() => (recording ? recorder.current?.stop() : void start())}
         >
           {recording ? <Square size={16} /> : <Mic size={16} />}{" "}
-          {recording
+          <span className={compact ? "sr-only" : ""}>{recording
             ? "Stop recording"
             : busy
               ? "Transcribing…"
-              : "Speak your message"}
+              : "Speak your message"}</span>
         </button>
         {(recording || busy) && (
           <button type="button" className="btn secondary" onClick={cancel}>

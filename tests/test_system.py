@@ -555,21 +555,22 @@ def test_voice_input_requires_session_and_validates_upload(client, monkeypatch):
     assert response.json()["text"]=="Synthetic text to review."
 
 
-def test_bundled_companion_glb_has_valid_animation_and_face_targets():
+def test_bundled_companion_glb_has_rig_face_targets_and_attribution():
     import json
     import struct
     from pathlib import Path
-    data = Path("apps/web/public/models/maya.glb").read_bytes()
+    data = Path("apps/web/public/models/maya-studio.glb").read_bytes()
     magic, version, length = struct.unpack_from("<III", data)
     assert magic == 0x46546C67 and version == 2 and length == len(data)
     json_length, chunk_type = struct.unpack_from("<II", data, 12)
     assert chunk_type == 0x4E4F534A
     document = json.loads(data[20:20 + json_length])
-    clips = {clip["name"]: clip for clip in document["animations"]}
-    assert {"Idle", "Talking"} <= clips.keys()
-    assert all(clips[name]["channels"] for name in ["Idle", "Talking"])
+    bones = {node.get("name") for node in document["nodes"]}
+    assert {"Head", "Neck", "Spine1"} <= bones
+    assert document["skins"] and document["images"]
     targets = {name for mesh in document["meshes"] for name in mesh.get("extras", {}).get("targetNames", [])}
-    assert {"jawOpen", "mouthSmile", "mouthFunnel", "blink"} <= targets
+    assert {"jawOpen", "mouthSmileLeft", "viseme_aa", "eyeBlinkLeft", "eyeBlinkRight"} <= targets
+    assert "CC BY-NC" in Path("apps/web/public/models/maya-studio.LICENSE.txt").read_text()
     assert all("uri" not in buffer for buffer in document["buffers"])
 
 

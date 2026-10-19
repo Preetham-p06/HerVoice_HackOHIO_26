@@ -15,6 +15,14 @@ async function visit(page: Page, path: string) {
   await expect(page).toHaveTitle("Everyday Notes — Ideas for everyday living");
 }
 
+
+async function conversationSettings(page: Page) {
+  const settings = page.locator(".room-settings");
+  if (!(await settings.evaluate(element => (element as HTMLDetailsElement).open))) {
+    await settings.locator("summary").click();
+  }
+}
+
 test("guest image request → verified intake → real case event", async ({
   page,
   context,
@@ -175,6 +183,7 @@ test("consented chat memory survives navigation and can be turned off", async ({
   page,
 }) => {
   await visit(page, "/journal");
+  await conversationSettings(page);
   await page
     .getByRole("button", {
       name: "Allow 24-hour conversation memory",
@@ -196,6 +205,7 @@ test("consented chat memory survives navigation and can be turned off", async ({
       exact: true,
     }),
   ).toBeVisible();
+  await conversationSettings(page);
   await page
     .getByRole("button", {
       name: "Turn off & delete saved memory",
@@ -567,12 +577,16 @@ test("companion controls and survivor-focused starters stay optional", async ({ 
   await page.getByRole("button", { name: "Speak replies: off", exact: true }).click();
   await expect(page.getByRole("button", { name: "Speak replies: on", exact: true })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Speak replies: on", exact: true }).click();
+  await conversationSettings(page);
+  await page.locator(".room-prompts > summary").click();
   await page.getByRole("button", { name: "I’m blaming myself for what happened.", exact: true }).click();
   await expect(page.getByLabel("Your message", { exact: true })).toHaveValue("I’m blaming myself for what happened.");
   await expect(page.locator(".message.you")).toHaveCount(0);
+  await page.locator(".room-settings > summary").click();
   const stillControl = page.getByRole("button", { name: "Show still image", exact: true });
   if (await stillControl.isVisible()) await stillControl.click();
   await expect(page.getByRole("img", { name: /Maya, an original illustrated/ })).toBeVisible();
+  await conversationSettings(page);
   await page.getByRole("button", { name: "Text only", exact: true }).click();
   await expect(page.locator(".companion")).toHaveCount(0);
   await expect(page.getByLabel("Your message", { exact: true })).toHaveValue("I’m blaming myself for what happened.");
@@ -580,10 +594,35 @@ test("companion controls and survivor-focused starters stay optional", async ({ 
 
 test("failed memory deletion does not falsely show memory off", async ({ page }) => {
   await visit(page, "/journal");
+  await conversationSettings(page);
   await page.getByRole("button", { name: "Allow 24-hour conversation memory", exact: true }).click();
   await expect(page.getByText("24-hour memory on", { exact: true })).toBeVisible();
   await page.route("**/api/v1/support/memory", route => route.request().method() === "DELETE" ? route.fulfill({status:503,json:{message:"Synthetic storage failure"}}) : route.continue());
+  await conversationSettings(page);
   await page.getByRole("button", { name: "Clear conversation", exact: true }).click();
   await expect(page.getByRole("alert").filter({hasText:"Could not delete saved memory"})).toBeVisible();
   await expect(page.getByText("24-hour memory on", { exact: true })).toBeVisible();
+});
+
+
+test("avatar studio keeps conversation history optional without losing the draft", async ({ page }) => {
+  await visit(page, "/journal");
+  await expect(page.locator(".room-settings")).not.toHaveAttribute("open");
+  await page.getByLabel("Your message", { exact: true }).fill("Synthetic studio draft.");
+  await page.getByRole("button", { name: "Hide conversation", exact: true }).click();
+  await expect(page.locator(".chatbody")).toBeHidden();
+  await page.getByRole("button", { name: "Show conversation", exact: true }).click();
+  await expect(page.getByLabel("Your message", { exact: true })).toHaveValue("Synthetic studio draft.");
+  await expect(page.getByRole("link", {name:"Avatar credits",exact:true})).toHaveAttribute("href","/models/maya-studio.LICENSE.txt");
+});
+
+
+test("expanded companion view preserves the draft and exits with Escape", async ({ page }) => {
+  await visit(page, "/journal");
+  await page.getByLabel("Your message", { exact: true }).fill("Synthetic presentation draft.");
+  await page.getByRole("button", { name: "Expand companion", exact: true }).click();
+  await expect(page.getByRole("dialog", { name:"Your space with Maya.", exact:true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".expanded-room")).toHaveCount(0);
+  await expect(page.getByLabel("Your message", { exact:true })).toHaveValue("Synthetic presentation draft.");
 });
