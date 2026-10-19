@@ -4490,3 +4490,14 @@ html[data-covering="true"] body::after {
 }
 
 @media (max-width: 550px) { .home-simple { padding-inline: 18px; } }
+/* Keep each case name a single, reliable touch target inside a scrolling table. */
+.live-table td > a {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 48px;
+  min-width: 96px;
+  padding: 4px 0;
+  scroll-margin-top: 80px;
+}
