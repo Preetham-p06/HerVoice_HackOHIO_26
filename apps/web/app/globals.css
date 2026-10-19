@@ -4831,3 +4831,17 @@ html[data-covering="true"] body::after {
 }
 .studio-room .companion-name { background: #fffffff0; border-color: #dbe4df; box-shadow: 0 8px 30px #304d4410; }
 .studio-room .room-dock { background: #f9fcf5d9; border-color: #fff; }
+
+/* Reference portrait: a warm, editorial illustration rather than a tight 3D crop. */
+.studio-room .portrait-companion[data-avatar-state="still"] .portrait {
+  height: 112%;
+  width: 100%;
+  bottom: -12%;
+  object-fit: contain;
+  object-position: center top;
+  transform-origin: 50% 45%;
+}
+.studio-room .portrait-companion[data-avatar-state="still"] .portrait.close { transform: scale(1.13); }
+@media (max-width: 600px) {
+  .studio-room .portrait-companion[data-avatar-state="still"] .portrait { height: 102%; bottom: -2%; }
+}
