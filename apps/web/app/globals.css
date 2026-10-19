@@ -4845,3 +4845,66 @@ html[data-covering="true"] body::after {
 @media (max-width: 600px) {
   .studio-room .portrait-companion[data-avatar-state="still"] .portrait { height: 102%; bottom: -2%; }
 }
+
+/* Related-person comparison dialog */
+.match-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.match-result {
+  border: 1px solid #d5dfe5;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 18px;
+  background: #fff;
+}
+.match-result-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.match-result-heading h3 {
+  margin: 0;
+}
+.match-score {
+  font-size: 26px;
+  font-weight: 700;
+  color: #235c83;
+  text-align: right;
+}
+.match-score small {
+  font-size: 13px;
+  font-weight: 500;
+}
+.match-facts {
+  margin: 22px 0;
+}
+.match-facts > div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 18px;
+  margin: 16px 0;
+}
+.match-facts dt {
+  font-weight: 600;
+}
+.match-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.match-facts dd small {
+  margin-top: 4px;
+}
+@media (max-width: 550px) {
+  .match-filters,
+  .match-facts > div {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .match-dialog {
+    padding: 20px;
+  }
+}

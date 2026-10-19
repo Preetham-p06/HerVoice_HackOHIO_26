@@ -760,13 +760,26 @@ def related(cid: str, b: MatchOptions = MatchOptions(), s=Depends(staff)):
     if MODE == "live" and os.getenv("MATCH_PROVIDER") == "atlas":
         from .matching import related as atlas_related
 
-        return atlas_related(store, c, b.limit, b.threshold)
+        return match_details(atlas_related(store, c, b.limit, b.threshold), s)
     candidates = [json.loads(r["data"]) for r in store.all(org=s["org"])]
     candidates = [item for item in candidates if item.get("status") != "prepared"]
     if MODE == "demo" and os.getenv("MATCH_PROVIDER") == "openai_local":
         from .matching import local_semantic
-        return local_semantic(c, candidates, b.limit, b.threshold)
-    return match(c, candidates, b.limit, b.threshold)
+        return match_details(local_semantic(c, candidates, b.limit, b.threshold), s)
+    return match_details(match(c, candidates, b.limit, b.threshold), s)
+
+
+def match_details(results, session):
+    """Expose reported descriptions only after rechecking case access."""
+    enriched = []
+    for result in results:
+        _, target = scoped(result["id"], session)
+        description = target.get("details", {}).get("personDescription", "").strip()
+        enriched.append(result | {
+            "personDescription": description,
+            "comparisonBasis": "person_description" if description else "narrative",
+        })
+    return enriched
 
 
 class Decision(BaseModel):

@@ -381,7 +381,7 @@ test("dashboard columns, row actions, related dialog and companion zoom", async 
   ).toBeVisible();
   await page.getByRole("button", { name: "Find Match", exact: true }).click();
   await expect(
-    page.getByRole("dialog", { name: "Related report information" }),
+    page.getByRole("dialog", { name: "Reported person matches" }),
   ).toBeVisible();
   await page
     .getByRole("dialog")

@@ -3089,38 +3089,41 @@ function CaseDetail({ id }: { id: string }) {
             <div className="sectionHeading">
               <div>
                 <div className="eyebrow">COMPARE REPORTED DETAILS</div>
-                <h2 id="match-title">Related report information</h2>
+                <h2 id="match-title">Reported person matches</h2>
+                <p>Compare descriptions across related cases.</p>
               </div>
               <Button secondary onClick={() => matches.current?.close()}>
                 Close
               </Button>
             </div>{" "}
             <div className="panel">
-              <h2>Related reports</h2>
-              <Field label="Maximum related reports">
-                <select
-                  value={matchLimit}
-                  onChange={(e) => MatchLimit(Number(e.target.value))}
-                >
-                  {[4, 8, 12, 20].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Minimum cosine similarity">
-                <select
-                  value={matchThreshold}
-                  onChange={(e) => MatchThreshold(Number(e.target.value))}
-                >
-                  {[0.08, 0.25, 0.5, 0.75, 0.9].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+              <h3>Search settings</h3>
+              <div className="match-filters">
+                <Field label="Maximum related reports">
+                  <select
+                    value={matchLimit}
+                    onChange={(e) => MatchLimit(Number(e.target.value))}
+                  >
+                    {[4, 8, 12, 20].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Minimum cosine similarity">
+                  <select
+                    value={matchThreshold}
+                    onChange={(e) => MatchThreshold(Number(e.target.value))}
+                  >
+                    {[0.08, 0.25, 0.5, 0.75, 0.9].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
               <p>
                 Cosine similarity compares the optional person description, or
                 the reviewed narrative when no description is supplied. Results
@@ -3145,38 +3148,70 @@ function CaseDetail({ id }: { id: string }) {
               {searched && !matchingBusy && related.length === 0 && (
                 <p>No reports met this similarity threshold.</p>
               )}
-              {related.map((r) => (
-                <div className="related" key={r.id}>
-                  <Link href={"/responder/cases/" + r.id}>{r.alias}</Link>
-                  <small>
-                    {r.method} · score {r.score}
-                  </small>
-                  <div className="actions">
-                    {["link", "reject"].map((decision) => (
-                      <Button
-                        secondary
-                        key={decision}
-                        onClick={async () => {
-                          const why = prompt("Reason for this review decision");
-                          if (why)
-                            try {
-                              await api("/cases/" + id + "/related/decision", {
-                                target: r.id,
-                                decision,
-                                reason: why,
-                              });
-                              I("Related report decision saved.");
-                            } catch (e) {
-                              E((e as Error).message);
-                            }
-                        }}
-                      >
-                        {decision === "link" ? "Link" : "Reject"}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              {!matchingBusy &&
+                related.map((r, index) => (
+                  <article className="related match-result" key={r.id}>
+                    <div className="match-result-heading">
+                      <h3>Match {index + 1}</h3>
+                      <span className="match-score">
+                        {(r.score * 100).toFixed(1)}% <small>similarity</small>
+                      </span>
+                    </div>
+                    <dl className="match-facts">
+                      <div>
+                        <dt>Source report</dt>
+                        <dd>
+                          <Link href={"/responder/cases/" + r.id}>
+                            {r.alias || "Anonymous report"}
+                          </Link>
+                          <small>
+                            Reporter alias · not the reported person’s name
+                          </small>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Person details</dt>
+                        <dd>
+                          {r.personDescription ||
+                            "No person description supplied. This comparison uses the report narrative."}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Search method</dt>
+                        <dd>{r.method}</dd>
+                      </div>
+                    </dl>
+                    <div className="actions">
+                      {["link", "reject"].map((decision) => (
+                        <Button
+                          secondary
+                          key={decision}
+                          onClick={async () => {
+                            const why = prompt(
+                              "Reason for this review decision",
+                            );
+                            if (why)
+                              try {
+                                await api(
+                                  "/cases/" + id + "/related/decision",
+                                  {
+                                    target: r.id,
+                                    decision,
+                                    reason: why,
+                                  },
+                                );
+                                I("Related report decision saved.");
+                              } catch (e) {
+                                E((e as Error).message);
+                              }
+                          }}
+                        >
+                          {decision === "link" ? "Link" : "Reject"}
+                        </Button>
+                      ))}
+                    </div>
+                  </article>
+                ))}
             </div>
           </dialog>
           <div className="detailgrid">

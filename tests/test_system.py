@@ -137,6 +137,11 @@ def test_queue_related_and_delete(client):
     assert len(r.json()["items"]) <= 6
     related = client.post("/v1/cases/" + cid + "/related", json={}).json()
     assert all(x["id"] != cid for x in related)
+    for result in related:
+        target = client.get("/v1/cases/" + result["id"]).json()
+        assert result["personDescription"] == target.get("details", {}).get("personDescription", "").strip()
+        assert result["comparisonBasis"] in {"person_description", "narrative"}
+
     assert client.delete("/v1/requests/" + cid).status_code == 200
     assert client.get("/v1/requests/" + cid).status_code == 404
 
