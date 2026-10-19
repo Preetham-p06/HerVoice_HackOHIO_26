@@ -553,3 +553,21 @@ def test_voice_input_requires_session_and_validates_upload(client, monkeypatch):
     response=client.post("/v1/support/transcribe",files={"file":("voice.webm",b"synthetic clip","audio/webm;codecs=opus")})
     assert response.status_code==200
     assert response.json()["text"]=="Synthetic text to review."
+
+
+def test_bundled_companion_glb_has_valid_animation_and_face_targets():
+    import json
+    import struct
+    from pathlib import Path
+    data = Path("apps/web/public/models/maya.glb").read_bytes()
+    magic, version, length = struct.unpack_from("<III", data)
+    assert magic == 0x46546C67 and version == 2 and length == len(data)
+    json_length, chunk_type = struct.unpack_from("<II", data, 12)
+    assert chunk_type == 0x4E4F534A
+    document = json.loads(data[20:20 + json_length])
+    clips = {clip["name"]: clip for clip in document["animations"]}
+    assert {"Idle", "Talking"} <= clips.keys()
+    assert all(clips[name]["channels"] for name in ["Idle", "Talking"])
+    targets = {name for mesh in document["meshes"] for name in mesh.get("extras", {}).get("targetNames", [])}
+    assert {"jawOpen", "mouthSmile", "mouthFunnel", "blink"} <= targets
+    assert all("uri" not in buffer for buffer in document["buffers"])

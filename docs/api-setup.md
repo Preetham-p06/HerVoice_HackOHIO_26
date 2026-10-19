@@ -1,6 +1,6 @@
 # HerVoice API credentials
 
-The entire synthetic demo, dashboard, avatar, original cover illustrations, browser speech, and PNG verification work without paid API keys. Maya is a bundled original illustration, not a hosted avatar service; no avatar API key is required. It has a voice status indicator and zoom, not a rigged face or lip sync.
+The entire synthetic demo, dashboard, avatar, original cover illustrations, browser speech, and PNG verification work without paid API keys. Maya is a bundled original GLB character with mouth/blink morph targets and Idle/Talking clips, loaded with useGLTF. No avatar API key is required. OpenAI audio drives mouth opening through a browser audio analyser; optional Rhubarb cues select timed visemes. The default is approximate audio-reactive animation, not phoneme-accurate lip sync. A still illustration remains available as a fallback.
 
 ## AI features — OpenAI
 

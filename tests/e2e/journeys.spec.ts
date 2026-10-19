@@ -380,7 +380,7 @@ test("dashboard columns, row actions, related dialog and companion zoom", async 
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("link", { name: "Therapy bot", exact: true }).click();
   await expect(
-    page.getByRole("img", { name: /Maya, an original/ }),
+    page.locator(".companion"),
   ).toBeVisible();
   await page.getByRole("button", { name: "Zoom in companion" }).click();
   await expect(
@@ -557,4 +557,32 @@ test("microphone denial preserves a typed message", async ({ page }) => {
   await expect(page.getByLabel("Your message", { exact: true })).toHaveValue(
     "Synthetic words already typed.",
   );
+});
+
+
+test("companion controls and survivor-focused starters stay optional", async ({ page }) => {
+  await visit(page, "/journal");
+  await expect(page.getByRole("button", { name: "Speak replies: off", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await page.getByRole("button", { name: "Speak replies: off", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Speak replies: on", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Speak replies: on", exact: true }).click();
+  await page.getByRole("button", { name: "I’m blaming myself for what happened.", exact: true }).click();
+  await expect(page.getByLabel("Your message", { exact: true })).toHaveValue("I’m blaming myself for what happened.");
+  await expect(page.locator(".message.you")).toHaveCount(0);
+  const stillControl = page.getByRole("button", { name: "Show still image", exact: true });
+  if (await stillControl.isVisible()) await stillControl.click();
+  await expect(page.getByRole("img", { name: /Maya, an original illustrated/ })).toBeVisible();
+  await page.getByRole("button", { name: "Text only", exact: true }).click();
+  await expect(page.locator(".companion")).toHaveCount(0);
+  await expect(page.getByLabel("Your message", { exact: true })).toHaveValue("I’m blaming myself for what happened.");
+});
+
+test("failed memory deletion does not falsely show memory off", async ({ page }) => {
+  await visit(page, "/journal");
+  await page.getByRole("button", { name: "Allow 24-hour conversation memory", exact: true }).click();
+  await expect(page.getByText("24-hour memory on", { exact: true })).toBeVisible();
+  await page.route("**/api/v1/support/memory", route => route.request().method() === "DELETE" ? route.fulfill({status:503,json:{message:"Synthetic storage failure"}}) : route.continue());
+  await page.getByRole("button", { name: "Clear conversation", exact: true }).click();
+  await expect(page.getByRole("alert").filter({hasText:"Could not delete saved memory"})).toBeVisible();
+  await expect(page.getByText("24-hour memory on", { exact: true })).toBeVisible();
 });

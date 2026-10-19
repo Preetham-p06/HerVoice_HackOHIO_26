@@ -1608,8 +1608,52 @@ function Chat() {
   const [avatar, A] = useState(true);
   const [speaking, S] = useState(false);
   const [mouthShape, Mouth] = useState("");
+  const [expression, Expression] = useState("neutral");
+  const voiceLevel = useRef(0);
+  const voiceContext = useRef<AudioContext | null>(null);
+  const sampleFrame = useRef(0);
+  const audioGraphs = useRef(new WeakMap<HTMLAudioElement, { source: MediaElementAudioSourceNode; analyser: AnalyserNode }>());
+  function stopSampling() {
+    cancelAnimationFrame(sampleFrame.current);
+    voiceLevel.current = 0;
+  }
+  function sampleAudio() {
+    const element = audio.current;
+    if (!element) return;
+    try {
+      const context = voiceContext.current || new AudioContext();
+      voiceContext.current = context;
+      void context.resume().catch(() => {});
+      let graph = audioGraphs.current.get(element);
+      if (!graph) {
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 256;
+        const source = context.createMediaElementSource(element);
+        source.connect(analyser);
+        analyser.connect(context.destination);
+        graph = { source, analyser };
+        audioGraphs.current.set(element, graph);
+      }
+      stopSampling();
+      const analyser = graph.analyser;
+      const data = new Uint8Array(analyser.fftSize);
+      function sample() {
+        analyser.getByteTimeDomainData(data);
+        voiceLevel.current = Math.sqrt(data.reduce((sum, value) => sum + ((value - 128) / 128) ** 2, 0) / data.length);
+        if (!element!.paused) sampleFrame.current = requestAnimationFrame(sample);
+        else voiceLevel.current = 0;
+      }
+      sample();
+    } catch { voiceLevel.current = 0; }
+  }
+  useEffect(() => () => {
+    stopSampling();
+    void voiceContext.current?.close().catch(() => {});
+    voiceContext.current = null;
+  }, []);
   const [studio, Studio] = useState("");
   const [studioBusy, StudioBusy] = useState(false);
+  const [autoVoice, AutoVoice] = useState(false);
   const cues = useRef<{ start: number; end: number; value: string }[]>([]);
   const audio = useRef<HTMLAudioElement>(null);
   const mediaJob = useRef("");
@@ -1681,12 +1725,14 @@ function Chat() {
     const g = generation.current;
     try {
       const d = await api("/support", { text: value, history: old.slice(-20) });
-      if (g === generation.current)
+      if (g === generation.current) {
+        Expression(d.expression === "gentle" ? "gentle" : "neutral");
         M([
           ...old,
           { role: "you", text: value },
           { role: "assistant", text: d.text },
         ]);
+      }
     } catch (e) {
       if (g === generation.current) {
         M(old);
@@ -1700,6 +1746,10 @@ function Chat() {
   async function studioVoice() {
     const last = [...messages].reverse().find((m) => m.role === "assistant");
     if (!last || studioBusy) return;
+    try {
+      voiceContext.current ||= new AudioContext();
+      void voiceContext.current.resume().catch(() => {});
+    } catch { /* Native audio controls remain available. */ }
     window.speechSynthesis?.cancel();
     audio.current?.pause();
     S(false);
@@ -1742,6 +1792,9 @@ function Chat() {
       if (g === generation.current) StudioBusy(false);
     }
   }
+  useEffect(() => {
+    if (autoVoice && messages.at(-1)?.role === "assistant") void studioVoice();
+  }, [messages, autoVoice]);
   function speak() {
     const last = [...messages].reverse().find((m) => m.role === "assistant");
     if (!last) return;
@@ -1825,7 +1878,7 @@ function Chat() {
           )}
           <div ref={chatEnd} />
         </div>
-        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} />}
+        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} expression={expression} busy={busy} level={voiceLevel} audio={audio} cues={cues} />}
       </div>
       {studio && (
         <div className="panel">
@@ -1846,12 +1899,14 @@ function Chat() {
                   );
               }
             }}
-            onPlay={() => S(true)}
+            onPlay={() => { S(true); sampleAudio(); }}
             onPause={() => {
+              stopSampling();
               S(false);
               Mouth("X");
             }}
             onEnded={() => {
+              stopSampling();
               VoiceInfo(
                 "Finished speaking. You can replay the audio or continue typing.",
               );
@@ -1876,6 +1931,13 @@ function Chat() {
         </div>
       )}
       <div className="chattools">
+        <button className="btn secondary" aria-pressed={autoVoice} onClick={() => {
+          if (!autoVoice) {
+            try { voiceContext.current ||= new AudioContext(); void voiceContext.current.resume().catch(() => {}); } catch {}
+          }
+          if (autoVoice) { playRequested.current = false; audio.current?.pause(); window.speechSynthesis?.cancel(); S(false); }
+          AutoVoice(!autoVoice);
+        }}>{autoVoice ? "Speak replies: on" : "Speak replies: off"}</button>
         <Button
           secondary
           disabled={busy}
@@ -1929,16 +1991,18 @@ function Chat() {
         </Button>
         <Button
           secondary
-          onClick={() => {
+          onClick={async () => {
+            if (remember) {
+              try { await api("/support/memory", undefined, "DELETE"); }
+              catch { E("Could not delete saved memory. Please retry."); return; }
+            }
             generation.current++;
             window.dispatchEvent(new Event("hervoice-reset"));
             playRequested.current = false;
             VoiceInfo("");
             T("");
-            void api("/support/memory", undefined, "DELETE").catch(() =>
-              E("Could not delete saved memory. Please retry."),
-            );
             Remember(false);
+            Expression("neutral");
             M([]);
             Verse("");
             B(false);
@@ -1969,6 +2033,11 @@ function Chat() {
           {voiceInfo}
         </p>
       )}
+      <div className="support-starters" aria-label="Conversation starters">
+        {["I’d like a grounding exercise.", "I’m blaming myself for what happened.", "I want to talk about boundaries safely.", "Help me think about one small next step."].map(prompt => (
+          <button key={prompt} className="btn secondary" disabled={busy} onClick={() => { T(prompt); document.getElementById("chat")?.focus(); }}>{prompt}</button>
+        ))}
+      </div>
       <VoiceInput
         onText={(words) => {
           T((current) =>

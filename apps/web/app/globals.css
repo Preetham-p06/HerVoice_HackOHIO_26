@@ -4517,3 +4517,15 @@ html[data-covering="true"] body::after {
   .live-table .row-actions > div { position: static; width: 100%; }
   .live-table:has(.row-actions[open]) { padding-bottom: 0; }
 }
+.animated-companion .avatar-canvas { position: relative; width: 100%; height: 540px; z-index: 1; }
+.animated-companion .companion-name { z-index: 3; pointer-events: none; }
+.avatar-controls { position: absolute; right: 18px; top: 22px; z-index: 4; display: flex; flex-direction: column; gap: 10px; }
+.avatar-controls button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #d5c5b7; border-radius: 12px; background: #fff9edf2; color: #3d4b52; }
+.avatar-controls button:hover { background: white; }
+.avatar-loading { position: absolute; top: 50%; width: 100%; text-align: center; z-index: 2; color: #4d414b; }
+.avatar-fallback > span { position: absolute; bottom: 54px; padding: 12px; background: #fff9ed; z-index: 4; }
+.support-starters { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 16px; }
+.support-starters .btn { font-size: 13px; text-align: left; padding: 10px 14px; }
+@media (max-width: 600px) { .animated-companion .avatar-canvas { height: 460px; } }
+
+.animated-companion .companion-caption, .animated-companion .portrait-note { z-index: 3; }
