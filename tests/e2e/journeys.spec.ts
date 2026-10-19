@@ -342,7 +342,7 @@ test("highlighted note opens the five-page hackathon demo directly", async ({
   ]);
   await nav.getByRole("link", { name: "Create a post", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Create a post.", exact: true }),
+    page.getByRole("heading", { name: "A little support starts with your words.", exact: true }),
   ).toBeVisible();
   await nav.getByRole("link", { name: "Law bot", exact: true }).click();
   await expect(
