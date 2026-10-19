@@ -78,7 +78,7 @@ flowchart LR
 
 The codec uses least-significant-bit pixel encoding with an `HV01` frame, payload length, SHA-256 digest, nonce, and AES-GCM ciphertext. It checks capacity, preserves UTF-8 content, and rejects damaged or unauthorized payloads.
 
-The encryption is server-readable, not end-to-end. Resizing, screenshots, JPEG conversion, and social-platform recompression can destroy the payload. Public X, Instagram, Telegram, and Slack publishing/monitoring are **not connected**; the demo feed preserves original PNG bytes to demonstrate the full flow.
+The encryption is server-readable, not end-to-end. Resizing, screenshots, JPEG conversion, and social-platform recompression can destroy the payload. A read-only X hashtag connector is implemented and requires account-backed verification. Public publishing and Instagram/Telegram/Slack monitoring are not connected; the demo feed preserves original PNG bytes to demonstrate the full flow. See [authority and Atlas setup](docs/authority-atlas.md).
 
 ### 2. Maya: an animated AI support companion 💬
 
@@ -119,7 +119,7 @@ The Law bot helps users explore U.S. support resources and legal-information sta
 
 Sources come from the maintained registry rather than invented model URLs. Ohio-specific information is eligible only when Ohio is selected. The bot offers general information and resource navigation, not personalized legal advice or a complete legal database.
 
-The current legal retriever uses a local reviewed registry. It does **not** use Atlas Vector Search or LangChain for legal retrieval.
+The no-key legal retriever uses the local reviewed registry. `LEGAL_PROVIDER=atlas` enables OpenAI query embeddings and MongoDB Atlas Vector Search over explicitly indexed legal chunks, followed by the same source-backed response generation. PDF chunking, ingestion, and index setup are included; live Atlas verification is pending. LangChain is not required.
 
 ### 4. Responder dashboard and related-report matching
 
@@ -299,7 +299,7 @@ The seeded dataset contains 16 synthetic cases across two practice organizations
 
 HerVoice demonstrates how a few plain-language details can become a verified support request and a structured responder workflow. It brings writing assistance, a companion, and legal-resource navigation into one interface without requiring the user to complete every feature.
 
-We have not measured clinical outcomes, response-time improvements, or real-world safety effectiveness. The prototype does not guarantee privacy, continuous availability, or a response from an authority. Quick exit covers the interface and clears unsaved page state; it does not erase browser history, network activity, downloaded files, or device monitoring. Public social-network delivery, real dispatch, and operational deployment remain outside the current demonstration.
+We have not measured clinical outcomes, response-time improvements, or real-world safety effectiveness. The prototype does not guarantee privacy, continuous availability, or a response from an authority. Quick exit covers the interface and clears unsaved page state; it does not erase browser history, network activity, downloaded files, or device monitoring. Live X image delivery still needs account-backed validation; Instagram, real dispatch, and operational deployment remain outside the current demonstration.
 
 ## Verification ✅
 
@@ -313,7 +313,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-CI checks types, lint, backend behavior, generated-contract drift, the production build, and desktop/mobile browser journeys. The current suite has **40 backend tests and 36 browser tests**, including organization boundaries, PNG verification, case updates, and companion controls. Live external integrations have separate verification limits documented below.
+CI checks types, lint, backend behavior, generated-contract drift, the production build, and desktop/mobile browser journeys. The current suite has **48 backend tests and 36 browser tests**, including organization boundaries, PNG verification, case updates, and companion controls. Live external integrations have separate verification limits documented below.
 
 ## Repository and Documentation
 
@@ -326,6 +326,7 @@ CI checks types, lint, backend behavior, generated-contract drift, the productio
 | `fixtures` | Reviewed source registry and synthetic fixtures. |
 | `tests` | Backend tests and browser journeys. |
 
+- [MongoDB authority workflow, X monitoring, and Atlas legal retrieval](docs/authority-atlas.md)
 - [Architecture and deployment limits](docs/architecture.md)
 - [API credentials and provider setup](docs/api-setup.md)
 - [Companion, voice, memory, and asset attribution](docs/companion.md)

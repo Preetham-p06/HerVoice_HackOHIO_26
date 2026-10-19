@@ -114,8 +114,16 @@ def retrieve(question, jurisdiction, documents=None, state=None):
     return sorted(rows, key=lambda r: -r[0])[:3]
 
 
-def answer(question, jurisdiction, state=None):
-    found = retrieve(question, jurisdiction, state=state)
+def answer(question, jurisdiction, state=None, database=None):
+    import os
+    if os.getenv("LEGAL_PROVIDER", "local") == "atlas":
+        from fastapi import HTTPException
+        from .legal_atlas import retrieve as atlas_retrieve
+        if database is None:
+            raise HTTPException(503, "Atlas legal retrieval requires a configured live MongoDB database")
+        found = atlas_retrieve(database, question, jurisdiction, state)
+    else:
+        found = retrieve(question, jurisdiction, state=state)
     if not found:
         return {
             "answer": "I cannot verify a legal answer from the current source collection. Please consult an official legal assistance directory.",

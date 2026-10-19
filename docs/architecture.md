@@ -20,7 +20,7 @@ Guest receipt cookies contain 40 random URL-safe bytes, are HttpOnly/SameSite=St
 
 Original input and approved narrative are separate fields. `channel=direct` writes a received record; `channel=image` writes prepared-only. An idempotency key links retries to the same logical record; an unrelated receipt session cannot retrieve an existing idempotency record. Events are created on actual receipt/preparation, assignment, note, status transition and intake. Closure requires a reason. Version checks reject stale updates; Mongo replacements include expected version.
 
-Queue filtering and pagination are performed in the API. Demo is small; the current live repository scans at most 5,000 authorized candidate records before filtering. This is a documented scaling limit, not an Atlas-backed semantic/large-queue implementation. Related search is lexical, scoped, excludes self, and never claims an identity probability. Decisions persist separately.
+Queue filtering and pagination are performed in the API. Demo is small; the current live repository scans at most 5,000 authorized candidate records before filtering. This is a documented scaling limit, not an Atlas-backed semantic/large-queue implementation. Related search supports lexical ranking, process-local OpenAI cosine ranking in demo, or organization-scoped Atlas vectors in live mode. It excludes self and never claims an identity probability. Decisions persist separately.
 
 ## Image transport
 
@@ -55,3 +55,7 @@ The active starter corpus contains reviewed, paraphrased U.S. DOJ survivor-direc
 ## Deployment limits
 
 Configure HTTPS, exact origins, secret management, separate org encryption keys, private S3 Block Public Access/lifecycle, staff memberships and provider IDs. Do not expose demo mode publicly. No deployment was performed. User-facing retention policy, multi-key rotation, backup/derived-data deletion, persistent account ownership, live staff logout and full application review remain required before real operational use. See feature-parity.md.
+
+## MongoDB monitor and Atlas legal retrieval
+
+Live monitor queueing now uses MongoDB with encrypted PNGs, expiring claims, bounded retries, and deduplication. The read-only X connector persists search pagination in MongoDB. An external cron entry point is available. Legal retrieval optionally embeds queries and searches indexed reviewed chunks in Atlas; canonical source records are rechecked after vector search. See [setup and verification boundaries](authority-atlas.md). These adapters require live account-backed verification.

@@ -4,6 +4,10 @@ Run only with approved live credentials and organization ID: python -m scripts.i
 
 import json
 import sys
+from dotenv import load_dotenv
+import os
+load_dotenv()
+os.environ["MONITOR_SCHEDULER"] = "external"
 from services.api.main import MODE, store
 from services.api.matching import index_case, DIMENSIONS
 
@@ -38,5 +42,7 @@ if __name__ == "__main__":
             )
         )
     for row in store.all(org=org):
-        index_case(store, json.loads(row["data"]))
+        case = json.loads(row["data"])
+        if case["status"] != "prepared":
+            index_case(store, case)
     print("Authorized cases indexed. Wait for Atlas index readiness before searching.")

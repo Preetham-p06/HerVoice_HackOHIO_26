@@ -11,6 +11,8 @@ import httpx
 
 
 def configured():
+    if os.getenv("SOCIAL_PROVIDER") == "x":
+        return bool(os.getenv("X_BEARER_TOKEN") and os.getenv("SOCIAL_FEED_ORG"))
     return bool(
         os.getenv("SOCIAL_FEED_URL")
         and os.getenv("SOCIAL_FEED_TOKEN")
