@@ -4532,3 +4532,5 @@ html[data-covering="true"] body::after {
 .animated-companion .companion-name small { position: static; font-size: 12px; }
 .animated-companion .portrait-note { left: 0; bottom: 16px; font-size: 11px; }
 .animated-companion .avatar-canvas { height: 100%; }
+
+.therapy-scene.with-avatar .chatbody { overflow-y: auto; overscroll-behavior: contain; }

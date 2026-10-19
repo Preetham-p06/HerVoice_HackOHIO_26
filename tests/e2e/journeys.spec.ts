@@ -525,6 +525,7 @@ test("voice dictation stays editable until Send is chosen", async ({
   await expect(page.locator(".message.you")).toHaveCount(0);
   await page.getByRole("button", { name: "Send message", exact: true }).click();
   await expect(page.locator(".message.assistant")).toBeVisible();
+  await expect.poll(() => page.locator(".therapy-scene").evaluate(element => element.scrollTop)).toBe(0);
   await expect(
     page.getByRole("button", { name: "Listen to reply", exact: true }),
   ).toBeEnabled();

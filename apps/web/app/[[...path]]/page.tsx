@@ -1662,7 +1662,12 @@ function Chat() {
   const [voiceInfo, VoiceInfo] = useState("");
   const chatEnd = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    chatEnd.current?.scrollIntoView({ block: "nearest" });
+    const thread = chatEnd.current?.parentElement;
+    if (thread) {
+      // Scroll only the transcript; scrolling all ancestors can clip the avatar.
+      if (thread.parentElement) thread.parentElement.scrollTop = 0;
+      thread.scrollTop = thread.scrollHeight;
+    }
   }, [messages, busy]);
   useEffect(() => {
     api("/support/memory")
