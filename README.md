@@ -1,52 +1,307 @@
 # HerVoice
 
-A U.S.-first support platform behind **Everyday Notes**, a neutral reading website. The public page, tab title, and navigation paths look like an everyday editorial site. The six highlighted words read **Click the button below for help**. Press the prominent **Open personal space** button to enter HerVoice directly. The header’s Personal space dialog remains an alternative. Returning to reading, switching tabs, pressing Escape twice, or reloading covers the tools and clears unsaved page state. This does not hide browser/network history, downloaded files, a recognizable deployment domain, or device monitoring.
+### A quiet way to reach out. A stronger voice for what comes next.
 
-HerVoice provides support workflows with a complete local **synthetic demo**: guest request → saved receipt → encrypted PNG → authorized intake → responder case updates. Includes text support chat, opt-in voice and an bundled rigged 3D companion, source-backed U.S. support and legal-resource summaries, resource browsing, and organization-scoped case work.
+A U.S.-first support platform combining discreet image-based requests, an animated AI companion, source-backed legal information, and a responder workspace.
 
-**Use synthetic information only.** This is development software, not an emergency service or a monitored assistance channel. The demo sends no real reports or messages. Live adapters are included but have not been exercised with live credentials. See [feature parity and remaining work](docs/feature-parity.md).
+[Try locally](#how-to-set-it-up-locally) · [Judge walkthrough](#five-minute-judge-walkthrough) · [Architecture](#system-architecture) · [API setup](docs/api-setup.md)
 
-## Start locally
+> **Hackathon prototype:** use synthetic information. HerVoice demonstrates the complete request-to-responder workflow; it does not contact real authorities or provide emergency dispatch. A neutral website and hidden image payload cannot guarantee secrecy on a monitored device.
 
-Requires Node 22 and Python 3.13. From the repository root:
+## Inspiration 🌟
+
+Asking for help can be difficult when someone else watches your phone, messages, or online activity. Even finding the words to describe a situation can feel overwhelming.
+
+HerVoice explores how a familiar, everyday website can offer a low-pressure entry into support. A person can write a few details, review their own message, prepare an ordinary-looking image, talk with an AI companion, or find information about their rights. The experience emphasizes clear choices, visible controls, and permission before voice, location, or saved conversation memory is used.
+
+## What It Does 💡
+
+### The problem
+
+People experiencing abuse may face limited privacy, uncertainty about their options, and difficulty accessing support. A useful interface needs to be easy to understand under stress and honest about what happens after a request is submitted.
+
+### HerVoice’s solution 💪
+
+| Experience | What we built |
+| --- | --- |
+| **Discreet entry** | Rotating **Everyday Notes**, **Everyday Music**, and **Everyday Books** covers, each with the same highlighted clue and **Open personal space** button. |
+| **Create a post** | A four-step flow: enter details, review text and generate images, submit/share, and view an accurate completion state. |
+| **Maya, the AI companion** | Text conversation, optional voice input and female AI speech, plus a moving 3D character with facial animation. |
+| **Law bot** | Retrieval from reviewed U.S. source summaries, optional OpenAI synthesis, and links to the underlying resources. |
+| **Responder dashboard** | A live-updating case table, detailed case cards, location/map controls, related-report search, and recorded case activity. |
+
+The main navigation is **Home · Create a post · Law bot · Therapy bot · Dashboard**. “Therapy bot” opens an AI support companion, not a licensed therapist.
+
+## Detailed Description 📝
+
+### 1. Discreet requests through steganography
+
+HerVoice turns an approved support message into an encrypted payload inside an ordinary PNG. Image generation and message encoding are separate steps: OpenAI receives the cover-image prompt, while our backend encrypts and embeds the approved message.
+
+#### How it works 🛠️
+
+**User side**
+
+1. **Describe the situation.** Enter a short description and optional alias, safe contact preference, location, duration, incident frequency, and other details. Location can be typed or requested through the browser with consent.
+2. **Review the message.** OpenAI can expand brief notes into a readable draft. The user can edit every word or continue manually.
+3. **Choose an image.** Generate three covers from a prompt, select a built-in cover, or upload a PNG.
+4. **Encode and verify.** The backend encrypts the exact approved narrative, embeds it into PNG pixels, and decodes the exported bytes to verify the result.
+5. **Choose a delivery path.** Download/share the original file, submit directly to the demo queue, or send to the controlled tagged demo feed. A downloaded image is marked **Prepared**, not delivered.
+
+**Responder side**
+
+1. **Receive a signal.** Upload an original PNG for verification, or let the controlled `#HerVoiceSignal` feed scanner process it. The scanner runs every 30 seconds and also supports **Scan now**.
+2. **Decode and verify.** The API checks the image framing, encrypted payload, recipient organization, and request linkage before recording receipt. Repeated intake does not create duplicate cases.
+3. **Review structured information.** Optional OpenAI analysis produces an advisory summary, reported issue categories, review flags, and a severity suggestion.
+4. **Manage the case.** Responders review severity and priority, assign cases, record notes, and close an issue with a reason. Updates create actual activity events; stale edits are rejected.
+
+```mermaid
+flowchart LR
+    A[Brief details] --> B[Review approved message]
+    B --> C[Choose or generate cover]
+    C --> D[Encrypt and encode PNG]
+    D --> E[Verify original PNG]
+    E --> F[Controlled demo feed or manual intake]
+    F --> G[Decode and verify recipient]
+    G --> H[Structured advisory analysis]
+    H --> I[Responder case and activity]
+```
+
+#### What sets it apart 🌠
+
+- **User-approved content:** original input and the approved narrative remain separate.
+- **Verified delivery states:** preparing a file, queueing a signal, and receiving a case are different events.
+- **Organization-scoped access:** one organization cannot decode or browse another organization’s cases.
+- **Human review:** AI suggestions do not silently change case priority or establish anyone’s identity.
+
+#### Technical details
+
+The codec uses least-significant-bit pixel encoding with an `HV01` frame, payload length, SHA-256 digest, nonce, and AES-GCM ciphertext. It checks capacity, preserves UTF-8 content, and rejects damaged or unauthorized payloads.
+
+The encryption is server-readable, not end-to-end. Resizing, screenshots, JPEG conversion, and social-platform recompression can destroy the payload. Public X, Instagram, Telegram, and Slack publishing/monitoring are **not connected**; the demo feed preserves original PNG bytes to demonstrate the full flow.
+
+### 2. Maya: an animated AI support companion 💬
+
+Maya provides a welcoming place to type, pause, or ask for a small grounding exercise. The support instructions emphasize autonomy, no blame, and no pressure to disclose or confront someone.
+
+#### How it works
+
+- **Text conversation:** OpenAI receives the current conversation context and generates a supportive response.
+- **Voice input:** choosing **Speak your message** records audio for transcription. The transcript is editable before sending.
+- **Female AI voice:** **Listen to reply** uses OpenAI speech with the `nova` voice. Automatic spoken replies are off by default.
+- **Moving avatar:** a locally bundled, rigged Ready Player Me character blinks, moves gently, and animates its mouth during audio playback.
+- **Optional memory:** explicitly enabled conversation memory is encrypted, limited to 20 messages, and expires after 24 hours. Users can turn it off and delete it.
+
+#### What sets it apart ✨
+
+The studio keeps the character central, with a peach/lavender background, a floating message dock, and an optional transcript. Users can zoom, pause animation, switch to a still image, or use text only. Reduced-motion preferences and WebGL fallback are supported. Speech is labelled AI-generated, and no camera or facial-recognition feature is used.
+
+#### Technical details 🛠️
+
+React Three Fiber, drei’s `useGLTF`, and Three.js render the GLB model. Bone motion and facial morph targets handle idle movement, blinking, and subtle expression cues. A browser audio analyser drives approximate mouth movement; optional Rhubarb cues provide timed visemes. Default animation does not claim phoneme-perfect lip sync.
+
+Maya is a prompted support experience, not a clinically trained or validated treatment. Its character asset has separate non-commercial demo terms and attribution: [companion details](docs/companion.md) · [asset notice](apps/web/public/models/maya-reference.LICENSE.txt).
+
+![HerVoice’s moving Maya companion in the studio](docs/screenshots/maya-reference-studio.png)
+
+### 3. Law bot for understanding options ⚖️
+
+The Law bot helps users explore U.S. support resources and legal-information starting points in plain language. Its current source set includes national guidance and selected Ohio protection-order resources.
+
+#### How it works 🤖
+
+1. Receive the question and selected jurisdiction/state.
+2. Retrieve relevant reviewed summaries using jurisdiction, source status, review expiry, lexical relevance, and local hash-vector ranking.
+3. When OpenAI is enabled, synthesize a response using the retrieved material.
+4. Present the answer with source links and coverage limitations. Unsupported questions or jurisdictions abstain.
+
+#### What sets it apart 💡
+
+Sources come from the maintained registry rather than invented model URLs. Ohio-specific information is eligible only when Ohio is selected. The bot offers general information and resource navigation, not personalized legal advice or a complete legal database.
+
+The current legal retriever uses a local reviewed registry. It does **not** use Atlas Vector Search or LangChain for legal retrieval.
+
+### 4. Responder dashboard and related-report matching
+
+The dashboard polls for case changes every five seconds. Responders can filter the table, sort severity, choose columns, and open a case for its contact preference, incident details, reported location, status, and activity timeline.
+
+Google Maps loads after selecting **Load Google map**; the reported location is then sent to Google. A separate Maps link is available. The default web embed needs no key, and an optional restricted Maps Embed API key is supported.
+
+#### Find Match
+
+**Find Match** retrieves similar reports for a responder to review. It does not identify a perpetrator or report an identity probability.
+
+- **No-key mode:** lexical related-report search.
+- **OpenAI demo mode:** 768-dimensional embeddings and cosine ranking over authorized synthetic reports, with a bounded process-local cache.
+- **Optional Atlas mode:** MongoDB Atlas `$vectorSearch` with organization/model filters and a configured vector index.
+
+Results exclude the current case and unrelated organizations. Responders can adjust the result count and threshold and save review decisions.
+
+## How We Built It 🔧
+
+### System architecture
+
+```mermaid
+flowchart TB
+    U[Browser: everyday cover and HerVoice tools] --> W[Next.js and React UI]
+    W --> P[Same-origin /api/v1 gateway]
+    P --> A[FastAPI /v1 API]
+    A --> V[Validation, authorization and case lifecycle]
+    A --> C[PNG codec and verified intake]
+    A --> R[Reviewed U.S. source registry]
+    A --> J[Bounded background media jobs]
+    J --> O[OpenAI: text, images, speech and transcription]
+    A --> O
+    V --> S[(SQLite: local synthetic demo)]
+    V -. live configuration .-> M[(MongoDB: encrypted case payloads)]
+    A -. live responder identity .-> K[Clerk JWT verification and server memberships]
+    A -. optional semantic search .-> X[OpenAI embeddings and Atlas Vector Search]
+    J -. optional private media storage .-> B[Amazon S3]
+    F[Controlled feed / approved connector] --> C
+```
+
+| Layer | Technologies and responsibility |
+| --- | --- |
+| Frontend | Next.js 16, React 19, strict TypeScript, custom CSS, Lucide icons, accessible responsive controls. |
+| Avatar | Three.js, React Three Fiber, drei, local GLB model, facial morph targets, browser audio analysis. |
+| Backend | Python 3.13, FastAPI, Pydantic validation, authorization, request receipts, case events, provider adapters. |
+| AI | OpenAI Responses, image generation, text-to-speech, transcription, and optional embeddings. |
+| Image transport | Pillow PNG processing, LSB encoding, AES-GCM encryption, integrity and recipient checks. |
+| Data | SQLite for synthetic local use; MongoDB adapter for live configuration. |
+| Authentication | Private guest receipt cookies; synthetic demo sessions; verified Clerk identity plus server-managed memberships in live mode. |
+| Jobs | Bounded in-process executor with durable job metadata, progress, cancellation, expiry, and scoped media access. |
+| Verification | Pytest, Ruff, TypeScript, production build, generated OpenAPI contracts, Playwright desktop/mobile journeys, and accessibility checks. |
+
+FastAPI owns permissions and case rules, including direct API calls. The Next.js gateway forwards requests; it does not independently decide responder access. The current job executor is not a separately deployed durable queue worker.
+
+### Important API routes
+
+Routes below are served by FastAPI. Browser requests use the same-origin `/api/v1` gateway.
+
+| Route | Purpose |
+| --- | --- |
+| `POST /v1/drafts` | Expand supplied details into an editable draft. |
+| `POST /v1/requests` | Create a request with private receipt access. |
+| `POST /v1/requests/{id}/covers` | Start cover-image preparation/generation. |
+| `POST /v1/requests/{id}/jobs/{job}/encode/{index}` | Encode the selected generated cover. |
+| `POST /v1/requests/{id}/image` | Encode a supplied PNG. |
+| `POST /v1/requests/{id}/demo-signal` | Queue an original PNG in the controlled demo feed. |
+| `POST /v1/intake/preview` and `/v1/intake/confirm` | Verify an image, then confirm intake. |
+| `POST /v1/monitor/scan` | Scan eligible feed items. |
+| `GET /v1/cases` and `PATCH /v1/cases/{id}` | Read the scoped queue and update a case. |
+| `POST /v1/cases/{id}/analysis` and `/v1/cases/{id}/related` | Advisory analysis and related-report search. |
+| `POST /v1/support`, `/v1/support/transcribe`, `/v1/support/media` | Support conversation, voice input, and generated speech. |
+| `GET`, `PUT`, `DELETE /v1/support/memory` | Consent-based conversation memory. |
+| `POST /v1/legal` and `/v1/encouragement` | Source-backed legal information and encouraging text. |
+
+The complete interactive contract is available at [localhost:8000/docs](http://localhost:8000/docs).
+
+## How AI Is Used Throughout the Project 🤖
+
+| Feature | AI’s role | User or responder control |
+| --- | --- | --- |
+| Message expansion | Turn brief notes into coherent text without requesting invented facts. | Review and edit before submission. |
+| Image generation | Create ordinary cover images from a separate image prompt. | Choose the image; encoding happens afterward. |
+| Intake analysis | Suggest structure, review flags, and severity. | Responders retain severity and priority decisions. |
+| Related reports | Embed descriptions for semantic comparison. | Review leads; no identity claim. |
+| Maya | Generate supportive conversation and presentation cues. | Text-only, voice, animation, and memory choices. |
+| Speech | Transcribe recordings and speak replies. | Deliberate recording, editable transcript, stop/replay controls. |
+| Law bot | Explain retrieved U.S. source summaries. | Inspect citations and jurisdiction limits. |
+| Encouragement | Generate short supportive text. | Optional; no promise that help is on the way. |
+
+## Where MongoDB and Atlas Fit 🗄️
+
+The local demo uses SQLite so coworkers can run it without a database account. With live configuration, MongoDB stores cases, memberships, intake records, jobs, review decisions, and consented memory. Sensitive case payloads are encrypted with AES-GCM; operational metadata remains searchable.
+
+Atlas Vector Search is an optional adapter for related reports, with 768-dimensional embeddings and organization/model filtering. It requires a configured cluster, vector index, and indexed authorized records. It has not been smoke-tested against a live Atlas account. See [architecture](docs/architecture.md) and [API setup](docs/api-setup.md) for deployment requirements and limits.
+
+## How to Set It Up Locally
+
+### Prerequisites
+
+- Node.js 22 and Python 3.13.
+- Git and a terminal.
+- An OpenAI API key only if you want generated text, images, AI speech, transcription, or semantic embeddings.
+
+### Quick start
 
 ```bash
+git clone https://github.com/Preetham-p06/HerWay.git
+cd HerWay
+cp .env.example .env
 ./scripts/dev.sh
 ```
 
-The first run installs dependencies. Open [Everyday Notes](http://localhost:3000). The API’s interactive contract is at [FastAPI docs](http://localhost:8000/docs). Stop both services with Ctrl+C. No account, paid provider, MongoDB instance or AWS account is required for the demo.
+The script installs missing dependencies and starts both services. Open [http://localhost:3000](http://localhost:3000). Stop with Ctrl+C. The no-key demo needs no MongoDB, Clerk, AWS, or avatar-service account.
 
-Alternative container setup:
+### Enable OpenAI features
+
+Keep these settings in the root `.env`, alongside the existing demo configuration. The values below are the models configured by this project; access depends on your API project.
+
+```dotenv
+APP_MODE=demo
+NEXT_PUBLIC_APP_MODE=demo
+TEXT_PROVIDER=openai
+IMAGE_PROVIDER=openai
+SPEECH_PROVIDER=openai
+OPENAI_API_KEY=your_server_only_key
+OPENAI_TEXT_MODEL=gpt-4.1-mini
+OPENAI_IMAGE_MODEL=gpt-image-1.5
+OPENAI_TTS_MODEL=gpt-4o-mini-tts
+OPENAI_TTS_VOICE=nova
+OPENAI_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe
+
+# Optional semantic matching over synthetic local reports:
+EMBEDDING_PROVIDER=openai
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+MATCH_PROVIDER=openai_local
+```
+
+Restart the development services after changing configuration. Keys stay server-side and must not be committed or placed in `NEXT_PUBLIC_*` variables. Provider errors are shown rather than presented as successful generation. Legacy Gemini, Bedrock, and ElevenLabs adapters remain in the codebase but are not used when the OpenAI selectors are enabled.
+
+### Run the services separately
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r services/api/requirements.lock
+npm ci
+
+# Terminal 1
+.venv/bin/uvicorn services.api.main:app --env-file .env --reload --host 127.0.0.1 --port 8000
+
+# Terminal 2
+npm run dev
+```
+
+For standalone frontend startup, supply web variables through its environment or `apps/web/.env.local`. The combined script loads the root `.env` for both processes.
+
+A container configuration is also provided:
 
 ```bash
 docker compose up --build
 ```
 
-Compose binds both exposed ports to localhost and persists demo data in a named volume. Container configuration is supplied but was not executed during development; native startup was exercised. Do not publish the demo authentication endpoint to the internet.
+Native startup has been exercised; the Compose setup is supplied but has not been validated in this development environment. No public deployment is claimed. Do not expose synthetic demo authentication to the internet. Live mode requires MongoDB, Clerk, independent encryption keys, organization memberships, and explicit origins; see [deployment requirements](docs/architecture.md).
 
-## Five-minute coworker walkthrough
+## Five-Minute Judge Walkthrough
 
-1. Press **Open personal space**, then **Create a post**, write a short synthetic note, leave contact as **Do not contact me**, and optionally type a city. Review and edit the exact message.
-2. Choose **Prepare a discreet PNG**, submit, and download the verified PNG. The receipt says **Prepared**, not delivered. Three built-in covers, uploaded PNGs and optional three-cover preparation work.
-3. Open **Responder portal**. Select practice organization A and open its server-established demo session. Organization B has a separate queue and cannot decode A’s PNGs.
-4. Open **Signals & image intake**, upload the original PNG, verify the message, and confirm intake. The original request is linked once; repeated intake does not duplicate it.
-5. Change status, assignment or notes. Activity comes from stored events. Closing requires a reason; stale updates are rejected.
-6. Explore support chat, opt-in voice and the bundled rigged 3D companion. Nothing starts playing automatically. **Know your rights** defaults to United States; try “protection order forms” and optionally choose Ohio. Unsupported questions and jurisdictions abstain.
+1. Start on the everyday cover. Read the six highlighted words, **Click the button below for help**, and select **Open personal space**.
+2. Open **Create a post** and enter synthetic details. Generate and edit the text, then choose one of three generated covers.
+3. Send the encoded PNG to the **monitored demo feed**. Watch the signal reach the dashboard; wait for the scanner or use **Scan now**.
+4. Open the case. Show the six summary cards, optional Google map, advisory analysis, and activity timeline.
+5. Use **Find Match** to review related reports, then update reviewed severity, assignment, notes, or status.
+6. Ask the **Law bot** about protection-order resources and select Ohio to demonstrate state-scoped coverage.
+7. Open **Therapy bot** to meet Maya. Show text conversation, optional voice playback, and moving-avatar controls, then return to the everyday cover.
 
-The initial dataset contains 16 synthetic cases across two organizations. No personal data, secrets or history were imported from the reference project. The studio uses a separately attributed, non-commercial demo character; see [companion details](docs/companion.md) and its asset license.
+The seeded dataset contains 16 synthetic cases across two practice organizations. The organization boundary can be demonstrated by trying to access or decode another organization’s request.
 
-## Structure
+## Impact and Current Boundaries
 
-| Path | Responsibility |
-| --- | --- |
-| `apps/web` | Next.js 16, React 19, strict TypeScript, responsive UI, same-origin gateway |
-| `services/api` | FastAPI validation, authorization, cases, codec, providers, source retrieval and enhancement jobs |
-| `services/worker` | Portable media-worker contract and operational limits |
-| `packages/api-client` | Generated OpenAPI snapshot and TypeScript input models |
-| `fixtures` | Reviewed source registry, no private records |
-| `tests` | Backend trust-boundary tests and Playwright journeys |
+HerVoice demonstrates how a few plain-language details can become a verified support request and a structured responder workflow. It brings writing assistance, a companion, and legal-resource navigation into one interface without requiring the user to complete every feature.
 
-## Checks
+We have not measured clinical outcomes, response-time improvements, or real-world safety effectiveness. The prototype does not guarantee privacy, continuous availability, or a response from an authority. Quick exit covers the interface and clears unsaved page state; it does not erase browser history, network activity, downloaded files, or device monitoring. Public social-network delivery, real dispatch, and operational deployment remain outside the current demonstration.
+
+## Verification ✅
 
 ```bash
 npm run typecheck
@@ -54,48 +309,28 @@ npm run lint
 npm test
 npm run contracts
 npm run build
-# With browsers installed:
 npx playwright install chromium
 npm run test:e2e
 ```
 
-CI repeats lint, typecheck, backend tests, generated-contract drift, production build and desktop/mobile Playwright checks. Browser journeys and axe checks also ran through the local in-app browser; see [verification](docs/verification.md) for the exact boundaries.
+CI checks types, lint, backend behavior, generated-contract drift, the production build, and desktop/mobile browser journeys. The current suite has **40 backend tests and 36 browser tests**, including organization boundaries, PNG verification, case updates, and companion controls. Live external integrations have separate verification limits documented below.
 
-## Configuration and live adapters
+## Repository and Documentation
 
-Copy `.env.example` to `.env` for native development. `scripts/dev.py` loads it for both services. Standalone `next dev` needs the web variables in its environment or `apps/web/.env.local`; never put server secrets in `NEXT_PUBLIC_*` variables.
+| Path | Contents |
+| --- | --- |
+| `apps/web` | Frontend, same-origin gateway, avatar, and static assets. |
+| `services/api` | API, storage, authorization, codec, AI adapters, retrieval, and jobs. |
+| `services/worker` | Portable worker contract and operational notes. |
+| `packages/api-client` | Generated OpenAPI snapshot and TypeScript input models. |
+| `fixtures` | Reviewed source registry and synthetic fixtures. |
+| `tests` | Backend tests and browser journeys. |
 
-The default is `APP_MODE=demo`. Setting `APP_MODE=live` requires MongoDB, separate 32-byte base64 data/recipient encryption keys, a trusted Clerk issuer/audience, explicit origins and a default organization. Startup fails if required settings are absent. Demo sign-in is rejected in live mode. The frontend must also use `NEXT_PUBLIC_APP_MODE=live` and configured Clerk keys; rebuild after public-variable changes.
-
-MongoDB stores case payloads encrypted with AES-GCM. Clerk tokens are signature/issuer/audience/expiry verified, then checked against active server-managed memberships. A trusted operator can establish memberships with `scripts/add_membership.py`; public signup cannot do so. Configure the Clerk session token’s `aud` to match `CLERK_AUDIENCE` and select an organization before using the workspace.
-
-OpenAI can power text, image generation, speech and optional embeddings with one server-only API key. Legacy Gemini, Nova Canvas/Bedrock and ElevenLabs adapters remain available by explicit configuration; S3 storage is optional. See [API setup](docs/api-setup.md). No historical model ID is assumed. Provider failures are surfaced; live requests never fall back to synthetic submissions. Missing optional writing assistance does not block manual submission. Follow [live configuration and limitations](docs/architecture.md) before using real information.
-
-## Data controls
-
-Drafts and conversation history stay in page memory. Guest receipt secrets are high entropy, stored only as hashes server-side, and sent through HttpOnly same-site cookies. Request IDs alone grant no access. Requests can be deleted from their private receipt page; downloaded PNGs and external backups are outside that deletion scope. PNG encryption is **server-readable**, not end-to-end encryption. JPEG conversion, screenshots, resizing and social platform processing can destroy the hidden message.
-
-To reset only local demo data, stop the API first:
-
-```bash
-.venv/bin/python scripts/reset_demo.py --target local-demo --confirm
-```
-
-This also changes the demo encryption key; old downloads will no longer decode. It cannot target a live MongoDB database.
-
-## Project documentation
-
-- [Source audit](docs/source-audit.md)
 - [Architecture and deployment limits](docs/architecture.md)
-- [Design system](docs/design-system.md)
-- [Feature parity and remaining work](docs/feature-parity.md)
-- [Verification](docs/verification.md)
+- [API credentials and provider setup](docs/api-setup.md)
+- [Companion, voice, memory, and asset attribution](docs/companion.md)
+- [Hackathon demonstration](docs/hackathon-demo.md)
+- [Feature parity](docs/feature-parity.md) and [workflow audit](docs/screenshot-parity-audit.md)
+- [Verification](docs/verification.md) and [design system](docs/design-system.md)
 
-The care-service interface uses high-contrast help buttons, a persistent Quick exit, and a user-opened **Help options** dialog with real national advocate links. It does not imply that HerVoice is a hospital or provides medical care. The active source set covers U.S. national support and selected Ohio court resources; state-specific advice is never inferred for other states.
-
-The application is named **HerVoice**. The repository retains the user-provided GitHub name **HerWay**.
-
-
-The main demo navigation is **Home · Create a post · Law bot · Therapy bot · Dashboard**. The dashboard opens the server-established synthetic organization workspace automatically in demo mode and polls case changes every five seconds. Live mode still requires verified responder authorization. Therapy bot starts with the bundled rigged 3D companion visible, without automatically playing speech; Text only remains available.
-
-For the screenshot-matched workflow and a complete judge demonstration, see [reference parity audit](docs/screenshot-parity-audit.md).
+The product is **HerVoice**; the shared GitHub repository retains its original name, **HerWay**.
