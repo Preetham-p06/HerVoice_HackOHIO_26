@@ -91,6 +91,11 @@ test("guest image request → verified intake → real case event", async ({
   await expect(
     page.getByText("Synthetic test note: review completed.", { exact: true }),
   ).toBeVisible();
+  await page.getByRole("link", { name: "Back to cases", exact: true }).click();
+  await expect(page).toHaveURL(/\/workspace\/cases$/);
+  await page.locator(`a[href="/workspace/cases/${cid}"]`).first().click();
+  await expect(page).toHaveURL(new RegExp("/workspace/cases/" + cid));
+  await expect(page.getByRole("heading", { name: "Reported location", exact: true })).toBeVisible();
 });
 
 test("public pages fit viewport and basic accessibility", async ({ page }) => {
