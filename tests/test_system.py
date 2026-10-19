@@ -571,3 +571,18 @@ def test_bundled_companion_glb_has_valid_animation_and_face_targets():
     targets = {name for mesh in document["meshes"] for name in mesh.get("extras", {}).get("targetNames", [])}
     assert {"jawOpen", "mouthSmile", "mouthFunnel", "blink"} <= targets
     assert all("uri" not in buffer for buffer in document["buffers"])
+
+
+def test_late_reply_cannot_restore_revoked_or_replaced_memory(client, monkeypatch):
+    import services.api.main as main
+    client.post("/v1/support/session")
+    client.put("/v1/support/memory", json={"enabled": True})
+    def reply_after_revoke(_body):
+        owner = main.chat_owner(type("Request", (), {"cookies": client.cookies})())
+        main.memory.delete(owner)
+        # Even new consent during an older request must not restore its old history.
+        main.memory.write(owner, [])
+        return {"text": "Synthetic late reply", "expression": "neutral", "animation": "idle"}
+    monkeypatch.setattr(main, "support_reply", reply_after_revoke)
+    assert client.post("/v1/support", json={"text": "Synthetic old context"}).status_code == 200
+    assert client.get("/v1/support/memory").json()["messages"] == []

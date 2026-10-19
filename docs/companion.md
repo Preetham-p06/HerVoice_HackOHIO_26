@@ -10,7 +10,7 @@ OpenAI generates the text and opt-in AI voice. Listen to reply speaks one reply.
 
 ## Memory
 
-Without consent, conversation text stays in the current page and is sent as context for that conversation. With explicit consent, the existing private-cookie-bound encrypted memory expires after 24 hours and is capped at 20 messages. Live mode uses the configured MongoDB store; local demo mode uses SQLite. Turning memory off deletes it. Clear conversation waits for confirmed deletion when memory is enabled and preserves the memory-on indication on failure. No responder can browse the support conversation.
+Without consent, conversation text stays in the current page and is sent as context for that conversation. With explicit consent, the existing private-cookie-bound encrypted memory expires after 24 hours and is capped at 20 messages. Live mode uses the configured MongoDB store; local demo mode uses SQLite. Turning memory off deletes it. Clear conversation waits for confirmed deletion when memory is enabled and preserves the memory-on indication on failure. A conditional encrypted-record token prevents an in-flight reply from restoring deleted or replaced memory. No responder can browse the support conversation.
 
 ## Verification
 

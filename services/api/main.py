@@ -816,7 +816,7 @@ class Chat(BaseModel):
 @app.post("/v1/support")
 def support(b: Chat, req: Request):
     owner = chat_owner(req) if req.cookies.get("hv_chat") else None
-    remembered = memory.read(owner) if owner else None
+    remembered, memory_token = memory.snapshot(owner) if owner else (None, None)
     if remembered is not None:
         b.history = remembered
     reply = support_reply(b)
@@ -828,6 +828,7 @@ def support(b: Chat, req: Request):
                 {"role": "you", "text": b.text},
                 {"role": "assistant", "text": reply["text"]},
             ],
+            expected_token=memory_token,
         )
     return reply
 
