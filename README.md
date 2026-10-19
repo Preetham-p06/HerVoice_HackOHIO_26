@@ -321,5 +321,3 @@ CI checks types, lint, backend behavior, generated-contract drift, the productio
 - [Hackathon demonstration](docs/hackathon-demo.md)
 - [Feature parity](docs/feature-parity.md) and [workflow audit](docs/screenshot-parity-audit.md)
 - [Verification](docs/verification.md) and [design system](docs/design-system.md)
-
-The product is **HerVoice**; the shared GitHub repository retains its original name, **HerWay**.
