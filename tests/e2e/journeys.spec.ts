@@ -617,7 +617,7 @@ test("avatar studio keeps conversation history optional without losing the draft
   await expect(page.locator(".chatbody")).toBeHidden();
   await page.getByRole("button", { name: "Show conversation", exact: true }).click();
   await expect(page.getByLabel("Your message", { exact: true })).toHaveValue("Synthetic studio draft.");
-  await expect(page.getByRole("link", {name:"Avatar credits",exact:true})).toHaveAttribute("href","/models/maya-studio.LICENSE.txt");
+  await expect(page.getByRole("link", {name:"Avatar credits",exact:true})).toHaveAttribute("href","/models/maya-reference.LICENSE.txt");
 });
 
 
