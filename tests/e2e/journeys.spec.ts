@@ -573,6 +573,8 @@ test("microphone denial preserves a typed message", async ({ page }) => {
 
 test("companion controls and survivor-focused starters stay optional", async ({ page }) => {
   await visit(page, "/journal");
+  await expect(page.getByRole("img", { name: "Maya, an animated 3D AI companion", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pause animation", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Speak replies: off", exact: true })).toHaveAttribute("aria-pressed", "false");
   await page.getByRole("button", { name: "Speak replies: off", exact: true }).click();
   await expect(page.getByRole("button", { name: "Speak replies: on", exact: true })).toHaveAttribute("aria-pressed", "true");

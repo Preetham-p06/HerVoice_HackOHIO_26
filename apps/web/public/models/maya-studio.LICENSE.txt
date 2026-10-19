@@ -12,6 +12,6 @@ The asset author identifies this example avatar as CC BY-NC 4.0. Section 2(a)(1)
 
 Included for the non-commercial HerVoice hackathon demonstration. This asset's license is separate from the application code. Do not use it commercially without obtaining the appropriate rights or replacing it with a commercially licensed character.
 
-Changes: file renamed; runtime pose, lighting, expressions, mouth movement, and clothing color are configured by HerVoice. No endorsement by Ready Player Me or TalkingHead is implied. The original downloaded GLB is otherwise unmodified.
+Changes: file renamed; runtime pose, lighting, expressions, mouth movement, and clothing color are configured by HerVoice. Additional runtime styling replaces the visible hair with an original brown updo and adds original blouse collar geometry. No endorsement by Ready Player Me or TalkingHead is implied. The original downloaded GLB is otherwise unmodified.
 
 SHA-256 of the distributed GLB: 8864c504b5c11daa2f0037afffdc0815bb0fa2e6062e37a584746116a3c2f538

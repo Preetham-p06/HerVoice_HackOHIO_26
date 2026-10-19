@@ -11,7 +11,7 @@ class AvatarBoundary extends Component<{children:ReactNode; fallback:ReactNode},
 }
 export default function Companion({ speaking, expression, busy, level, audio, cues }: Omit<AvatarMotion, "paused"> & { busy: boolean; mouthShape?: string }) {
   const [close, Close]=useState(false);
-  const [still, Still]=useState(true);
+  const [still, Still]=useState(false);
   const [paused, Paused]=useState(false);
   const [ready, Ready]=useState(false);
   useEffect(() => {

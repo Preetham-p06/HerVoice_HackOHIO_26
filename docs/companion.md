@@ -23,3 +23,5 @@ Use synthetic messages to check text, voice, mouth movement during playback, pau
 Maya uses the OpenAI `nova` voice by default, with calm feminine delivery instructions. The browser speech option selects a known feminine English device voice, or directs the user to AI speech if none is available. The rig uses relaxed shoulder/arm positioning and a modest resting smile.
 
 The default companion presentation is now the original illustrated portrait matching the brown bun and light blue collared shirt reference. This mode does not animate the face or lip-sync; speech and text remain available. “Show 3D companion” switches to the separate rigged demo character.
+
+The moving 3D character is again the default. Local rig-attached geometry replaces the original hairstyle with a chestnut updo and loose framing curls and adds a blue blouse collar. Head, blink, and audio-driven facial animation remain active; the reference portrait is the optional still view. The rigged face is a stylized approximation of the illustrated reference, not an exact reconstruction.

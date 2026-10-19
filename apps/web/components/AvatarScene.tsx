@@ -12,6 +12,7 @@ import {
   Euler,
   Vector3,
 } from "three";
+import { styleMaya } from "./mayaStyling";
 import type { RefObject } from "react";
 export type AvatarMotion = {
   speaking: boolean;
@@ -65,6 +66,7 @@ function Character({
       world.premultiply(new Quaternion().setFromUnitVectors(direction, target));
       arm.quaternion.copy(arm.parent.getWorldQuaternion(new Quaternion()).invert().multiply(world));
     }
+    styleMaya(model as import("three").Group);
     const head = model.getObjectByName("Head") as Bone;
     const spine = model.getObjectByName("Spine1") as Bone;
     return {
@@ -152,8 +154,8 @@ function Character({
 function Camera({ close }: { close: boolean }) {
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 1.56, close ? 1.3 : 1.95);
-    camera.lookAt(0, close ? 1.62 : 1.4, 0);
+    camera.position.set(0, 1.56, close ? 1.3 : 1.65);
+    camera.lookAt(0, close ? 1.62 : 1.48, 0);
   }, [camera, close]);
   return null;
 }
