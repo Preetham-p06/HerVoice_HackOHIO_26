@@ -24,7 +24,7 @@ export default function Companion({ speaking, expression, busy, level, audio, cu
   const onReady=useCallback(()=>Ready(true),[]);
   const portrait=<img className={close ? "portrait close" : "portrait"} src="/images/companion-maya.png" alt="Maya, an original illustrated female AI companion in a blue shirt" width={1024} height={1536}/>;
   return <div className={"companion portrait-companion animated-companion"+(speaking ? " is-speaking" : "")} data-avatar-state={still ? "still" : ready ? "ready" : "loading"}>
-    <div className="companion-name"><span className="eyebrow">YOUR AI COMPANION</span><strong>Maya</strong><small>One moment at a time.</small></div>
+    <div className="companion-name"><span className="eyebrow">YOUR AI COMPANION</span><strong>Maya</strong><small role="status">{speaking ? "Speaking…" : busy ? "Taking a moment to reply…" : "Here to listen."}</small></div>
     <div className="portrait-halo" />
     {still ? portrait : <AvatarBoundary fallback={<div className="avatar-fallback">{portrait}<span>3D is unavailable here. Text and voice still work.</span></div>}>
       <div className="avatar-canvas" role="img" aria-label="Maya, an animated 3D AI companion">

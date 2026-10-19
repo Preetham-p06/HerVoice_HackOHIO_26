@@ -4657,3 +4657,11 @@ html[data-covering="true"] body::after {
  .studio-room.expanded-room .therapy-scene { height:calc(100dvh - 82px); }
 }
 .room-settings > summary { position:sticky; top:0; z-index:2; }
+.room-heading .actions { margin:0; }
+.studio-room .companion-caption { display:none; }
+@media (max-width:550px) {
+ .studio-room .companion-name { max-width:140px; padding:10px 12px; }
+ .studio-room .companion-name .eyebrow { font-size:8px; }
+ .studio-room .companion-name strong { font-size:22px; }
+ .studio-room .companion-name small { font-size:10px; }
+}
