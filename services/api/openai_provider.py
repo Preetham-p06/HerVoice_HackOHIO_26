@@ -67,9 +67,9 @@ def image(prompt):
 
 def speech(text):
     model = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts")
-    payload = {"model": model, "voice": os.getenv("OPENAI_TTS_VOICE", "coral"), "input": text, "response_format": "mp3"}
+    payload = {"model": model, "voice": os.getenv("OPENAI_TTS_VOICE", "shimmer"), "input": text, "response_format": "mp3"}
     if model.startswith("gpt-4o"):
-        payload["instructions"] = "Speak warmly and calmly at a comfortable, unhurried pace. Be steady and respectful, without theatrical emotion or exaggerated cheerfulness."
+        payload["instructions"] = "Use a warm, gentle feminine voice with a natural American accent. Speak calmly at a comfortable, unhurried pace. Be steady and respectful, without theatrical emotion or exaggerated cheerfulness."
     return request("/audio/speech", payload, binary=True)
 
 

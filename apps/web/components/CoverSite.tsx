@@ -1,6 +1,8 @@
 "use client";
+import { useDiscreetSession } from "./DiscreetSession";
 import { useEffect, useRef, useState } from "react";
 import {
+  Music,
   ArrowUpRight,
   ArrowLeft,
   ArrowRight,
@@ -63,19 +65,163 @@ const stories = [
     ],
   },
 ];
+const editions = [
+  {
+    name: "notes",
+    kicker: "GOOD THINGS, CLOSE TO HOME",
+    heading: "More joy in",
+    ending: "the little things.",
+    latest: "THE LATEST NOTES",
+    note: "No grand plans needed.",
+    noteEnd: "Start with something small.",
+    stories,
+  },
+  {
+    name: "music",
+    kicker: "A SOUNDTRACK FOR THE EVERYDAY",
+    heading: "Good music.",
+    ending: "A little discovery.",
+    latest: "LISTENING NOTES",
+    note: "Put on something familiar.",
+    noteEnd: "Leave room for something new.",
+    stories: [
+      {
+        id: "slow-sounds",
+        category: "Listening",
+        title: "A softer start to the day.",
+        subtitle: "Making a little room for music in the morning.",
+        time: "3 min read",
+        art: "record",
+        paragraphs: [
+          "A morning playlist can be as simple as three songs you enjoy. Start with something familiar and let the next track surprise you.",
+          "Keep the volume comfortable and choose a moment when listening fits your day. Instrumental music, a favorite singer, or a quiet acoustic recording can each bring a different feeling.",
+          "You do not need a perfect playlist. Add a song when it catches your ear, and let your collection grow slowly.",
+        ],
+      },
+      {
+        id: "records",
+        category: "Collections",
+        title: "The pleasure of a whole album.",
+        subtitle: "Letting a record tell its story, one track at a time.",
+        time: "4 min read",
+        art: "record",
+        paragraphs: [
+          "An album offers a sequence chosen by the artist. Try listening from the first track to the last and noticing how the mood changes.",
+          "Look at the artwork and read the liner notes if they are available. The musicians, recording places, and production details can be part of the discovery.",
+          "Return to a favorite track afterward. Sometimes the songs you notice on a second listen are different from the first.",
+        ],
+      },
+      {
+        id: "new-artists",
+        category: "Discovery",
+        title: "Follow a familiar sound somewhere new.",
+        subtitle: "Small ways to discover your next favorite artist.",
+        time: "3 min read",
+        art: "headphones",
+        paragraphs: [
+          "Start with a musician you already enjoy. Look for a collaborator, an opening act, or an artist they mention as an influence.",
+          "Try one song rather than a long list. Notice the instruments, the rhythm, or the way a voice sits in the recording.",
+          "Keep a short listening list for another day. Finding music is more enjoyable when it feels like exploration rather than homework.",
+        ],
+      },
+      {
+        id: "listening-corner",
+        category: "At home",
+        title: "Make a little listening corner.",
+        subtitle: "A comfortable chair and a favorite record.",
+        time: "2 min read",
+        art: "headphones",
+        paragraphs: [
+          "A listening corner needs very little: somewhere comfortable to sit and a way to play music at a pleasant volume.",
+          "Place a record sleeve or a notebook nearby if you like reading about what you hear. Keep cables tidy and leave room to move.",
+          "Let the space stay simple. The music can provide the detail.",
+        ],
+      },
+    ],
+  },
+  {
+    name: "books",
+    kicker: "ONE GOOD PAGE AT A TIME",
+    heading: "Small moments.",
+    ending: "Good books.",
+    latest: "FROM THE BOOKSHELF",
+    note: "You don’t need to finish a chapter.",
+    noteEnd: "A page is a lovely place to start.",
+    stories: [
+      {
+        id: "reading-ritual",
+        category: "Reading life",
+        title: "A few pages, just for you.",
+        subtitle: "Finding a reading rhythm that fits an ordinary day.",
+        time: "3 min read",
+        art: "books",
+        paragraphs: [
+          "Reading does not need a long stretch of uninterrupted time. A few pages with a cup of tea can be a satisfying part of the day.",
+          "Keep a book where you naturally pause. Choose a comfortable size and a story you actually want to return to.",
+          "There is no required pace. Some days are for a chapter and others are for a single paragraph.",
+        ],
+      },
+      {
+        id: "bookshop",
+        category: "Discovery",
+        title: "Browse without a reading list.",
+        subtitle: "Let a cover, a first line, or a curious title lead you.",
+        time: "4 min read",
+        art: "books",
+        paragraphs: [
+          "A library shelf or bookshop display can introduce you to something you would not have searched for.",
+          "Read the first page and see whether the voice catches your attention. Try a different shelf or an unfamiliar subject.",
+          "You can leave with one title, a short list, or simply an idea for next time.",
+        ],
+      },
+      {
+        id: "bookmark",
+        category: "Small projects",
+        title: "A place to save your page.",
+        subtitle: "Simple bookmarks from paper you already have.",
+        time: "2 min read",
+        art: "notebook",
+        paragraphs: [
+          "A bookmark can be a postcard, a strip of sturdy paper, or a small sketch. Choose something thin enough to sit comfortably between pages.",
+          "Add a date or a line you enjoyed if you wish. Leave fragile photographs and bulky objects outside the book.",
+          "It is a small project with a useful purpose: keeping your place until you return.",
+        ],
+      },
+      {
+        id: "shelf",
+        category: "At home",
+        title: "Give your favorites a little space.",
+        subtitle: "A bookshelf arranged for browsing, not perfection.",
+        time: "3 min read",
+        art: "books",
+        paragraphs: [
+          "Keep the books you reach for on an accessible shelf. A little space around them makes choosing the next one easier.",
+          "Arrange by topic, author, color, or whatever helps you find things. Keep books out of direct damp and strong sunlight.",
+          "A shelf can change as your reading changes. There is no single right order.",
+        ],
+      },
+    ],
+  },
+];
 function Illustration({ kind }: { kind: string }) {
   return (
     <svg
       viewBox="0 0 600 470"
       role="img"
       aria-label={
-        kind === "plant"
-          ? "Original illustration of a potted plant beside a window"
-          : kind === "cup"
-            ? "Original illustration of a cup on a table"
-            : kind === "notebook"
-              ? "Original illustration of an open notebook"
-              : "Original illustration of hills and a sunny sky"
+        kind === "record"
+          ? "Original illustration of a record player"
+          : kind === "headphones"
+            ? "Original illustration of headphones"
+            : kind === "books"
+              ? "Original illustration of a stack of books"
+              : kind === "plant"
+                ? "Original illustration of a potted plant beside a window"
+                : kind === "cup"
+                  ? "Original illustration of a cup on a table"
+                  : kind === "notebook"
+                    ? "Original illustration of an open notebook"
+                    : "Original illustration of hills and a sunny sky"
       }
     >
       <rect
@@ -83,7 +229,98 @@ function Illustration({ kind }: { kind: string }) {
         height="470"
         fill={kind === "landscape" ? "#d8e6df" : "#e9dfce"}
       />
-      {kind === "plant" ? (
+      {kind === "record" ? (
+        <>
+          <rect
+            x="80"
+            y="130"
+            width="440"
+            height="270"
+            rx="22"
+            fill="#a86f51"
+          />
+          <rect
+            x="100"
+            y="148"
+            width="400"
+            height="230"
+            rx="12"
+            fill="#dfcbb0"
+          />
+          <circle cx="270" cy="260" r="102" fill="#293e3d" />
+          {[82, 68, 54].map((r) => (
+            <circle
+              key={r}
+              cx="270"
+              cy="260"
+              r={r}
+              fill="none"
+              stroke="#546864"
+              strokeWidth="2"
+            />
+          ))}
+          <circle cx="270" cy="260" r="31" fill="#c58b5b" />
+          <path
+            d="M445 190v80l-55 55"
+            stroke="#536862"
+            strokeWidth="12"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <circle cx="445" cy="185" r="17" fill="#f3ead8" />
+        </>
+      ) : kind === "headphones" ? (
+        <>
+          <circle cx="300" cy="245" r="180" fill="#d5ddcf" />
+          <path
+            d="M175 280v-65a125 125 0 0 1 250 0v65"
+            stroke="#36564c"
+            strokeWidth="28"
+            fill="none"
+          />
+          <rect
+            x="143"
+            y="240"
+            width="75"
+            height="130"
+            rx="30"
+            fill="#af7453"
+          />
+          <rect
+            x="382"
+            y="240"
+            width="75"
+            height="130"
+            rx="30"
+            fill="#af7453"
+          />
+          <path
+            d="M420 365q0 60-100 60"
+            stroke="#36564c"
+            strokeWidth="6"
+            fill="none"
+          />
+        </>
+      ) : kind === "books" ? (
+        <>
+          <circle cx="320" cy="220" r="170" fill="#e4cba7" />
+          <rect x="105" y="350" width="390" height="55" rx="9" fill="#45695a" />
+          <rect x="125" y="359" width="350" height="32" fill="#f5ead5" />
+          <rect x="135" y="290" width="340" height="58" rx="8" fill="#ad6f53" />
+          <rect x="150" y="300" width="310" height="32" fill="#f5ead5" />
+          <path
+            d="M160 275V110q75-35 140 5 65-40 140-5v165q-75-25-140 10-65-35-140-10Z"
+            fill="#fff7e5"
+            stroke="#8e785b"
+            strokeWidth="4"
+          />
+          <path
+            d="M300 115v170M180 140l95 10m-95 20 95 10m50-30 95-10m-95 40 95-10"
+            stroke="#c9b99d"
+            strokeWidth="3"
+          />
+        </>
+      ) : kind === "plant" ? (
         <>
           <rect
             x="345"
@@ -185,6 +422,10 @@ function Illustration({ kind }: { kind: string }) {
   );
 }
 export default function CoverSite({ onOpen }: { onOpen: () => void }) {
+  const { cover } = useDiscreetSession();
+  const edition = editions[cover];
+  const stories = edition.stories;
+  const BrandIcon = cover === 1 ? Music : cover === 2 ? BookOpen : Leaf;
   const [selected, Selected] = useState("");
   const [category, Category] = useState("All stories");
   const [query, Query] = useState("");
@@ -204,7 +445,7 @@ export default function CoverSite({ onOpen }: { onOpen: () => void }) {
         .includes(query.toLowerCase()),
   );
   return (
-    <div className="everyday-site">
+    <div className={"everyday-site edition-" + edition.name}>
       <a href="#reading" className="skip">
         Skip to stories
       </a>
@@ -220,7 +461,8 @@ export default function CoverSite({ onOpen }: { onOpen: () => void }) {
             Query("");
           }}
         >
-          <Leaf size={25} strokeWidth={1.4} /> everyday<span>notes</span>
+          <BrandIcon size={25} strokeWidth={1.4} /> everyday
+          <span>{edition.name}</span>
           <span className="sr-only"> home</span>
         </button>
         <button
@@ -260,13 +502,11 @@ export default function CoverSite({ onOpen }: { onOpen: () => void }) {
           <>
             <div className="everyday-hero">
               <div>
-                <span className="everyday-kicker">
-                  GOOD THINGS, CLOSE TO HOME
-                </span>
+                <span className="everyday-kicker">{edition.kicker}</span>
                 <h1>
-                  More joy in
+                  {edition.heading}
                   <br />
-                  the little things.
+                  {edition.ending}
                 </h1>
                 <p className="reading-clue">
                   A note can be a quiet reminder: <mark>Click</mark> into a new
@@ -284,29 +524,30 @@ export default function CoverSite({ onOpen }: { onOpen: () => void }) {
                 <div className="editor-note">
                   <span>THE EDITOR’S NOTE</span>
                   <p>
-                    No grand plans needed.
+                    {edition.note}
                     <br />
-                    Start with something small.
+                    {edition.noteEnd}
                   </p>
                 </div>
               </div>
               <button
                 className="feature-art"
-                onClick={() => Selected("windowsill")}
-                aria-label="Read A little green goes a long way"
+                onClick={() => Selected(stories[0].id)}
+                aria-label={"Read " + stories[0].title}
               >
-                <Illustration kind="plant" />
+                <Illustration kind={stories[0].art} />
                 <span>
-                  AT HOME / 3 MIN READ
+                  {stories[0].category.toUpperCase()} /{" "}
+                  {stories[0].time.toUpperCase()}
                   <br />
-                  <strong>A little green goes a long way.</strong>
+                  <strong>{stories[0].title}</strong>
                   <ArrowUpRight size={22} />
                 </span>
               </button>
             </div>
             <div className="reading-section-heading">
               <div>
-                <span className="everyday-kicker">THE LATEST NOTES</span>
+                <span className="everyday-kicker">{edition.latest}</span>
                 <h2>A few things you might enjoy.</h2>
               </div>
               <label className="reading-search">
@@ -322,10 +563,7 @@ export default function CoverSite({ onOpen }: { onOpen: () => void }) {
             <nav className="reading-categories" aria-label="Story categories">
               {[
                 "All stories",
-                "At home",
-                "Everyday rituals",
-                "Out & about",
-                "Small projects",
+                ...Array.from(new Set(stories.map((s) => s.category))),
               ].map((c) => (
                 <button
                   key={c}
@@ -376,7 +614,7 @@ export default function CoverSite({ onOpen }: { onOpen: () => void }) {
         )}
       </main>
       <footer className="everyday-footer">
-        <span>everyday notes</span>
+        <span>everyday {edition.name}</span>
         <p>A collection of small ideas. Made to browse at your own pace.</p>
         <button onClick={() => dialog.current?.showModal()}>
           Personal space <ArrowUpRight size={15} />

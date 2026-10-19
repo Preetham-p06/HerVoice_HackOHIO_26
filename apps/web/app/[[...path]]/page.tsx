@@ -1861,6 +1861,16 @@ function Chat() {
     audio.current?.pause();
     window.speechSynthesis.cancel();
     const s = new SpeechSynthesisUtterance(last.text);
+    const voice = window.speechSynthesis.getVoices().find(v =>
+      /^en[-_]/i.test(v.lang) && /Samantha|Karen|Moira|Tessa|Victoria|Zira|Jenny|Aria|Female/i.test(v.name)
+    );
+    if (!voice) {
+      E("A feminine device voice is unavailable. Choose Listen to reply for Maya’s AI voice.");
+      return;
+    }
+    s.voice = voice;
+    s.lang = "en-US";
+    s.rate = .94;
     s.onend = () => S(false);
     s.onerror = () => {
       S(false);

@@ -12,7 +12,7 @@ async function visit(page: Page, path: string) {
     .getByRole("button", { name: "Open support tools", exact: true })
     .click();
   await expect(page.locator(".private-shell")).toBeVisible();
-  await expect(page).toHaveTitle("Everyday Notes — Ideas for everyday living");
+  await expect(page).toHaveTitle(/^Everyday (Notes|Music|Books) — /);
 }
 
 
@@ -227,9 +227,9 @@ test("neutral reading cover is the default on every entry and after closing tool
   });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "More joy in the little things." }),
+    page.getByRole("heading", { name: /More joy in the little things\.|Good music\. A little discovery\.|Small moments\. Good books\./ }),
   ).toBeVisible();
-  await expect(page).toHaveTitle("Everyday Notes — Ideas for everyday living");
+  await expect(page).toHaveTitle(/^Everyday (Notes|Music|Books) — /);
   await expect(page.locator(".private-shell")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Help options/ })).toHaveCount(
     0,
@@ -278,15 +278,15 @@ test("neutral reading cover is the default on every entry and after closing tool
     .getByRole("button", { name: "Back to reading", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "More joy in the little things." }),
+    page.getByRole("heading", { name: /More joy in the little things\.|Good music\. A little discovery\.|Small moments\. Good books\./ }),
   ).toBeVisible();
   await expect(page.locator("textarea")).toHaveCount(0);
   await page.goto("/journal");
   await expect(
-    page.getByRole("heading", { name: "More joy in the little things." }),
+    page.getByRole("heading", { name: /More joy in the little things\.|Good music\. A little discovery\.|Small moments\. Good books\./ }),
   ).toBeVisible();
   await expect(page.getByLabel("Your message", { exact: true })).toHaveCount(0);
-  await expect(page).toHaveTitle("Everyday Notes — Ideas for everyday living");
+  await expect(page).toHaveTitle(/^Everyday (Notes|Music|Books) — /);
   const result = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
@@ -304,12 +304,12 @@ test("double Escape covers private tools and reload keeps them covered", async (
   await page.keyboard.press("Escape");
   await expect(page.locator(".private-shell")).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "More joy in the little things." }),
+    page.getByRole("heading", { name: /More joy in the little things\.|Good music\. A little discovery\.|Small moments\. Good books\./ }),
   ).toBeVisible();
   await page.reload();
   await expect(page.locator(".private-shell")).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "More joy in the little things." }),
+    page.getByRole("heading", { name: /More joy in the little things\.|Good music\. A little discovery\.|Small moments\. Good books\./ }),
   ).toBeVisible();
 });
 
@@ -627,4 +627,22 @@ test("expanded companion view preserves the draft and exits with Escape", async 
   await page.keyboard.press("Escape");
   await expect(page.locator(".expanded-room")).toHaveCount(0);
   await expect(page.getByLabel("Your message", { exact:true })).toHaveValue("Synthetic presentation draft.");
+});
+
+
+test("cover editions rotate across reloads with a consistent highlighted entry", async ({ page }) => {
+  await page.goto("/");
+  for (const name of ["notes", "music", "books", "notes"]) {
+    await expect(page.locator(".everyday-brand")).toContainText(name);
+    await expect(page.locator(".reading-clue mark")).toHaveText(["Click", "the", "button", "below", "for", "help"]);
+    await expect(page.getByRole("button", { name: "Open personal space", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Read " + (name === "notes" ? "A little green goes a long way." : name === "music" ? "A softer start to the day." : "A few pages, just for you."), exact: true }).click();
+    await expect(page.locator(".article-copy p")).toHaveCount(3);
+    await page.getByRole("button", { name: "Back to stories", exact: true }).click();
+    await page.getByRole("button", { name: "Open personal space", exact: true }).click();
+    await expect(page.locator(".private-shell")).toBeVisible();
+    await page.getByRole("button", { name: "Back to reading", exact: true }).click();
+    await expect(page.locator(".everyday-brand")).toContainText(name);
+    await page.reload();
+  }
 });

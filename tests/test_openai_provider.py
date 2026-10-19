@@ -43,3 +43,17 @@ def test_openai_billing_error_is_sanitized(monkeypatch):
     assert err.value.status_code==429
     assert "credits" in err.value.detail
     assert "private-test-secret" not in err.value.detail
+
+
+def test_companion_speech_uses_gentle_feminine_voice(monkeypatch):
+    monkeypatch.delenv("OPENAI_TTS_VOICE", raising=False)
+    monkeypatch.setenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts")
+    seen = {}
+    def request(path, payload, **kwargs):
+        seen.update(payload)
+        assert path == "/audio/speech" and kwargs["binary"]
+        return b"synthetic-audio"
+    monkeypatch.setattr(openai_provider, "request", request)
+    assert openai_provider.speech("Synthetic welcome") == b"synthetic-audio"
+    assert seen["voice"] == "shimmer"
+    assert "feminine" in seen["instructions"]
