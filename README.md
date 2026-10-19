@@ -4,7 +4,7 @@
 
 A U.S.-first support platform combining discreet image-based requests, an animated AI companion, source-backed legal information, and a responder workspace.
 
-[Try locally](#how-to-set-it-up-locally) · [Judge walkthrough](#five-minute-judge-walkthrough) · [Architecture](#system-architecture) · [API setup](docs/api-setup.md)
+[Try locally](#how-to-set-it-up-locally) · [Architecture](#system-architecture) · [API setup](docs/api-setup.md)
 
 > **Hackathon prototype:** use synthetic information. HerVoice demonstrates the complete request-to-responder workflow; it does not contact real authorities or provide emergency dispatch. A neutral website and hidden image payload cannot guarantee secrecy on a monitored device.
 
@@ -282,18 +282,6 @@ docker compose up --build
 ```
 
 Native startup has been exercised; the Compose setup is supplied but has not been validated in this development environment. No public deployment is claimed. Do not expose synthetic demo authentication to the internet. Live mode requires MongoDB, Clerk, independent encryption keys, organization memberships, and explicit origins; see [deployment requirements](docs/architecture.md).
-
-## Five-Minute Judge Walkthrough
-
-1. Start on the everyday cover. Read the six highlighted words, **Click the button below for help**, and select **Open personal space**.
-2. Open **Create a post** and enter synthetic details. Generate and edit the text, then choose one of three generated covers.
-3. Send the encoded PNG to the **monitored demo feed**. Watch the signal reach the dashboard; wait for the scanner or use **Scan now**.
-4. Open the case. Show the six summary cards, optional Google map, advisory analysis, and activity timeline.
-5. Use **Find Match** to review related reports, then update reviewed severity, assignment, notes, or status.
-6. Ask the **Law bot** about protection-order resources and select Ohio to demonstrate state-scoped coverage.
-7. Open **Therapy bot** to meet Maya. Show text conversation, optional voice playback, and moving-avatar controls, then return to the everyday cover.
-
-The seeded dataset contains 16 synthetic cases across two practice organizations. The organization boundary can be demonstrated by trying to access or decode another organization’s request.
 
 ## Impact and Current Boundaries
 
