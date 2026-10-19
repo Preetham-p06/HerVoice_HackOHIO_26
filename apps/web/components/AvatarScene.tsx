@@ -52,7 +52,7 @@ function Character({ speaking, expression, paused, level, audio, cues, onReady }
 }
 function Camera({ close }: { close: boolean }) {
   const { camera }=useThree();
-  useEffect(() => { camera.position.set(0,1.30,close ? 2.65 : 3.65); camera.lookAt(0,1.18,0); }, [camera,close]);
+  useEffect(() => { camera.position.set(0,close ? 1.7 : 1.30,close ? 2.65 : 3.65); camera.lookAt(0,close ? 1.7 : 1.18,0); }, [camera,close]);
   return null;
 }
 export default function AvatarScene({ close, onReady, ...motion }: AvatarMotion & { close: boolean; onReady: () => void }) {
