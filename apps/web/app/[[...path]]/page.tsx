@@ -1606,7 +1606,7 @@ function Chat() {
   const [busy, B] = useState(false);
   const [error, E] = useState("");
   const [avatar, A] = useState(true);
-  const [transcript, Transcript] = useState(true);
+  const [transcript, Transcript] = useState(false);
   const room = useRef<HTMLElement>(null);
   const [fullRoom, FullRoom] = useState(false);
   useEffect(() => {
@@ -1693,7 +1693,7 @@ function Chat() {
     api("/support/memory")
       .then((d) => {
         Remember(d.enabled);
-        if (d.enabled) M(d.messages);
+        if (d.enabled) { M(d.messages); Transcript(d.messages.length > 0); }
       })
       .catch(() => {});
   }, []);
@@ -1731,6 +1731,7 @@ function Chat() {
   }, []);
   async function send() {
     if (!text.trim() || busy) return;
+    Transcript(true);
     generation.current++;
     playRequested.current = false;
     if (mediaJob.current)
@@ -1854,7 +1855,7 @@ function Chat() {
         </div>
       </div>
       <div className={"therapy-scene" + (avatar ? " with-avatar" : "") + (!transcript ? " thread-hidden" : "")}>
-        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} expression={expression} busy={busy} level={voiceLevel} audio={audio} cues={cues} />}        <div className="chatbody" aria-live="polite" hidden={avatar && (!transcript || (!messages.length && !busy))}>
+        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} expression={expression} busy={busy} level={voiceLevel} audio={audio} cues={cues} />}        <div className="chatbody" aria-live="polite" hidden={avatar && !transcript}>
           <div className="thread-heading"><strong>Conversation</strong><button type="button" onClick={() => Transcript(false)} aria-label="Close conversation panel"><X size={17}/></button></div>
           {!messages.length && (
             <div className="welcome">

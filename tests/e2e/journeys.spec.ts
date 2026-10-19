@@ -19,7 +19,7 @@ async function visit(page: Page, path: string) {
 async function conversationSettings(page: Page) {
   const settings = page.locator(".room-settings");
   if (!(await settings.evaluate(element => (element as HTMLDetailsElement).open))) {
-    await settings.locator("summary").click();
+    await settings.locator(":scope > summary").click();
   }
 }
 
@@ -609,6 +609,8 @@ test("avatar studio keeps conversation history optional without losing the draft
   await visit(page, "/journal");
   await expect(page.locator(".room-settings")).not.toHaveAttribute("open");
   await page.getByLabel("Your message", { exact: true }).fill("Synthetic studio draft.");
+  await page.getByRole("button", { name: "Show conversation", exact: true }).click();
+  await expect(page.locator(".chatbody")).toBeVisible();
   await page.getByRole("button", { name: "Hide conversation", exact: true }).click();
   await expect(page.locator(".chatbody")).toBeHidden();
   await page.getByRole("button", { name: "Show conversation", exact: true }).click();
