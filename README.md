@@ -42,6 +42,8 @@ HerVoice turns an approved support message into an encrypted payload inside an o
 
 **User side**
 
+![HerVoice user flow: enter details, review text, choose a cover, encrypt, verify, and share the original PNG](docs/diagrams/user-flow.png)
+
 1. **Describe the situation.** Enter a short description and optional alias, safe contact preference, location, duration, incident frequency, and other details. Location can be typed or requested through the browser with consent.
 2. **Review the message.** OpenAI can expand brief notes into a readable draft. The user can edit every word or continue manually.
 3. **Choose an image.** Generate three covers from a prompt, select a built-in cover, or upload a PNG.
@@ -50,22 +52,12 @@ HerVoice turns an approved support message into an encrypted payload inside an o
 
 **Responder side**
 
+![HerVoice responder flow: scan, decode, structure, store, review, and find related reports](docs/diagrams/authority-flow.png)
+
 1. **Receive a signal.** Upload an original PNG for verification, or let the controlled `#HerVoiceSignal` feed scanner process it. The scanner runs every 30 seconds and also supports **Scan now**.
 2. **Decode and verify.** The API checks the image framing, encrypted payload, recipient organization, and request linkage before recording receipt. Repeated intake does not create duplicate cases.
 3. **Review structured information.** Optional OpenAI analysis produces an advisory summary, reported issue categories, review flags, and a severity suggestion.
 4. **Manage the case.** Responders review severity and priority, assign cases, record notes, and close an issue with a reason. Updates create actual activity events; stale edits are rejected.
-
-```mermaid
-flowchart LR
-    A[Brief details] --> B[Review approved message]
-    B --> C[Choose or generate cover]
-    C --> D[Encrypt and encode PNG]
-    D --> E[Verify original PNG]
-    E --> F[Controlled demo feed or manual intake]
-    F --> G[Decode and verify recipient]
-    G --> H[Structured advisory analysis]
-    H --> I[Responder case and activity]
-```
 
 #### What sets it apart 🌠
 
@@ -85,6 +77,8 @@ The encryption is server-readable, not end-to-end. Resizing, screenshots, JPEG c
 Maya provides a welcoming place to type, pause, or ask for a small grounding exercise. The support instructions emphasize autonomy, no blame, and no pressure to disclose or confront someone.
 
 #### How it works
+
+![Maya companion flow: load the avatar, receive a message, generate a reply, create speech, animate, and provide user controls](docs/diagrams/companion-flow.png)
 
 - **Text conversation:** OpenAI receives the current conversation context and generates a supportive response.
 - **Voice input:** choosing **Speak your message** records audio for transcription. The transcript is editable before sending.
@@ -109,6 +103,10 @@ Maya is a prompted support experience, not a clinically trained or validated tre
 The Law bot helps users explore U.S. support resources and legal-information starting points in plain language. Its current source set includes national guidance and selected Ohio protection-order resources.
 
 #### How it works 🤖
+
+![HerVoice legal retrieval: prepare reviewed sources, index embeddings, receive and embed a question, retrieve and verify passages, and generate a cited answer](docs/diagrams/legal-flow.png)
+
+The diagram shows the optional Atlas retrieval path. The default local flow is:
 
 1. Receive the question and selected jurisdiction/state.
 2. Retrieve relevant reviewed summaries using jurisdiction, source status, review expiry, lexical relevance, and local hash-vector ranking.
@@ -140,6 +138,8 @@ Results exclude the current case and unrelated organizations. Responders can adj
 ## How We Built It 🔧
 
 ### System architecture
+
+The illustrated flows above are maintained as [editable SVG and PNG assets](docs/diagrams). Regenerate them with `node scripts/render_readme_diagrams.mjs` after installing the project dependencies.
 
 ```mermaid
 flowchart TB
