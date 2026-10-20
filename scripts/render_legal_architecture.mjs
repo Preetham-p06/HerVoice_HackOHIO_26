@@ -1,0 +1,40 @@
+/** Rebuild the legal retrieval architecture: node scripts/render_legal_architecture.mjs */
+import { writeFile } from 'node:fs/promises';
+import sharp from 'sharp';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import * as icons from 'lucide-react';
+const esc = s => s.replaceAll('&','&amp;').replaceAll('<','&lt;');
+const text = (x,y,s,size=18,color='#536675',weight=400) => `<text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="${size}" fill="${color}" font-weight="${weight}">${esc(s)}</text>`;
+function box(x,y,title,lines,icon,color='#216b85') {
+ const glyph=renderToStaticMarkup(React.createElement(icons[icon],{size:30,color,strokeWidth:1.7}));
+ return `<rect x="${x}" y="${y}" width="340" height="130" rx="16" fill="white" stroke="${color}" stroke-opacity=".35" stroke-width="2"/><g transform="translate(${x+22},${y+22})">${glyph}</g>${text(x+66,y+44,title,22,'#193c4d',700)}${lines.map((s,i)=>text(x+24,y+79+i*25,s)).join('')}`;
+}
+const arrow = d => `<path d="${d}" fill="none" stroke="#8195a1" stroke-width="2.5" marker-end="url(#arrow)"/>`;
+let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1300" viewBox="0 0 1400 1300" role="img" aria-labelledby="title desc"><title id="title">HerVoice legal retrieval architecture</title><desc id="desc">Reviewed sources are chunked and embedded into Atlas. A question is embedded to retrieve passages, checked for jurisdiction and source validity, and combined with the question for an OpenAI answer with citations. Source summaries remain available if generation fails.</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="#8195a1" stroke-width="1.5"/></marker></defs><rect width="1400" height="1300" fill="#f7fafb"/>`;
+svg+=text(80,64,'HerVoice / Legal search architecture',36,'#193c4d',700);
+svg+=text(80,102,'From reviewed documents to a clear explanation with traceable sources.',21);
+svg+=text(80,157,'01  PREPARE THE KNOWLEDGE BASE',14,'#216b85',700);
+svg+=box(80,180,'Reviewed sources',['Official PDFs or the maintained','U.S. / Ohio source registry'],'Files');
+svg+=box(520,180,'Extract & split',['pypdf · overlapping text chunks','Keep page and source metadata'],'Scissors');
+svg+=box(960,180,'Document embeddings',['OpenAI text-embedding-3-small','768-dimensional vectors'],'Network');
+svg+=arrow('M420 245 H510')+arrow('M860 245 H950');
+svg+=text(80,382,'02  RETRIEVE RELEVANT PASSAGES',14,'#216b85',700);
+svg+=box(80,410,'Your question',['Question + selected jurisdiction','Optional state and follow-up context'],'MessageCircleQuestion');
+svg+=box(520,410,'Query embedding',['The same OpenAI embedding model','as the indexed source chunks'],'Network');
+svg+=box(960,410,'MongoDB Atlas',['Vector Search · cosine similarity','Rank and filter relevant chunks'],'Database','#27916b');
+svg+=arrow('M420 475 H510')+arrow('M860 475 H950')+arrow('M1130 310 V400');
+svg+=text(520,625,'03  CHECK CONTEXT & EXPLAIN',14,'#216b85',700);
+svg+=box(960,655,'Verify the sources',['Jurisdiction, review expiry, version','Exclude stale or withdrawn text'],'ShieldCheck','#27916b');
+svg+=box(520,655,'Question + context',['Original question + retrieved text','Keep coverage limits and citations'],'Layers');
+svg+=arrow('M1130 540 V645')+arrow('M960 720 H870')+arrow('M250 540 V720 H510');
+svg+=text(96,690,'Original question',17);
+svg+=box(520,875,'OpenAI explanation',['Generate from retrieved text only','No unsupported laws or outcomes'],'Sparkles');
+svg+=box(960,875,'If AI is unavailable',['Show the retrieved summaries','and a clear availability notice'],'BookOpen','#b27b36');
+svg+=arrow('M690 785 V865')+arrow('M860 940 H950');
+svg+=box(520,1090,'Answer + sources',['Readable response and official links','No relevant evidence? Say so.'],'MessagesSquare');
+svg+=arrow('M690 1005 V1080')+arrow('M1130 1005 V1155 H870');
+svg+=text(80,1265,'Atlas path shown · Requires live configuration. Default local retrieval uses the reviewed registry and local ranking.',17);
+svg+='</svg>';
+await writeFile('docs/diagrams/legal-architecture.svg',svg);
+await sharp(Buffer.from(svg)).png().toFile('docs/diagrams/legal-architecture.png');

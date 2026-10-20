@@ -119,6 +119,12 @@ Sources come from the maintained registry rather than invented model URLs. Ohio-
 
 The no-key legal retriever uses the local reviewed registry. `LEGAL_PROVIDER=atlas` enables OpenAI query embeddings and MongoDB Atlas Vector Search over explicitly indexed legal chunks, followed by the same source-backed response generation. PDF chunking, ingestion, and index setup are included; live Atlas verification is pending. LangChain is not required.
 
+#### Retrieval architecture
+
+![HerVoice legal architecture: reviewed documents and questions are embedded for Atlas retrieval, verified passages provide context to OpenAI, and the answer includes official sources with a source-summary fallback](docs/diagrams/legal-architecture.png)
+
+This shows the optional Atlas path using our actual OpenAI and Python components. The default local retriever remains available. Regenerate the graphic with `node scripts/render_legal_architecture.mjs`.
+
 ### 4. Responder dashboard and related-report matching
 
 The dashboard polls for case changes every five seconds. Responders can filter the table, sort severity, choose columns, and open a case for its contact preference, incident details, reported location, status, and activity timeline.
