@@ -4915,3 +4915,17 @@ html[data-covering="true"] body::after {
 .match-summary { margin: 20px 0 4px; color: #465b69; }
 .match-facts dd small { display: block; color: #526575; }
 .match-dialog .match-result { box-shadow: none; }
+
+/* Legal support: a quieter form and a clear, readable answer. */
+.legal-page { max-width: 1000px; }
+.legal-page h1 { font-size: clamp(2rem, 4vw, 3.2rem); max-width: 800px; line-height: 1.15; }
+.legal-question-panel h2 { margin-top: 0; }
+.legal-helper { color: #526575; line-height: 1.6; }
+.legal-location { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+.legal-starters { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 8px 0 24px; }
+.legal-starters > span { width: 100%; color: #526575; font-size: 14px; }
+.legal-starters .btn { min-height: 44px; padding: 10px 14px; font-size: 14px; }
+.legal-answer-panel { border-top: 4px solid #276b76; scroll-margin-top: 100px; }
+.legal-answer-panel > p { line-height: 1.8; }
+.legal-answer-panel:focus-visible { outline: 3px solid #276b76; outline-offset: 4px; }
+@media (max-width: 650px) { .legal-location { grid-template-columns: 1fr; gap: 0; } }

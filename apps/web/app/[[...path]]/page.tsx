@@ -2185,17 +2185,24 @@ function Rights() {
   const [answer, A] = useState<any>(null);
   const [busy, B] = useState(false);
   const [error, E] = useState("");
+  const answerPanel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (answer) answerPanel.current?.focus();
+  }, [answer]);
   return (
-    <section className="page formpage">
+    <section className="page formpage legal-page">
       <div className="eyebrow">LAW BOT · KNOW YOUR RIGHTS</div>
-      <h1>Clarity is a place to start.</h1>
+      <h1>Understand your options, one question at a time.</h1>
       <p className="intro">
-        Explore official sources about your options. This demo does not provide
-        legal advice.
+        You don’t need to know the legal terms. Ask in your own words, and we’ll help you explore trusted U.S. resources.
       </p>
-      <div className="panel">
+      <div className="panel legal-question-panel">
+        <h2>Let’s start with what you need</h2>
+        <p className="legal-helper">General information, not legal advice. You can leave out names and personal details.</p>
+        <div className="legal-location">
         <Field label="Jurisdiction">
           <select
+            disabled={busy}
             value={j}
             onChange={(e) => {
               J(e.target.value);
@@ -2213,6 +2220,7 @@ function Rights() {
             hint="National information is available without a location. State laws vary; coverage is limited to the sources shown."
           >
             <select
+              disabled={busy}
               value={state}
               onChange={(e) => {
                 SetState(e.target.value);
@@ -2227,15 +2235,24 @@ function Rights() {
             </select>
           </Field>
         )}
+        </div>
+        <div className="legal-starters" aria-label="Example questions">
+          <span>Need a place to start?</span>
+          {[["Protection orders", "Where can I find official information about protection orders and application forms?"], ["Find local support", "Where can someone experiencing domestic abuse find local support?"], ["Understand my options", "What official resources can help me understand domestic violence and my options?"]].map(([label, question]) => (
+            <button type="button" className="btn secondary" key={label} disabled={busy} onClick={() => Q(question)}>{label}</button>
+          ))}
+        </div>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
+            if (!q.trim()) { E("Please enter a question to get started."); return; }
+            A(null);
             B(true);
             E("");
             try {
               A(
                 await api("/legal", {
-                  question: q,
+                  question: q.trim(),
                   jurisdiction: j,
                   state: state || null,
                   previousQuestions: questions.slice(-4),
@@ -2270,6 +2287,8 @@ function Rights() {
           <Field label="What would you like to understand?">
             <textarea
               rows={4}
+              placeholder="For example: Where can I learn about protection orders in Ohio?"
+              disabled={busy}
               value={q}
               onChange={(e) => Q(e.target.value)}
               required
@@ -2281,13 +2300,16 @@ function Rights() {
             <BookOpen size={16} />
           </button>
         </form>
-        {error && <p className="error">{error}</p>}
+        {busy && <p role="status" className="legal-helper">Finding relevant sources and preparing your answer…</p>}
+        {error && <p role="alert" className="error">{error}</p>}
       </div>
       {answer && (
-        <div className="panel" aria-live="polite">
+        <div className="panel legal-answer-panel" ref={answerPanel} tabIndex={-1} aria-labelledby="legal-answer-title">
           <Badge>{answer.mode}</Badge>
-          <h2>About your question</h2>
+          <h2 id="legal-answer-title">A starting point for you</h2>
+          {answer.notice && <p role="status" className="notice">{answer.notice}</p>}
           <p style={{ whiteSpace: "pre-wrap" }}>{answer.answer}</p>
+          {answer.sources.length > 0 && <h3>Read the official sources</h3>}
           {answer.sources.map((s: any) => (
             <a
               className="source"

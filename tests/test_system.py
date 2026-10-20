@@ -592,3 +592,22 @@ def test_late_reply_cannot_restore_revoked_or_replaced_memory(client, monkeypatc
     monkeypatch.setattr(main, "support_reply", reply_after_revoke)
     assert client.post("/v1/support", json={"text": "Synthetic old context"}).status_code == 200
     assert client.get("/v1/support/memory").json()["messages"] == []
+
+
+def test_legal_provider_failure_keeps_retrieved_sources(client, monkeypatch):
+    from fastapi import HTTPException
+    from services.api import main
+    monkeypatch.setenv("LEGAL_PROVIDER", "local")
+    monkeypatch.setattr(main.providers, "enabled", lambda: True)
+    def unavailable(*args, **kwargs):
+        raise HTTPException(503, "provider unavailable")
+    monkeypatch.setattr(main.providers, "generate", unavailable)
+    response = client.post("/v1/legal", json={"question": "protection order forms", "jurisdiction": "United States", "state": "Ohio"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["sources"] and body["answer"]
+    assert "unavailable" in body["notice"]
+    assert "synthesis" not in body["mode"]
+    unsupported = client.post("/v1/legal", json={"question": "patent registration", "jurisdiction": "Japan"}).json()
+    assert unsupported["mode"] == "abstention"
+    assert unsupported["sources"] == []
