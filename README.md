@@ -211,6 +211,8 @@ The complete interactive contract is available at [localhost:8000/docs](http://l
 
 ## Where MongoDB and Atlas Fit 🗄️
 
+For account setup, private connection settings, index creation, and the live matching checklist, see the [Atlas setup and connection-test guide](docs/authority-atlas.md#first-time-atlas-setup).
+
 The local demo uses SQLite so coworkers can run it without a database account. With live configuration, MongoDB stores cases, memberships, intake records, jobs, review decisions, and consented memory. Sensitive case payloads are encrypted with AES-GCM; operational metadata remains searchable.
 
 Atlas Vector Search is an optional adapter for related reports, with 768-dimensional embeddings and organization/model filtering. It requires a configured cluster, vector index, and indexed authorized records. It has not been smoke-tested against a live Atlas account. See [architecture](docs/architecture.md) and [API setup](docs/api-setup.md) for deployment requirements and limits.

@@ -2,6 +2,54 @@
 
 The OpenAI companion remains unchanged. This configuration enables MongoDB case storage, a Mongo-backed monitor queue, optional X ingestion, case vectors, and legal-document vector retrieval. Implementation and mocked adapter tests are included; a live Atlas cluster and X account have not yet been supplied or tested.
 
+## First-time Atlas setup
+
+For **Find Match**, you need an Atlas database, OpenAI embeddings, and Clerk responder authentication. X and Instagram credentials are not needed for matching. Keep the working demo in demo mode until live identity and encryption settings are ready.
+
+1. Sign in to [MongoDB Atlas](https://cloud.mongodb.com/), create a project, and create a cluster supporting Vector Search.
+2. Create a database user with access to the `hervoice` database. This is separate from your Atlas website account. The setup operator also needs permission to create search indexes.
+3. Add the IP address of the computer running the API to the project's network access list. If your IP changes, update this entry.
+4. Choose **Connect → Drivers → Python** and copy the connection string. Replace its username/password placeholders; URL-encode special characters in credentials.
+5. Save `MONGODB_URI` and `MONGODB_DATABASE=hervoice` in the ignored root `.env`. This is a database connection string, not an Atlas management API key. Never commit the URI with credentials.
+6. Configure the Clerk application and organization, the live settings below, and a server-managed responder membership. A Clerk account alone does not grant dashboard access. For a local frontend, use `ALLOWED_ORIGINS=http://localhost:3000`.
+7. Enable `MATCH_PROVIDER=atlas` and `EMBEDDING_PROVIDER=openai`, then run the case indexing command below. Wait until the index is queryable before testing Find Match.
+
+For matching alone, omit the X settings and leave `LEGAL_PROVIDER` unchanged unless you also want Atlas legal retrieval. The full configuration below includes those optional integrations.
+
+Official instructions: [connect to Atlas](https://www.mongodb.com/docs/atlas/connect-to-database-deployment/) and [configure vector indexes](https://www.mongodb.com/docs/vector-search/indexes/vector-search-type/).
+
+### Test the database connection first
+
+Run from the repository root after saving the connection. This checks connectivity and authentication without printing the URI or changing app mode:
+
+```bash
+.venv/bin/python - <<'PYTHON'
+import os
+from dotenv import load_dotenv
+from pymongo import MongoClient
+load_dotenv('.env')
+try:
+    with MongoClient(os.environ['MONGODB_URI'], serverSelectionTimeoutMS=10000) as client:
+        client.admin.command('ping')
+    print('Atlas connection successful')
+except Exception:
+    raise SystemExit('Atlas connection failed. Check the URI, database user, IP access list, and network.')
+PYTHON
+```
+
+A successful ping does not verify Vector Search, database write permissions, or responder authentication. Complete the end-to-end check below too.
+
+### Verify live matching with synthetic reports
+
+1. Restart both services after completing the live configuration. Sign in as an authorized responder in the configured organization.
+2. Create and receive at least two synthetic reports with similar physical/behavioral descriptions, plus one different description. Prepared-only reports are excluded. Existing SQLite demo cases are not automatically migrated to MongoDB.
+3. Run `.venv/bin/python -m scripts.index_cases YOUR_CLERK_ORG`. Confirm `case_similarity` is queryable in Atlas and that `case_vectors` contains the organization’s records.
+4. Open a received case and select **Find Match**. Confirm that the displayed search method identifies Atlas cosine similarity, results exclude the source case, and the similar description is ranked above the unrelated one.
+5. Change the maximum results and minimum similarity. Confirm the result count stays within the limit and every score meets the threshold; an empty result is valid at a high threshold.
+6. Verify a responder from another organization cannot access the case or see it in matching results. Refresh the dashboard to confirm case data persists.
+
+Only after these steps pass should the deployment be described as live-Atlas verified. The existing automated adapter tests use mocks; they do not establish that a particular cluster is configured correctly.
+
 ## What runs where
 
 1. X Recent Search fetches posts with the configured hashtag and image attachments. A cursor in `monitor_cursors` preserves pagination and the last completed batch. The first run searches the API's recent window; this is not full-history collection.
