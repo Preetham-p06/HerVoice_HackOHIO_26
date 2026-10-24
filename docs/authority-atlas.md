@@ -135,13 +135,13 @@ The current source collection is still a small U.S./Ohio corpus. Enabling Atlas 
 With `MONITOR_SCHEDULER=external`, the API does not start its internal monitor loop. Configure a scheduler to invoke this command every minute:
 
 ```bash
-cd /absolute/path/to/HerWay && .venv/bin/python -m scripts.scan_feed
+cd /absolute/path/to/HerVoice_HackOHIO_26 && .venv/bin/python -m scripts.scan_feed
 ```
 
 Example crontab (replace paths; no keys in the crontab):
 
 ```cron
-* * * * * cd /absolute/path/to/HerWay && .venv/bin/python -m scripts.scan_feed >> /var/log/hervoice-monitor.log 2>&1
+* * * * * cd /absolute/path/to/HerVoice_HackOHIO_26 && .venv/bin/python -m scripts.scan_feed >> /var/log/hervoice-monitor.log 2>&1
 ```
 
 The command purges expired memory, drains retries, fetches one X page (up to 10 posts), and processes queued images. Mongo claims prevent duplicate active processing and expire after worker interruption. Transient intake failures retry up to three attempts; invalid or terminal payloads discard image bytes. X pagination advances only after all attachments in a page have been handled. Failed X polls preserve the cursor and store a sanitized `lastError`; cron exits unsuccessfully for operator alerting. Quotas, rate limits, downtime exceeding the recent-search window, and high feed volume can delay or omit collection. Adjust operations and API access before relying on it.

@@ -1,6 +1,6 @@
 # HerVoice
 
-### A quiet way to reach out. A stronger voice for what comes next.
+### A quiet way to be heard.
 
 A U.S.-first support platform combining discreet image-based requests, an animated AI companion, source-backed legal information, and a responder workspace.
 
@@ -8,19 +8,19 @@ A U.S.-first support platform combining discreet image-based requests, an animat
 
 > **Hackathon prototype:** use synthetic information. HerVoice demonstrates the complete request-to-responder workflow; it does not contact real authorities or provide emergency dispatch. A neutral website and hidden image payload cannot guarantee secrecy on a monitored device.
 
-## Inspiration 🌟
+## Inspiration
 
 Asking for help can be difficult when someone else watches your phone, messages, or online activity. Even finding the words to describe a situation can feel overwhelming.
 
-HerVoice explores how a familiar, everyday website can offer a low-pressure entry into support. A person can write a few details, review their own message, prepare an ordinary-looking image, talk with an AI companion, or find information about their rights. The experience emphasizes clear choices, visible controls, and permission before voice, location, or saved conversation memory is used.
+We built HerVoice to make that first step easier. Users can write a request, hide the approved message in an image, talk with Maya, or look up legal resources. They choose what to share and whether to save conversation memory.
 
-## What It Does 💡
+## What It Does
 
 ### The problem
 
 People experiencing abuse may face limited privacy, uncertainty about their options, and difficulty accessing support. A useful interface needs to be easy to understand under stress and honest about what happens after a request is submitted.
 
-### HerVoice’s solution 💪
+### HerVoice’s solution
 
 | Experience | What we built |
 | --- | --- |
@@ -32,13 +32,13 @@ People experiencing abuse may face limited privacy, uncertainty about their opti
 
 The main navigation is **Home · Create a post · Law bot · Therapy bot · Dashboard**. “Therapy bot” opens an AI support companion, not a licensed therapist.
 
-## Detailed Description 📝
+## Detailed Description
 
 ### 1. Discreet requests through steganography
 
 HerVoice turns an approved support message into an encrypted payload inside an ordinary PNG. Image generation and message encoding are separate steps: OpenAI receives the cover-image prompt, while our backend encrypts and embeds the approved message.
 
-#### How it works 🛠️
+#### How it works
 
 **User side**
 
@@ -59,7 +59,7 @@ HerVoice turns an approved support message into an encrypted payload inside an o
 3. **Review structured information.** Optional OpenAI analysis produces an advisory summary, reported issue categories, review flags, and a severity suggestion.
 4. **Manage the case.** Responders review severity and priority, assign cases, record notes, and close an issue with a reason. Updates create actual activity events; stale edits are rejected.
 
-#### What sets it apart 🌠
+#### Design choices
 
 - **User-approved content:** original input and the approved narrative remain separate.
 - **Verified delivery states:** preparing a file, queueing a signal, and receiving a case are different events.
@@ -72,7 +72,7 @@ The codec uses least-significant-bit pixel encoding with an `HV01` frame, payloa
 
 The encryption is server-readable, not end-to-end. Resizing, screenshots, JPEG conversion, and social-platform recompression can destroy the payload. A read-only X hashtag connector is implemented and requires account-backed verification. Public publishing and Instagram/Telegram/Slack monitoring are not connected; the demo feed preserves original PNG bytes to demonstrate the full flow. See [authority and Atlas setup](docs/authority-atlas.md).
 
-### 2. Maya: an animated AI support companion 💬
+### 2. Maya: an animated AI support companion
 
 Maya provides a welcoming place to type, pause, or ask for a small grounding exercise. The support instructions emphasize autonomy, no blame, and no pressure to disclose or confront someone.
 
@@ -82,15 +82,15 @@ Maya provides a welcoming place to type, pause, or ask for a small grounding exe
 
 - **Text conversation:** OpenAI receives the current conversation context and generates a supportive response.
 - **Voice input:** choosing **Speak your message** records audio for transcription. The transcript is editable before sending.
-- **Female AI voice:** **Listen to reply** uses OpenAI speech with the `nova` voice. Automatic spoken replies are off by default.
+- **Female AI voice:** **Listen to reply** uses OpenAI speech with the `nova` voice. Voice controls let users stop or replay speech.
 - **Moving avatar:** a locally bundled, rigged Ready Player Me character blinks, moves gently, and animates its mouth during audio playback.
 - **Optional memory:** explicitly enabled conversation memory is encrypted, limited to 20 messages, and expires after 24 hours. Users can turn it off and delete it.
 
-#### What sets it apart ✨
+#### Design choices
 
-The studio keeps the character central, with a peach/lavender background, a floating message dock, and an optional transcript. Users can zoom, pause animation, switch to a still image, or use text only. Reduced-motion preferences and WebGL fallback are supported. Speech is labelled AI-generated, and no camera or facial-recognition feature is used.
+The studio places Maya beside the conversation, with cream and sage colors and a message composer. Users can zoom, pause animation, switch to a still image, or use text only. Reduced-motion preferences and WebGL fallback are supported. Speech is labelled AI-generated, and no camera or facial-recognition feature is used.
 
-#### Technical details 🛠️
+#### Technical details
 
 React Three Fiber, drei’s `useGLTF`, and Three.js render the GLB model. Bone motion and facial morph targets handle idle movement, blinking, and subtle expression cues. A browser audio analyser drives approximate mouth movement; optional Rhubarb cues provide timed visemes. Default animation does not claim phoneme-perfect lip sync.
 
@@ -98,11 +98,11 @@ Maya is a prompted support experience, not a clinically trained or validated tre
 
 ![HerVoice’s moving Maya companion in the studio](docs/screenshots/maya-reference-studio.png)
 
-### 3. Law bot for understanding options ⚖️
+### 3. Law bot for understanding options
 
 The Law bot helps users explore U.S. support resources and legal-information starting points in plain language. Its current source set includes national guidance and selected Ohio protection-order resources.
 
-#### How it works 🤖
+#### How it works
 
 ![HerVoice legal retrieval: prepare reviewed sources, index embeddings, receive and embed a question, retrieve and verify passages, and generate a cited answer](docs/diagrams/legal-flow.png)
 
@@ -113,7 +113,7 @@ The diagram shows the optional Atlas retrieval path. The default local flow is:
 3. When OpenAI is enabled, synthesize a response using the retrieved material.
 4. Present the answer with source links and coverage limitations. Unsupported questions or jurisdictions abstain.
 
-#### What sets it apart 💡
+#### Design choices
 
 Sources come from the maintained registry rather than invented model URLs. Ohio-specific information is eligible only when Ohio is selected. The bot offers general information and resource navigation, not personalized legal advice or a complete legal database.
 
@@ -127,9 +127,9 @@ This shows the optional Atlas path using our actual OpenAI and Python components
 
 ### 4. Responder dashboard and related-report matching
 
-The dashboard polls for case changes every five seconds. Responders can filter the table, sort severity, choose columns, and open a case for its contact preference, incident details, reported location, status, and activity timeline.
+The dashboard polls for case changes every five seconds. New requests appear first. Responders can filter the table, switch to severity sorting, choose columns, and open a case for its contact preference, incident details, reported location, status, and activity timeline.
 
-Google Maps loads after selecting **Load Google map**; the reported location is then sent to Google. A separate Maps link is available. The default web embed needs no key, and an optional restricted Maps Embed API key is supported.
+Google Maps loads inside the case view and sends the reported location to Google. A separate Maps link is available. The default web embed needs no key, and an optional restricted Maps Embed API key is supported.
 
 #### Find Match
 
@@ -141,7 +141,7 @@ Google Maps loads after selecting **Load Google map**; the reported location is 
 
 Results exclude the current case and unrelated organizations. Responders can adjust the result count and threshold and save review decisions.
 
-## How We Built It 🔧
+## How We Built It
 
 ### System architecture
 
@@ -202,7 +202,7 @@ Routes below are served by FastAPI. Browser requests use the same-origin `/api/v
 
 The complete interactive contract is available at [localhost:8000/docs](http://localhost:8000/docs).
 
-## How AI Is Used Throughout the Project 🤖
+## How AI Is Used Throughout the Project
 
 | Feature | AI’s role | User or responder control |
 | --- | --- | --- |
@@ -215,7 +215,7 @@ The complete interactive contract is available at [localhost:8000/docs](http://l
 | Law bot | Explain retrieved U.S. source summaries. | Inspect citations and jurisdiction limits. |
 | Encouragement | Generate short supportive text. | Optional; no promise that help is on the way. |
 
-## Where MongoDB and Atlas Fit 🗄️
+## Where MongoDB and Atlas Fit
 
 For account setup, private connection settings, index creation, and the live matching checklist, see the [Atlas setup and connection-test guide](docs/authority-atlas.md#first-time-atlas-setup).
 
@@ -234,8 +234,8 @@ Atlas Vector Search is an optional adapter for related reports, with 768-dimensi
 ### Quick start
 
 ```bash
-git clone https://github.com/Preetham-p06/HerWay.git
-cd HerWay
+git clone https://github.com/Preetham-p06/HerVoice_HackOHIO_26.git
+cd HerVoice_HackOHIO_26
 cp .env.example .env
 ./scripts/dev.sh
 ```
@@ -297,7 +297,7 @@ HerVoice demonstrates how a few plain-language details can become a verified sup
 
 We have not measured clinical outcomes, response-time improvements, or real-world safety effectiveness. The prototype does not guarantee privacy, continuous availability, or a response from an authority. Quick exit covers the interface and clears unsaved page state; it does not erase browser history, network activity, downloaded files, or device monitoring. Live X image delivery still needs account-backed validation; Instagram, real dispatch, and operational deployment remain outside the current demonstration.
 
-## Verification ✅
+## Verification
 
 ```bash
 npm run typecheck
@@ -309,7 +309,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-CI checks types, lint, backend behavior, generated-contract drift, the production build, and desktop/mobile browser journeys. The current suite has **48 backend tests and 36 browser tests**, including organization boundaries, PNG verification, case updates, and companion controls. Live external integrations have separate verification limits documented below.
+CI checks types, lint, backend behavior, generated-contract drift, the production build, and desktop/mobile browser journeys. The suites cover organization boundaries, PNG verification, case updates, and companion controls. Live external integrations have separate verification limits documented below.
 
 ## Repository and Documentation
 
@@ -329,3 +329,9 @@ CI checks types, lint, backend behavior, generated-contract drift, the productio
 - [Hackathon demonstration](docs/hackathon-demo.md)
 - [Feature parity](docs/feature-parity.md) and [workflow audit](docs/screenshot-parity-audit.md)
 - [Verification](docs/verification.md) and [design system](docs/design-system.md)
+
+## Contributors
+
+- Preetham Prabhu
+- Aadit Bhatia
+- Akarsh Penubaka
