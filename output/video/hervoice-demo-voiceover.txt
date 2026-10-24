@@ -1,0 +1,20 @@
+0–12 seconds
+HerVoice looks like an everyday website to help users stay discreet. Reloading changes the cover, and switching tabs hides the support tools from view.
+
+12–24 seconds
+Inside Create a post, I describe what’s happening and choose the support I need. These details are fictional for this demo.
+
+24–36 seconds
+I can add a description of the person involved, choose whether I want to be contacted, and optionally share my location.
+
+36–46 seconds
+Next, I review the message and make any changes. I stay in control of what the final message says.
+
+46–70 seconds
+Now I choose a simple image theme, like a good morning post. While the covers generate, the idea is straightforward: an ordinary-looking image can carry an encrypted support message. The hidden message is separate from the public image prompt.
+
+70–80 seconds
+I choose a cover and continue. HerVoice prepares the image with the encrypted message hidden inside its pixels.
+
+80–93.333 seconds
+From here, I can download the PNG and open X to share it. For this demonstration, I submit the original image to our monitored feed.

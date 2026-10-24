@@ -1,0 +1,7 @@
+file 'narration-0.wav'
+file 'narration-1.wav'
+file 'narration-2.wav'
+file 'narration-3.wav'
+file 'narration-4.wav'
+file 'narration-5.wav'
+file 'narration-6.wav'
