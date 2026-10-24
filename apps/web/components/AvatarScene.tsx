@@ -54,6 +54,10 @@ function Character({
     const head = model.getObjectByName("Head") as Bone;
     const spine = model.getObjectByName("Spine1") as Bone;
     return {
+      limbs: ["LeftArm", "RightArm", "LeftForeArm", "RightForeArm", "LeftHand", "RightHand"].map(name => {
+        const bone = model.getObjectByName(name) as Bone | undefined;
+        return { name, bone, rest: bone?.quaternion.clone() };
+      }),
       faces,
       head,
       spine,
@@ -63,14 +67,23 @@ function Character({
   }, [model]);
   const offset = useRef(new Quaternion());
   const rotation = useRef(new Euler());
+  const limbOffset = useRef(new Quaternion());
   useEffect(() => onReady(), [onReady]);
-  useFrame(({ clock }, delta) => {
-    const t = clock.elapsedTime;
+  const motionTime = useRef(0);
+  const gesture = useRef(0);
+  useFrame((_, delta) => {
+    if (!paused) motionTime.current += Math.min(delta, .1);
+    const t = motionTime.current;
+    gesture.current = MathUtils.damp(gesture.current, speaking ? 1 : 0, 3, Math.min(delta, .1));
     const current = audio.current?.currentTime || 0;
     const cue = speaking
       ? cues.current.find((c) => c.start <= current && c.end > current)?.value
       : undefined;
-    const energy = speaking && !paused ? Math.min(0.8, level.current * 6) : 0;
+    const energy = speaking && !paused
+      ? audio.current && !audio.current.paused
+        ? Math.min(0.8, level.current * 6)
+        : .15 + Math.max(0, Math.sin(t * 13)) * .25
+      : 0;
     const blink =
       !paused && t % 4.7 < 0.16 ? Math.sin(((t % 4.7) / 0.16) * Math.PI) : 0;
     const viseme = cue
@@ -124,13 +137,30 @@ function Character({
     }
     if (!paused && rig.spine && rig.spineRest) {
       rotation.current.set(
-        Math.sin(t * 0.8) * 0.003,
-        0,
-        Math.sin(t * 0.38) * 0.003,
+        Math.sin(t * 0.8) * 0.012,
+        Math.sin(t * .42) * .018,
+        Math.sin(t * 0.38) * 0.012,
       );
       rig.spine.quaternion
         .copy(rig.spineRest)
         .multiply(offset.current.setFromEuler(rotation.current));
+    }
+    if (!paused) {
+      for (const { name, bone, rest } of rig.limbs) {
+        if (!bone || !rest) continue;
+        const side = name.startsWith("Left") ? 1 : -1;
+        const beat = .5 + .5 * Math.sin(t * 1.7 + side);
+        const amount = gesture.current;
+        if (name.endsWith("ForeArm")) {
+          rotation.current.set(-.12 - amount * (.3 + beat * .22), 0, side * .08);
+        } else if (name.endsWith("Hand")) {
+          rotation.current.set(Math.sin(t * 1.3 + side) * .055, side * amount * .12, side * (.04 + beat * amount * .1));
+        } else {
+          rotation.current.set(-.04 - amount * .16, side * .035, side * (.035 + amount * (.08 + beat * .06)));
+        }
+        const target = offset.current.copy(rest).multiply(limbOffset.current.setFromEuler(rotation.current));
+        bone.quaternion.slerp(target, 1 - Math.exp(-5 * Math.min(delta, .1)));
+      }
     }
   });
   return <primitive object={model} />;
@@ -138,8 +168,8 @@ function Character({
 function Camera({ close }: { close: boolean }) {
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 1.56, close ? 1.25 : 1.5);
-    camera.lookAt(0, close ? 1.62 : 1.49, 0);
+    camera.position.set(0, close ? 1.56 : 1.38, close ? 1.25 : 2.6);
+    camera.lookAt(0, close ? 1.62 : 1.22, 0);
   }, [camera, close]);
   return null;
 }

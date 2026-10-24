@@ -159,10 +159,15 @@ test("visible help panel is keyboard accessible and preserves a draft", async ({
 
 test("U.S. resources and legal defaults", async ({ page }) => {
   await visit(page, "/library");
+  await page.getByRole("button", { name: "United States · National" }).click();
   await expect(page.getByLabel("Jurisdiction", { exact: true })).toHaveValue(
     "United States",
   );
   await page.getByLabel("State or territory (optional)").selectOption("Ohio");
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await page.getByRole("button", { name: "How this works" }).click();
+  await expect(page.getByRole("dialog", { name: "A little clarity, at your pace" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await page
     .getByLabel("What would you like to understand?")
     .fill("protection order forms");
@@ -391,7 +396,7 @@ test("dashboard columns, row actions, related dialog and companion zoom", async 
   await expect(dialog.locator(".match-result")).toHaveCount(initialRows.length);
   await dialog.locator(".match-settings summary").click();
   await dialog.getByLabel("Maximum related reports").selectOption("8");
-  await dialog.getByLabel("Minimum cosine similarity").selectOption("0.9");
+  await dialog.getByLabel("Minimum description similarity").selectOption("0.9");
   const filteredMatches = page.waitForResponse(response => response.url().endsWith("/related") && response.request().method() === "POST");
   await dialog.getByRole("button", { name: "Find related reports", exact: true }).click();
   const filteredResponse = await filteredMatches;
@@ -626,15 +631,11 @@ test("failed memory deletion does not falsely show memory off", async ({ page })
 });
 
 
-test("avatar studio keeps conversation history optional without losing the draft", async ({ page }) => {
+test("Maya workspace keeps the conversation visible and preserves the draft", async ({ page }) => {
   await visit(page, "/journal");
   await expect(page.locator(".room-settings")).not.toHaveAttribute("open");
   await page.getByLabel("Your message", { exact: true }).fill("Synthetic studio draft.");
-  await page.getByRole("button", { name: "Show conversation", exact: true }).click();
   await expect(page.locator(".chatbody")).toBeVisible();
-  await page.getByRole("button", { name: "Hide conversation", exact: true }).click();
-  await expect(page.locator(".chatbody")).toBeHidden();
-  await page.getByRole("button", { name: "Show conversation", exact: true }).click();
   await expect(page.getByLabel("Your message", { exact: true })).toHaveValue("Synthetic studio draft.");
   await expect(page.getByRole("link", {name:"Avatar credits",exact:true})).toHaveAttribute("href","/models/maya-reference.LICENSE.txt");
 });
@@ -666,4 +667,116 @@ test("cover editions rotate across reloads with a consistent highlighted entry",
     await expect(page.locator(".everyday-brand")).toContainText(name);
     await page.reload();
   }
+});
+
+test("Twitter handoff preserves the post and restores ordinary concealment", async ({ page, context }) => {
+  await context.route("https://twitter.com/**", route => route.fulfill({ contentType: "text/html", body: "<p>Test composer</p>" }));
+  await page.route("**/api/v1/requests", route => route.fulfill({ json: { id: "share-test" } }));
+  await page.route("**/api/v1/requests/share-test/covers", route => route.fulfill({ json: { id: "test-job", status: "complete", results: [{ index: 0 }] } }));
+  await page.route("**/api/v1/requests/share-test/jobs/**", route => route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="green"/></svg>' }));
+  let submitted = false;
+  await page.route("**/api/v1/requests/share-test/submit", route => { submitted = true; return route.fulfill({ json: { ok: true } }); });
+  await page.route("**/api/v1/encouragement", route => route.fulfill({ json: { text: "Your words matter." } }));
+  await visit(page, "/studio");
+  await page.getByLabel("What’s on your mind?").fill("Synthetic sharing test");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("button", { name: "Generate Images", exact: true }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  const popupPromise = page.waitForEvent("popup");
+  await page.getByRole("link", { name: "Share on Twitter (opens X in a new tab)" }).click();
+  const popup = await popupPromise;
+  expect(popup.url()).toContain("twitter.com/intent/tweet");
+  // Headless browsers don't reliably change visibility when a new tab opens.
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    document.dispatchEvent(new Event("visibilitychange"));
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await popup.close();
+  await expect(page.getByRole("heading", { name: "Your post is ready." })).toBeVisible();
+  await page.getByRole("button", { name: "Submit post", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Post successfully submitted!" })).toBeVisible();
+  expect(submitted).toBe(true);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.locator(".everyday-site")).toBeVisible();
+});
+
+test("Maya uses the saved Nova greeting on each visit", async ({ page }) => {
+  await page.addInitScript(() => {
+    const state = { played: [] as string[] };
+    Object.assign(window, { mayaAudioTest: state });
+    HTMLMediaElement.prototype.play = function () {
+      state.played.push(this.getAttribute("src") || "");
+      this.dispatchEvent(new Event("play"));
+      return Promise.resolve();
+    };
+    HTMLMediaElement.prototype.pause = function () {
+      this.dispatchEvent(new Event("pause"));
+    };
+  });
+  await visit(page, "/journal");
+  await expect(page.getByText("Hello, what's on your mind today?", { exact: true })).toBeVisible();
+  const plays = () => page.evaluate(() => (window as unknown as { mayaAudioTest: { played: string[] } }).mayaAudioTest.played);
+  await expect.poll(plays).toEqual(["/audio/maya-greeting-nova.mp3"]);
+  await page.getByRole("button", { name: "Stop voice", exact: true }).click();
+  await page.getByRole("button", { name: "Hear greeting", exact: true }).click();
+  await expect.poll(plays).toHaveLength(2);
+  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await page.getByRole("link", { name: "Therapy bot", exact: true }).click();
+  await expect.poll(plays).toHaveLength(3);
+  await page.getByRole("button", { name: "Pause animation", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Resume animation", exact: true })).toBeVisible();
+});
+
+test("submitted create-post reaches the real responder queue with its details", async ({ page }) => {
+  const alias = "Demo transfer " + Date.now();
+  await page.route("**/api/v1/requests/*/covers", route => route.fulfill({ json: { id: "fixture-cover", status: "complete", results: [{ index: 0 }] } }));
+  await page.route("**/api/v1/requests/*/jobs/fixture-cover/**", route => route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="green"/></svg>' }));
+  await page.route("**/api/v1/encouragement", route => route.fulfill({ json: { text: "Demo complete." } }));
+  await visit(page, "/studio");
+  const narrative = "Synthetic demo: I need housing support. My partner checks my phone.";
+  await page.getByLabel("What’s on your mind?").fill(narrative);
+  await page.getByLabel("Name or alias (optional)").fill(alias);
+  await page.getByLabel("Description of the person involved (optional)").fill("Tall, fair skin, glasses.");
+  await page.getByLabel("City or region (optional)").fill("Columbus, Ohio");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  const saved = page.waitForResponse(r => r.url().endsWith("/requests") && r.request().method() === "POST");
+  await page.getByRole("button", { name: "Generate Images", exact: true }).click();
+  const { id } = await (await saved).json();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("button", { name: "Submit post", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Post successfully submitted!" })).toBeVisible();
+  await page.getByRole("link", { name: "Dashboard", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Live dashboard", exact: true })).toBeVisible();
+  const response = await page.request.get("/api/v1/cases");
+  expect(response.ok()).toBeTruthy();
+  expect((await response.json()).items[0].id).toBe(id);
+  await visit(page, "/workspace/cases/" + id);
+  await expect(page.getByText(narrative, { exact: true })).toBeVisible();
+  await expect(page.getByText("Tall, fair skin, glasses.", { exact: true })).toBeVisible();
+});
+
+
+test("responder workspace stays open across tab switches and shows an embedded map", async ({ page }) => {
+  await page.route("https://www.google.com/**", route => route.fulfill({ contentType: "text/html", body: "<html><body>Map preview</body></html>" }));
+  await visit(page, "/workspace");
+  await expect(page.getByRole("heading", { name: "Live dashboard", exact: true })).toBeVisible();
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    document.dispatchEvent(new Event("visibilitychange"));
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.getByRole("heading", { name: "Live dashboard", exact: true })).toBeVisible();
+  const result = await page.request.get("/api/v1/cases");
+  const cases = (await result.json()).items;
+  const located = cases.find((c: {location?: string}) => c.location);
+  expect(located).toBeTruthy();
+  await visit(page, "/workspace/cases/" + located.id);
+  await expect(page.locator('iframe[title="Google map of reported location"]')).toBeVisible();
+  await expect(page.getByText("Loading Google Maps…", { exact: true })).toHaveCount(0);
 });

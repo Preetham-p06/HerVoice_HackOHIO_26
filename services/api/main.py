@@ -536,7 +536,7 @@ async def uploaded_image(cid: str, req: Request, file: UploadFile = File(...)):
 
 @app.get("/v1/cases")
 def cases(
-    q: str = "", status: str = "", priority: str = "", page: int = 1, s=Depends(staff)
+    q: str = "", status: str = "", priority: str = "", page: int = 1, sort: Literal["newest", "severity", "severity_asc"] = "newest", s=Depends(staff)
 ):
     allc = [json.loads(r["data"]) for r in store.all(org=s["org"])]
     allc = [
@@ -548,9 +548,16 @@ def cases(
         and (not priority or c["priority"] == priority)
     ]
     severity_rank = {"critical": 4, "high": 3, "medium": 2, "low": 1}
-    allc.sort(key=lambda c: (severity_rank.get(c.get("severity"), 3 if c["priority"] == "high" else 1), c["created"]), reverse=True)
+    allc.sort(key=lambda c: c["created"], reverse=True)
+    if sort != "newest":
+        allc.sort(key=lambda c: severity_rank.get(c.get("severity"), 3 if c["priority"] == "high" else 1), reverse=sort == "severity")
     page = max(1, page)
     return {
+        "summary": {
+            "statuses": {name: sum(c["status"] == name for c in allc) for name in ("received", "in_review", "closed")},
+            "severity": {name: sum((c.get("severity") or "unreviewed") == name for c in allc) for name in ("unreviewed", "low", "medium", "high", "critical")},
+            "high_priority": sum(c["priority"] == "high" for c in allc),
+        },
         "items": [
             {
                 k: c.get(k)

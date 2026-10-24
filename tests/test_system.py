@@ -135,6 +135,12 @@ def test_queue_related_and_delete(client):
     signin(client)
     r = client.get("/v1/cases?page=1")
     assert len(r.json()["items"]) <= 6
+    summary = r.json()["summary"]
+    assert sum(summary["statuses"].values()) == r.json()["total"]
+    assert sum(summary["severity"].values()) == r.json()["total"]
+    filtered = client.get("/v1/cases?status=closed").json()
+    assert filtered["summary"]["statuses"]["closed"] == filtered["total"]
+    assert filtered["summary"]["statuses"]["received"] == 0
     related = client.post("/v1/cases/" + cid + "/related", json={}).json()
     assert all(x["id"] != cid for x in related)
     for result in related:

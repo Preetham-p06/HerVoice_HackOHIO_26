@@ -1,11 +1,17 @@
 "use client";
-import { useState } from "react";
-import { MapPin, ArrowUpRight, Map } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MapPin, ArrowUpRight } from "lucide-react";
 
 export default function CaseMap({ location }: { location: string }) {
-  const [loaded, load] = useState(false);
   const [ready, Ready] = useState(false);
-  const query = location?.trim();
+  const [attempt, Attempt] = useState(0);
+  const [slow, Slow] = useState(false);
+  useEffect(() => {
+    if (ready) return;
+    const timer = setTimeout(() => Slow(true), 10000);
+    return () => clearTimeout(timer);
+  }, [ready, attempt]);
+  const query = location?.replace(/\s*\(synthetic\)\s*/gi, "").trim();
   const encoded = encodeURIComponent(query || "");
   const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_KEY;
   const source = key
@@ -19,22 +25,19 @@ export default function CaseMap({ location }: { location: string }) {
       </div>
       {query ? <>
         <p className="map-location-label">{query}</p>
-        {loaded ? <div className="case-map-frame">
+        {<div className="case-map-frame">
           {!ready && <p className="map-loading" role="status">Loading Google Maps…</p>}
           <iframe
+            key={attempt}
             title="Google map of reported location"
             src={source}
             referrerPolicy={key ? "strict-origin-when-cross-origin" : "no-referrer"}
             allowFullScreen
             onLoad={() => Ready(true)}
           />
-        </div> : <div className="map-placeholder">
-          <Map size={38} strokeWidth={1.4} aria-hidden="true" />
-          <p>See this location on an interactive map.</p>
-          <button className="btn" onClick={() => load(true)}>Load Google map <ArrowUpRight size={17} /></button>
-          <small>Loads Google Maps and shares this reported location with Google.</small>
         </div>}
-        {loaded && <small className="map-fallback">Map not visible? Use Open Google Maps above. A city or region shows an approximate area.</small>}
+        {slow && <div className="map-retry" role="status"><p>The embedded map is taking longer than expected. You can open Google Maps directly.</p><button className="btn secondary" onClick={() => { Ready(false); Slow(false); Attempt(attempt + 1); }}>Retry map</button></div>}
+        {<small className="map-fallback">Map not visible? Use Open Google Maps above. A city or region shows an approximate area.</small>}
       </> : <div className="map-placeholder"><MapPin size={35} aria-hidden="true" /><h3>No location shared</h3><p>This person chose not to provide a location.</p></div>}
     </section>
   );

@@ -263,8 +263,21 @@ export default function App() {
     if (!unlocked) delete document.documentElement.dataset.covering;
   }, [unlocked]);
   useEffect(() => {
+    let shareHandoffUntil = 0;
+    function shareHandoff() {
+      // Only the next immediate tab switch caused by an explicit share link.
+      shareHandoffUntil = Date.now() + 10000;
+    }
     function visibility() {
-      if (document.visibilityState === "hidden") cover();
+      // Responders keep their workspace when consulting another tab.
+      if (privatePath(window.location.pathname).startsWith("/responder")) return;
+      if (document.visibilityState === "hidden") {
+        const sharing = Date.now() < shareHandoffUntil;
+        shareHandoffUntil = 0;
+        if (!sharing) cover();
+      } else {
+        shareHandoffUntil = 0;
+      }
     }
     function key(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
@@ -275,12 +288,14 @@ export default function App() {
     function restored(e: PageTransitionEvent) {
       if (e.persisted) cover();
     }
+    window.addEventListener("hervoice-share-handoff", shareHandoff);
     window.addEventListener("hervoice-cover", cover);
     window.addEventListener("keydown", key);
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("pagehide", conceal);
     window.addEventListener("pageshow", restored);
     return () => {
+      window.removeEventListener("hervoice-share-handoff", shareHandoff);
       window.removeEventListener("hervoice-cover", cover);
       window.removeEventListener("keydown", key);
       document.removeEventListener("visibilitychange", visibility);
@@ -315,7 +330,7 @@ export default function App() {
       </>
     );
   return (
-    <div className="private-shell">
+    <div className={`private-shell${path === "/" ? " home-shell" : staff ? " responder-shell" : ""}`}>
       {process.env.NODE_ENV === "development" && <DevAudit />}
       <a className="skip" href="#main">
         Skip to content
@@ -427,9 +442,9 @@ function Home() {
   return (
     <div className="home-simple">
       <section className="home-welcome">
-        <div className="eyebrow">YOUR VOICE. YOUR CHOICES.</div>
-        <h1>A little support.<br />A way forward.</h1>
-        <p>Share what’s happening, talk things through, or explore your options. Start wherever feels right.</p>
+        <div className="eyebrow">Welcome to HerVoice</div>
+        <h1>Your space.<br /><span>Your way forward.</span></h1>
+        <p>A quiet way to be heard. Share, talk, or explore your options.<br /> Start wherever feels right.</p>
         <div className="actions">
           <button className="btn" onClick={() => window.dispatchEvent(new Event("hervoice-open-help"))}>
             <HeartHandshake size={20} /> Get help now <ArrowRight size={18} />
@@ -1188,17 +1203,34 @@ Take it at your own pace.`),
             />
             <div className="post-share-actions">
               {["Telegram", "Twitter", "Instagram", "Slack"].map((t) => (
-                <Button key={t} secondary onClick={() => share(t)}>
-                  <Upload size={16} /> Share on {t}
-                </Button>
+                t === "Twitter" ? (
+                  <a
+                    key={t}
+                    className="btn secondary"
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("A little inspiration for today.")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Share on Twitter (opens X in a new tab)"
+                    onClick={() => window.dispatchEvent(new Event("hervoice-share-handoff"))}
+                  >
+                    <ArrowUpRight size={16} /> Share on Twitter
+                  </a>
+                ) : (
+                  <Button key={t} secondary onClick={() => share(t)}>
+                    <Upload size={16} /> Share on {t}
+                  </Button>
+                )
               ))}
             </div>
             <Button secondary onClick={() => share()}>
               <Download size={16} /> Download verified PNG
             </Button>
             <p className="notice">
-              Sharing opens your device’s share sheet when supported, or
-              downloads a file to attach yourself. Social platforms may resize
+              Download your PNG before opening Twitter. The Twitter button opens
+              X with a neutral caption; attach the downloaded image and review
+              your post there. Return to this tab to submit your request;
+              your post stays open during this Twitter handoff. Other share buttons open your device’s share sheet
+              when supported, or download a file to attach yourself. Social platforms may resize
               images and destroy the embedded message. Sharing does not confirm
               receipt.
             </p>
@@ -1238,6 +1270,7 @@ Take it at your own pace.`),
                   ? "Your original encoded PNG is queued in the controlled #HerVoiceSignal feed. The 30-second scanner verifies and receives it into the demo dashboard. No public social account was contacted."
                   : "Prepared only. No organization or social platform has received your image."}
             </p>
+            {mode === "direct" && <Link className="btn" href={`/responder/cases/${record}`}>Open submitted case <ArrowRight size={16} /></Link>}
             {mode === "feed" && (
               <Link className="btn" href="/responder/intake">
                 Watch the signal reach the dashboard <ArrowRight size={16} />
@@ -1631,7 +1664,7 @@ function Chat() {
   const [busy, B] = useState(false);
   const [error, E] = useState("");
   const [avatar, A] = useState(true);
-  const [transcript, Transcript] = useState(false);
+  const [transcript, Transcript] = useState(true);
   const room = useRef<HTMLElement>(null);
   const [fullRoom, FullRoom] = useState(false);
   useEffect(() => {
@@ -1705,6 +1738,26 @@ function Chat() {
   const generation = useRef(0);
   const playRequested = useRef(false);
   const [voiceInfo, VoiceInfo] = useState("");
+  const greeting = "Hello, what's on your mind today?";
+  function greet() {
+    window.speechSynthesis?.cancel();
+    audio.current?.pause();
+    cues.current = [];
+    Expression("gentle");
+    VoiceInfo("");
+    const greetingUrl = "/audio/maya-greeting-nova.mp3";
+    if (audio.current?.getAttribute("src") === greetingUrl) {
+      audio.current.currentTime = 0;
+      void audio.current.play().catch(() => VoiceInfo("Select Hear greeting to listen to Maya."));
+    } else {
+      playRequested.current = true;
+      Studio(greetingUrl);
+    }
+  }
+  useEffect(() => {
+    const timer = window.setTimeout(greet, 350);
+    return () => window.clearTimeout(timer);
+  }, []);
   const chatEnd = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const thread = chatEnd.current?.parentElement;
@@ -1880,9 +1933,9 @@ function Chat() {
     window.speechSynthesis?.speak(s);
   }
   return (
-    <section ref={room} className={"page chatpage studio-room" + (fullRoom ? " expanded-room" : "")} role={fullRoom ? "dialog" : undefined} aria-modal={fullRoom ? true : undefined} aria-labelledby="maya-room-title">
+    <section ref={room} className={"page chatpage studio-room maya-workspace" + (fullRoom ? " expanded-room" : "")} role={fullRoom ? "dialog" : undefined} aria-modal={fullRoom ? true : undefined} aria-labelledby="maya-room-title">
       <div className="room-heading">
-        <div><h1 id="maya-room-title">Your space with Maya.</h1><p>AI support, at your pace.</p></div>
+        <div><h1 id="maya-room-title">Your space with Maya.</h1><p>{greeting}</p></div>
         <div className="actions">
           {fullRoom && <button className="btn" onClick={() => window.dispatchEvent(new Event("hervoice-cover"))}>Back to reading</button>}
           <Badge>{remember ? "24-hour memory on" : "Memory off"}</Badge>
@@ -1890,17 +1943,16 @@ function Chat() {
         </div>
       </div>
       <div className={"therapy-scene" + (avatar ? " with-avatar" : "") + (!transcript ? " thread-hidden" : "")}>
-        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} expression={expression} busy={busy} level={voiceLevel} audio={audio} cues={cues} />}        <div className="chatbody" aria-live="polite" hidden={avatar && !transcript}>
-          <div className="thread-heading"><strong>Conversation</strong><button type="button" onClick={() => Transcript(false)} aria-label="Close conversation panel"><X size={17}/></button></div>
+        {avatar && <Companion speaking={speaking} mouthShape={mouthShape} expression={expression} busy={busy} level={voiceLevel} audio={audio} cues={cues} />}        <div className="chatbody" aria-live="polite" >
+          <div className="thread-heading"><strong>Your conversation</strong><span>At your pace</span></div>
           {!messages.length && (
             <div className="welcome">
               <span className="iconbox">
                 <MessageCircle size={28} />
               </span>
-              <h2>I’m here to listen.</h2>
+              <span className="eyebrow">A MOMENT FOR YOU</span><h2>Start wherever<br/>you are.</h2>
               <p>
-                You can share what’s on your mind, or start with a small
-                question.
+                You don’t need to have the right words. Share what’s on your mind, or choose a place to start.
               </p>
               <div className="chips">
                 {[
@@ -1940,7 +1992,7 @@ function Chat() {
       <div className="chattools">
         {!speaking && (<Button
           secondary
-          disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
+          disabled={studioBusy}
           onClick={() => {
             if (speaking) {
               window.speechSynthesis?.cancel();
@@ -2127,6 +2179,7 @@ function Chat() {
 
           </div>
           <div className="room-quick-controls">
+        {!speaking && <button type="button" className="btn secondary" onClick={greet} disabled={busy || studioBusy}>Hear greeting</button>}
         <button className="btn secondary" aria-pressed={autoVoice} onClick={() => {
           if (!autoVoice) {
             try { voiceContext.current ||= new AudioContext(); void voiceContext.current.resume().catch(() => {}); } catch {}
@@ -2145,7 +2198,7 @@ function Chat() {
         </Button>
         {speaking && (<Button
           secondary
-          disabled={!messages.some((m) => m.role === "assistant") || studioBusy}
+          disabled={studioBusy}
           onClick={() => {
             if (speaking) {
               window.speechSynthesis?.cancel();
@@ -2157,9 +2210,9 @@ function Chat() {
           {speaking ? <VolumeX size={16} /> : <Volume2 size={16} />}{" "}
           {speaking ? "Stop voice" : "Read latest reply"}
         </Button>)}
-            <button type="button" className="btn secondary" aria-pressed={transcript} onClick={() => Transcript(!transcript)}>{transcript ? "Hide conversation" : "Show conversation"}</button>
+
           </div>
-          <small className="room-voice-disclosure">AI-generated voice. Voice input uses OpenAI; review your words before sending.</small>
+          <small className="room-voice-disclosure">Maya is an AI companion, not a therapist. Share only what feels right.</small>
       {error && (
         <p role="alert" className="error">
           {error}
@@ -2185,62 +2238,40 @@ function Rights() {
   const [answer, A] = useState<any>(null);
   const [busy, B] = useState(false);
   const [error, E] = useState("");
+  const locationPopup = useRef<HTMLDialogElement>(null);
+  const infoPopup = useRef<HTMLDialogElement>(null);
   const answerPanel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (answer) answerPanel.current?.focus();
   }, [answer]);
   return (
     <section className="page formpage legal-page">
-      <div className="eyebrow">LAW BOT · KNOW YOUR RIGHTS</div>
-      <h1>Understand your options, one question at a time.</h1>
-      <p className="intro">
-        You don’t need to know the legal terms. Ask in your own words, and we’ll help you explore trusted U.S. resources.
-      </p>
-      <div className="panel legal-question-panel">
-        <h2>Let’s start with what you need</h2>
-        <p className="legal-helper">General information, not legal advice. You can leave out names and personal details.</p>
-        <div className="legal-location">
-        <Field label="Jurisdiction">
-          <select
-            disabled={busy}
-            value={j}
-            onChange={(e) => {
-              J(e.target.value);
-              Questions([]);
-              A(null);
-            }}
-          >
-            <option>United States</option>
-            <option>Other</option>
-          </select>
-        </Field>
-        {j === "United States" && (
-          <Field
-            label="State or territory (optional)"
-            hint="National information is available without a location. State laws vary; coverage is limited to the sources shown."
-          >
-            <select
-              disabled={busy}
-              value={state}
-              onChange={(e) => {
-                SetState(e.target.value);
-                Questions([]);
-                A(null);
-              }}
-            >
-              <option value="">National information / prefer not to say</option>
-              {US_REGIONS.map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </select>
-          </Field>
-        )}
-        </div>
+      <header className="legal-workspace-heading">
+        <div className="legal-emblem"><BookOpen size={28} /></div>
+        <div><div className="eyebrow">HERVOICE / LAW BOT</div><h1>A clearer next step.</h1><p>Understand your options, one question at a time.</p></div>
+      </header>
+      <aside className="legal-topic-sidebar" aria-label="Explore legal topics">
+        <span className="legal-side-label">START WITH A TOPIC</span>
         <div className="legal-starters" aria-label="Example questions">
-          <span>Need a place to start?</span>
-          {[["Protection orders", "Where can I find official information about protection orders and application forms?"], ["Find local support", "Where can someone experiencing domestic abuse find local support?"], ["Understand my options", "What official resources can help me understand domestic violence and my options?"]].map(([label, question]) => (
-            <button type="button" className="btn secondary" key={label} disabled={busy} onClick={() => Q(question)}>{label}</button>
-          ))}
+          {[
+            ["Protection orders", "Learn about protection and court resources", "Where can I find official information about protection orders and application forms?", ShieldCheck],
+            ["Find local support", "Find services and people who can help", "Where can someone experiencing domestic abuse find local support?", HeartHandshake],
+            ["Understand my options", "Explore your rights and available resources", "What official resources can help me understand domestic violence and my options?", BookOpen],
+          ].map(([label, description, question, Icon]) => <button type="button" key={String(label)} disabled={busy} onClick={() => { Q(String(question)); document.querySelector<HTMLTextAreaElement>(".legal-composer textarea")?.focus(); }}>
+            <span className="topic-icon">{React.createElement(Icon as any, { size: 20 })}</span>
+            <span><strong>{String(label)}</strong><small>{String(description)}</small></span><ArrowUpRight size={15} />
+          </button>)}
+        </div>
+        <div className="legal-sidebar-note"><LockKeyhole size={19} /><h2>Share only what you choose.</h2><p>You can ask without including names or personal details.</p></div>
+        <Link href="/resources" className="legal-human-link">Prefer to talk to someone? <ArrowRight size={16} /></Link>
+      </aside>
+      <div className="panel legal-question-panel">
+        <div className="legal-editor-heading"><span className="legal-editor-icon"><MessageCircle size={22} /></span><div><h2>Let’s start with your question.</h2><p>Plain words are all you need. We’ll look for relevant sources.</p></div></div>
+                <div className="legal-toolbar">
+          <button type="button" className="btn secondary" disabled={busy} aria-haspopup="dialog" onClick={() => locationPopup.current?.showModal()}>
+            {j === "United States" ? (state || "United States · National") : "Other jurisdiction"} <span aria-hidden="true">⌄</span>
+          </button>
+          <button type="button" className="btn secondary legal-about" aria-haspopup="dialog" onClick={() => infoPopup.current?.showModal()}>How this works</button>
         </div>
         <form
           onSubmit={async (e) => {
@@ -2284,10 +2315,11 @@ function Rights() {
               </button>
             </p>
           )}
+          <div className="legal-composer">
           <Field label="What would you like to understand?">
             <textarea
-              rows={4}
-              placeholder="For example: Where can I learn about protection orders in Ohio?"
+              rows={2}
+              placeholder="For example: Where can I find information about getting a protection order?"
               disabled={busy}
               value={q}
               onChange={(e) => Q(e.target.value)}
@@ -2295,48 +2327,111 @@ function Rights() {
               maxLength={4000}
             />
           </Field>
-          <button className="btn" disabled={busy}>
-            {busy ? "Checking sources…" : "Explore sources"}{" "}
-            <BookOpen size={16} />
+          <button className="btn legal-send" aria-label={busy ? "Checking sources…" : "Explore sources"} title="Explore sources" disabled={busy}>
+            <span>{busy ? "Searching…" : "Ask Law bot"}</span><ArrowUpRight size={18} aria-hidden="true" />
           </button>
+          </div>
+          <div className="legal-editor-note"><BookOpen size={15} /> Answers include sources you can read for yourself.</div>
         </form>
+        <dialog className="legal-popup" ref={locationPopup} aria-labelledby="legal-location-title" onClick={e => { if (e.target === e.currentTarget) locationPopup.current?.close(); }}>
+          <div className="legal-popup-heading"><h2 id="legal-location-title">Choose your location</h2><button type="button" className="btn secondary" aria-label="Close location settings" onClick={() => locationPopup.current?.close()}><X size={20} /></button></div>
+          <p>Choose the resources you want to explore. Your exact location is never requested.</p>
+        <div className="legal-location">
+        <Field label="Jurisdiction">
+          <select
+            disabled={busy}
+            value={j}
+            onChange={(e) => {
+              J(e.target.value);
+              Questions([]);
+              A(null);
+            }}
+          >
+            <option>United States</option>
+            <option>Other</option>
+          </select>
+        </Field>
+        {j === "United States" && (
+          <Field
+            label="State or territory (optional)"
+            hint="National information is available without a location. State laws vary; coverage is limited to the sources shown."
+          >
+            <select
+              disabled={busy}
+              value={state}
+              onChange={(e) => {
+                SetState(e.target.value);
+                Questions([]);
+                A(null);
+              }}
+            >
+              <option value="">National information / prefer not to say</option>
+              {US_REGIONS.map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </Field>
+        )}
+        </div>
+        <button type="button" className="btn" onClick={() => locationPopup.current?.close()}>Done</button>
+        </dialog>
+        <dialog className="legal-popup" ref={infoPopup} aria-labelledby="legal-about-title" onClick={e => { if (e.target === e.currentTarget) infoPopup.current?.close(); }}>
+          <div className="legal-popup-heading"><h2 id="legal-about-title">A little clarity, at your pace</h2><button type="button" className="btn secondary" aria-label="Close how this works" onClick={() => infoPopup.current?.close()}><X size={20} /></button></div>
+          <ol><li>Ask in your own words. You can leave out names and personal details.</li><li>We find relevant reviewed sources for your selected jurisdiction.</li><li>Read the explanation and open the official sources to learn more.</li></ol>
+          <p>General information, not legal advice. Coverage includes U.S. resources and selected Ohio materials. If our sources cannot support an answer, we’ll say so.</p>
+          <button type="button" className="btn" onClick={() => infoPopup.current?.close()}>Got it</button>
+        </dialog>
         {busy && <p role="status" className="legal-helper">Finding relevant sources and preparing your answer…</p>}
         {error && <p role="alert" className="error">{error}</p>}
       </div>
       {answer && (
         <div className="panel legal-answer-panel" ref={answerPanel} tabIndex={-1} aria-labelledby="legal-answer-title">
-          <Badge>{answer.mode}</Badge>
-          <h2 id="legal-answer-title">A starting point for you</h2>
+          <div className="legal-answer-hero">
+            <div>
+              <span className="legal-answer-kicker"><BookOpen size={16} aria-hidden="true" /> YOUR QUESTION, EXPLAINED</span>
+              <h2 id="legal-answer-title">A starting point for you</h2>
+              <p>Take your time. Explore what feels useful to you.</p>
+              <span className="legal-source-count">{answer.sources.length ? `${answer.sources.length} source${answer.sources.length === 1 ? "" : "s"} to explore` : "Coverage guidance"} · {j === "United States" ? state || "U.S. national resources" : "Other jurisdiction"}</span>
+            </div>
+            <svg className="legal-answer-art" viewBox="0 0 220 170" fill="none" aria-hidden="true">
+              <circle cx="113" cy="85" r="71" fill="#e2eee9" />
+              <circle cx="174" cy="35" r="12" fill="#f3dfb7" />
+              <path d="M32 127C58 116 81 122 108 139C133 122 164 116 192 127" stroke="#9ab5b4" strokeWidth="2" strokeLinecap="round" />
+              <path d="M41 53Q76 42 110 63V136Q76 115 41 124Z" fill="#fff" stroke="#397c88" strokeWidth="2.5" strokeLinejoin="round" />
+              <path d="M110 63Q144 42 179 53V124Q144 115 110 136Z" fill="#f8fbfa" stroke="#397c88" strokeWidth="2.5" strokeLinejoin="round" />
+              <path d="M56 71Q76 67 94 78M56 86Q76 82 94 93M56 101Q76 97 88 104M126 77Q144 66 164 71M126 92Q144 81 164 86M126 107Q144 96 158 100" stroke="#b2ced1" strokeWidth="3" strokeLinecap="round" />
+              <path d="M143 52V91L152 84L161 88V49" fill="#d7ac61" />
+              <path d="M29 44V56M23 50H35M193 98V108M188 103H198" stroke="#719f9c" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
           {answer.notice && <p role="status" className="notice">{answer.notice}</p>}
-          <p style={{ whiteSpace: "pre-wrap" }}>{answer.answer}</p>
-          {answer.sources.length > 0 && <h3>Read the official sources</h3>}
-          {answer.sources.map((s: any) => (
+          <div className="legal-answer-body">{answer.answer.split(/\n\s*\n/).map((paragraph: string, index: number) => <p key={index}>{paragraph}</p>)}</div>
+          {answer.sources.length > 0 && <div className="legal-sources-heading"><span className="legal-section-icon"><BookOpen size={20} aria-hidden="true" /></span><div><h3>Go a little deeper</h3><p>Read the official sources behind this answer.</p></div></div>}
+          <div className="legal-source-grid">
+          {answer.sources.map((s: any, index: number) => (
             <a
-              className="source"
+              className="source legal-source-card"
               key={s.id}
               href={s.url}
               target="_blank"
               rel="noreferrer"
             >
-              <BookOpen size={20} />
+              <span className="legal-source-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               <span>
                 <strong>{s.title}</strong>
                 <small>
-                  {s.jurisdiction} · {s.section} · Source reviewed {s.reviewed}
-                  <br />
-                  Source-backed guidance and directories; not legal advice.
-                  State-specific coverage is shown explicitly.
+                  {s.state || s.jurisdiction} · {s.section}
+                  <span className="legal-reviewed">Reviewed {s.reviewed}</span>
                 </small>
               </span>
               <ArrowUpRight size={16} />
             </a>
           ))}
+          </div>
+          <details className="legal-answer-method"><summary>About this answer</summary><p>{answer.mode}. Coverage is limited to the sources shown; this is general information, not legal advice.</p></details>
         </div>
       )}
-      <div className="notice">
-        Coverage is intentionally limited. When evidence is unavailable,
-        HerVoice says so instead of generating an unsupported answer.
-      </div>
+      <p className="legal-footnote">General information, not legal advice. You choose what to share.</p>
     </section>
   );
 }
@@ -2651,6 +2746,56 @@ function Staff({ path }: { path: string }) {
     </div>
   );
 }
+function DashboardSummary({ data }: { data: any }) {
+  const statuses = data?.summary?.statuses;
+  const total = data?.total ?? 0;
+  const statusRows = [
+    { key: "received", label: "Awaiting review", color: "#71856b" },
+    { key: "in_review", label: "In review", color: "#b97958" },
+    { key: "closed", label: "Closed", color: "#344e38" },
+  ];
+  let cursor = 0;
+  const stops = statusRows.map(row => {
+    const start = cursor;
+    cursor += total ? (statuses?.[row.key] || 0) / total * 100 : 0;
+    return `${row.color} ${start}% ${cursor}%`;
+  });
+  const severityRows = ["unreviewed", "low", "medium", "high", "critical"];
+  const max = Math.max(1, ...severityRows.map(key => data?.summary?.severity?.[key] || 0));
+  return <section className="dashboard-summary" aria-label="Case analytics">
+    <div className="dashboard-metrics">
+      {[
+        ["Total requests", data?.total, FolderOpen, "In the filtered queue"],
+        ["Awaiting review", statuses?.received, MessageCircle, "Ready for your attention"],
+        ["In review", statuses?.in_review, ShieldCheck, "Follow-up in progress"],
+        ["High priority", data?.summary?.high_priority, LayoutDashboard, "Reported priority"],
+      ].map(([label, value, Icon, hint]) => <div className="dashboard-metric" key={String(label)}>
+        <span className="metric-icon">{React.createElement(Icon as any, { size: 20 })}</span>
+        <small>{String(label)}</small><strong>{value == null ? "—" : String(value)}</strong><p>{String(hint)}</p>
+      </div>)}
+    </div>
+    <div className="dashboard-charts">
+      <article className="dashboard-chart">
+        <div className="chart-heading"><div><h2>Review overview</h2><p>Where requests stand today</p></div><span>All matching requests</span></div>
+        <div className="status-chart">
+          <div className="status-donut" role="img" aria-label={data ? statusRows.map(row => `${row.label}: ${statuses?.[row.key] || 0}`).join(", ") : "Loading case status"} style={{ background: total ? `conic-gradient(${stops.join(",")})` : "#e9edf1" }}>
+            <div><strong>{data ? total : "—"}</strong><span>requests</span></div>
+          </div>
+          <ul>{statusRows.map(row => <li key={row.key}><i style={{ background: row.color }} /><span>{row.label}</span><strong>{data ? statuses?.[row.key] || 0 : "—"}</strong></li>)}</ul>
+        </div>
+      </article>
+      <article className="dashboard-chart">
+        <div className="chart-heading"><div><h2>Reviewed severity</h2><p>Assessment recorded by responders</p></div><ShieldCheck size={22} /></div>
+        <div className="severity-chart">{severityRows.map(key => <div className="severity-chart-row" key={key}>
+          <span>{key === "critical" ? "Very high" : key === "unreviewed" ? "Not reviewed" : key}</span>
+          <div className="severity-track"><div style={{ width: `${(data?.summary?.severity?.[key] || 0) / max * 100}%` }} /></div>
+          <strong>{data ? data.summary?.severity?.[key] || 0 : "—"}</strong>
+        </div>)}</div>
+      </article>
+    </div>
+    <div className="queue-section-heading"><h2>Request queue</h2><p>Search, filter, and open a case to follow up.</p></div>
+  </section>;
+}
 function Queue({ overview }: { overview: boolean }) {
   const [data, D] = useState<any>(null);
   const [q, Q] = useState("");
@@ -2663,17 +2808,13 @@ function Queue({ overview }: { overview: boolean }) {
     "Issue",
     "Status",
   ]);
-  const rank = (c: Case) =>
-    (({ critical: 4, high: 3, medium: 2, low: 1 }) as Record<string, number>)[
-      c.severity || ""
-    ] || (c.priority === "high" ? 3 : 1);
-  const [descending, Descending] = useState(true);
+  const [sort, Sort] = useState("newest");
   const [copied, Copied] = useState("");
   const visible = (name: string) => columns.includes(name);
   const [error, E] = useState("");
   function load() {
     api(
-      `/cases?q=${encodeURIComponent(q)}&status=${status}&priority=${priority}&page=${page}`,
+      `/cases?q=${encodeURIComponent(q)}&status=${status}&priority=${priority}&page=${page}&sort=${sort}`,
     )
       .then(D)
       .catch((e) => E(e.message));
@@ -2682,7 +2823,7 @@ function Queue({ overview }: { overview: boolean }) {
     load();
     const t = setInterval(load, 5000);
     return () => clearInterval(t);
-  }, [q, status, priority, page]);
+  }, [q, status, priority, page, sort]);
   return (
     <>
       <div className="eyebrow">PRACTICE CENTER · PRIVATE WORKSPACE</div>
@@ -2702,24 +2843,16 @@ function Queue({ overview }: { overview: boolean }) {
           <RefreshCw size={16} /> Refresh
         </Button>
       </div>
-      {overview && (
-        <div className="stats">
-          <div>
-            <small>Matching requests</small>
-            <strong>{data?.total ?? "—"}</strong>
-          </div>
-          <div>
-            <small>Workspace</small>
-            <strong>{DEMO ? "Demo" : "Live"}</strong>
-          </div>
-          <div>
-            <small>Queue freshness</small>
-            <strong>5 sec</strong>
-          </div>
-        </div>
-      )}
+      {overview && <DashboardSummary data={data} />}
       <div className="panel">
         <div className="filters">
+          <Field label="Sort cases">
+            <select value={sort} onChange={(e) => { Sort(e.target.value); G(1); }}>
+              <option value="newest">Newest first</option>
+              <option value="severity">Highest severity first</option>
+              <option value="severity_asc">Lowest severity first</option>
+            </select>
+          </Field>
           <Field label="Search alias or category">
             <input
               value={q}
@@ -2792,9 +2925,9 @@ function Queue({ overview }: { overview: boolean }) {
                   <th>
                     <button
                       className="sort-priority"
-                      onClick={() => Descending(!descending)}
+                      onClick={() => { Sort(sort === "severity" ? "severity_asc" : "severity"); G(1); }}
                     >
-                      Severity {descending ? "↓" : "↑"}
+                      Severity {sort === "severity" ? "↓" : sort === "severity_asc" ? "↑" : "↕"}
                     </button>
                   </th>
                 )}
@@ -2806,12 +2939,7 @@ function Queue({ overview }: { overview: boolean }) {
               </tr>
             </thead>
             <tbody>
-              {[...(data?.items || [])]
-                .sort(
-                  (a: Case, b: Case) =>
-                    (rank(b) - rank(a)) * (descending ? 1 : -1),
-                )
-                .map((c: Case, index: number) => (
+              {(data?.items || []).map((c: Case, index: number) => (
                   <tr key={c.id}>
                     <td data-label="S.No">{(page - 1) * 6 + index + 1}</td>
                     <td data-label="Name">
@@ -2979,11 +3107,12 @@ function CaseDetail({ id }: { id: string }) {
     }
   }
   return (
-    <>
+    <div className="case-command">
       <Link className="backlink" href="/responder/cases">
         <ArrowLeft size={16} /> Back to cases
       </Link>
-      {error && <p className="error">{error}</p>}
+      {error && <p role="alert" className="error">{error}</p>}
+      {!c && !error && <p className="notice" role="status">Loading case workspace…</p>}
       {c && (
         <>
           <div className="eyebrow">CASE {c.id.slice(0, 8)}</div>
@@ -3011,12 +3140,13 @@ function CaseDetail({ id }: { id: string }) {
               </Button>
             </div>
           </div>
-          <div className="chips">
-            <Badge>{c.status}</Badge>
+          <div className="case-state-strip">
+            <span className={"case-status " + c.status}><span className="status-dot" />{c.status.replaceAll("_", " ")}</span>
             <Badge>
               {c.priority} priority · {c.urgent ? "person reported" : "default"}
             </Badge>
           </div>
+          <div className="command-banner"><ShieldCheck size={22}/><div><strong>Responder workspace</strong><span>Review the report, respect contact preferences, and record your next action.</span></div><span className="case-number">#{c.id.slice(0, 8)}</span></div>
           <div className="case-summary-grid">
             <article className="panel">
               <Phone size={20} />
@@ -3134,7 +3264,7 @@ function CaseDetail({ id }: { id: string }) {
                     ))}
                   </select>
                 </Field>
-                <Field label="Minimum cosine similarity">
+                <Field label="Minimum description similarity">
                   <select
                     value={matchThreshold}
                     onChange={(e) => MatchThreshold(Number(e.target.value))}
@@ -3148,7 +3278,7 @@ function CaseDetail({ id }: { id: string }) {
                 </Field>
               </div>
               <p>
-                Cosine similarity compares the optional person description, or
+                Description similarity compares the optional person description, or
                 the reviewed narrative when no description is supplied. Results
                 support human review; they do not establish identity or a shared
                 incident.
@@ -3177,13 +3307,14 @@ function CaseDetail({ id }: { id: string }) {
               )}
               {!matchingBusy &&
                 related.map((r, index) => (
-                  <article className="related match-result" key={r.id}>
+                  <article className={"related match-result " + (r.score >= .75 ? "similarity-high" : r.score >= .5 ? "similarity-medium" : "similarity-low")} key={r.id}>
                     <div className="match-result-heading">
-                      <h3>{index === 0 ? "Closest description" : `Similar description ${index + 1}`}</h3>
+                      <span className="match-rank"><Search size={20}/><small>#{index + 1}</small></span><h3>{index === 0 ? "Closest description" : `Similar description ${index + 1}`}</h3>
                       <span className="match-score">
                         {(r.score * 100).toFixed(1)}% <small>similarity</small>
                       </span>
                     </div>
+                    <div className="similarity-track" aria-hidden="true"><span style={{ width: Math.max(0, Math.min(100, r.score * 100)) + "%" }}/></div>
                     <dl className="match-facts">
                       <div>
                         <dt>Source report</dt>
@@ -3205,7 +3336,7 @@ function CaseDetail({ id }: { id: string }) {
                       </div>
                       <div>
                         <dt>Search method</dt>
-                        <dd>{r.method}</dd>
+                        <dd>{r.method?.includes("OpenAI") ? "OpenAI embeddings" : r.method?.includes("Gemini") ? "Gemini embeddings" : "Text similarity"}</dd>
                       </div>
                     </dl>
                     <div className="actions">
@@ -3243,8 +3374,8 @@ function CaseDetail({ id }: { id: string }) {
           </dialog>
           <div className="detailgrid">
             <div>
-              <div className="panel">
-                <h2>Their words</h2>
+              <div className="panel case-narrative">
+                <h2><MessageCircle size={20}/> Their words</h2>
                 <p className="narrative">{c.narrative}</p>
                 <Button
                   secondary
@@ -3316,12 +3447,12 @@ function CaseDetail({ id }: { id: string }) {
                     <small>{analysis.method}</small>
                   </div>
                 )}
-                <small>
+                <small className="case-source-meta">
                   Support type: {c.category} · Created {date(c.created)}
                 </small>
               </div>
-              <div className="panel">
-                <h2>Safe contact</h2>
+              <div className="panel case-contact">
+                <h2><LockKeyhole size={20}/> Safe contact</h2>
                 <p>
                   <strong>
                     {c.contact.method === "none"
@@ -3343,7 +3474,7 @@ function CaseDetail({ id }: { id: string }) {
               </div>
             </div>
             <div>
-              <div className="panel">
+              <div className="panel case-manage">
                 <h2 id="manage-case" tabIndex={-1}>
                   Manage case
                 </h2>
@@ -3412,7 +3543,7 @@ function CaseDetail({ id }: { id: string }) {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }
 function FeedMonitor() {
