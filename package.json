@@ -13,7 +13,10 @@
     "contracts": ".venv/bin/python scripts/contracts.py",
     "test:e2e": "playwright test",
     "format": "prettier --write apps/web package.json",
-    "lint": ".venv/bin/ruff check services tests scripts --select F"
+    "lint": ".venv/bin/ruff check services tests scripts --select F",
+    "demo:start": ".venv/bin/python scripts/demo_service.py start",
+    "demo:stop": ".venv/bin/python scripts/demo_service.py stop",
+    "demo:status": ".venv/bin/python scripts/demo_service.py status"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
