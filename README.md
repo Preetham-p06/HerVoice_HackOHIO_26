@@ -41,9 +41,51 @@ The main navigation is **Home · Create a post · Law bot · Therapy bot · Dash
 - Responders see contact preferences, case history, and AI suggestions together.
 - Related-report search flags similar descriptions for human review, without claiming to identify anyone.
 
-## How LangChain Is Used in the Project
+## How Retrieval and MongoDB Work
 
-HerVoice does not currently use LangChain. We implement the retrieval steps directly in Python: split documents into chunks, generate embeddings, retrieve relevant passages, and pass them to OpenAI with the question. MongoDB Atlas Vector Search is optional; the local demo uses the reviewed source registry. This keeps the source checks and retrieval logic visible in the code.
+HerVoice's live configuration uses MongoDB to store case records and MongoDB Atlas Vector Search to retrieve related reports and legal passages. OpenAI creates embeddings, numerical representations that help compare text by meaning. Our Python code handles document preparation, source checks, retrieval, and response generation directly; LangChain is not a dependency. The local demo uses SQLite and the reviewed source registry, so it can run without an Atlas account.
+
+For legal questions, the Atlas pipeline is:
+
+1. Split reviewed documents into chunks and retain source metadata.
+2. Generate OpenAI embeddings and index the chunks in MongoDB Atlas.
+3. Embed the user's question and retrieve relevant passages.
+4. Recheck jurisdiction, review status, and source version.
+5. Pass the verified passages and question to OpenAI, then show the explanation with source links.
+
+### Enable MongoDB and Atlas search
+
+1. Create an Atlas cluster supporting Vector Search, a database user, and an IP access-list entry for the API server. Copy the database connection string into the ignored root `.env`.
+2. Complete the live-mode authentication and encryption configuration in the [setup guide](docs/authority-atlas.md#required-configuration), including Clerk organization membership and separate encryption keys. A connection string alone is not enough to run live mode.
+3. Add the following provider settings to that configuration:
+
+   ```dotenv
+   MONGODB_URI=mongodb+srv://YOUR_DATABASE_CONNECTION
+   MONGODB_DATABASE=hervoice
+   EMBEDDING_PROVIDER=openai
+   OPENAI_API_KEY=YOUR_SERVER_KEY
+   OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+   MATCH_PROVIDER=atlas
+   ATLAS_CASE_VECTOR_INDEX=case_similarity
+   LEGAL_PROVIDER=atlas
+   ATLAS_LEGAL_VECTOR_INDEX=legal_similarity
+   ```
+
+4. Run the [connection check](docs/authority-atlas.md#test-the-database-connection-first), then index the reviewed legal sources from the repository root:
+
+   ```bash
+   .venv/bin/python -m backend.scripts.index_legal --registry
+   ```
+
+5. To test case matching, create and receive synthetic requests in the configured live organization, then index them:
+
+   ```bash
+   .venv/bin/python -m backend.scripts.index_cases YOUR_CLERK_ORG
+   ```
+
+6. Wait for the Atlas indexes to become queryable, restart the services with the completed live configuration, and follow the [live verification checklist](docs/authority-atlas.md#verify-live-matching-with-synthetic-reports). SQLite demo cases are not automatically copied into MongoDB.
+
+The MongoDB and Atlas adapters are implemented and covered by local adapter tests. Live account-backed verification is still pending; enabling these settings does not establish that a deployment has passed those checks.
 
 ## Detailed Description
 
