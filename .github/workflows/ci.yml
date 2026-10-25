@@ -14,12 +14,12 @@ jobs:
           python-version: "3.13"
       - run: npm ci
       - run: python -m venv .venv
-      - run: .venv/bin/pip install -r services/api/requirements.lock
-      - run: .venv/bin/ruff check services tests scripts --select F
+      - run: .venv/bin/pip install -r backend/api/requirements.lock
+      - run: .venv/bin/ruff check backend/api backend/tests backend/scripts --select F
       - run: npm run typecheck
       - run: npm test
       - run: npm run contracts
-      - run: git diff --exit-code packages/api-client
+      - run: git diff --exit-code backend/packages/api-client
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
