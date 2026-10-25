@@ -109,7 +109,7 @@ React Three Fiber, drei’s `useGLTF`, and Three.js render the GLB model. Bone m
 
 Maya is a prompted support experience, not a clinically trained or validated treatment. Its character asset has separate non-commercial demo terms and attribution: [companion details](docs/companion.md) · [asset notice](frontend/public/models/maya-reference.LICENSE.txt).
 
-![HerVoice’s moving Maya companion in the studio](docs/screenshots/maya-reference-studio.png)
+![HerVoice’s moving Maya companion in the studio](docs/screenshots/maya-workspace.png)
 
 ### 3. Law bot for understanding options
 
