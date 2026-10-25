@@ -1,5 +1,7 @@
 # HerVoice
 
+[**Watch the video demo**](https://youtu.be/AAFByEBo2XE)
+
 ### A quiet way to be heard.
 
 A U.S.-first support platform combining discreet image-based requests, an animated AI companion, source-backed legal information, and a responder workspace.
@@ -31,6 +33,17 @@ People experiencing abuse may face limited privacy, uncertainty about their opti
 | **Responder dashboard** | A live-updating case table, detailed case cards, location/map controls, related-report search, and recorded case activity. |
 
 The main navigation is **Home · Create a post · Law bot · Therapy bot · Dashboard**. “Therapy bot” opens an AI support companion, not a licensed therapist.
+
+## What Sets It Apart:
+
+- Requests can travel inside an ordinary PNG, with encrypted content and verification before intake.
+- Users review the exact message and choose whether to submit it or keep the image.
+- Responders see contact preferences, case history, and AI suggestions together.
+- Related-report search flags similar descriptions for human review, without claiming to identify anyone.
+
+## How LangChain Is Used in the Project
+
+HerVoice does not currently use LangChain. We implement the retrieval steps directly in Python: split documents into chunks, generate embeddings, retrieve relevant passages, and pass them to OpenAI with the question. MongoDB Atlas Vector Search is optional; the local demo uses the reviewed source registry. This keeps the source checks and retrieval logic visible in the code.
 
 ## Detailed Description
 
@@ -94,7 +107,7 @@ The studio places Maya beside the conversation, with cream and sage colors and a
 
 React Three Fiber, drei’s `useGLTF`, and Three.js render the GLB model. Bone motion and facial morph targets handle idle movement, blinking, and subtle expression cues. A browser audio analyser drives approximate mouth movement; optional Rhubarb cues provide timed visemes. Default animation does not claim phoneme-perfect lip sync.
 
-Maya is a prompted support experience, not a clinically trained or validated treatment. Its character asset has separate non-commercial demo terms and attribution: [companion details](docs/companion.md) · [asset notice](apps/web/public/models/maya-reference.LICENSE.txt).
+Maya is a prompted support experience, not a clinically trained or validated treatment. Its character asset has separate non-commercial demo terms and attribution: [companion details](docs/companion.md) · [asset notice](frontend/public/models/maya-reference.LICENSE.txt).
 
 ![HerVoice’s moving Maya companion in the studio](docs/screenshots/maya-reference-studio.png)
 
@@ -123,7 +136,7 @@ The no-key legal retriever uses the local reviewed registry. `LEGAL_PROVIDER=atl
 
 ![HerVoice legal architecture: reviewed documents and questions are embedded for Atlas retrieval, verified passages provide context to OpenAI, and the answer includes official sources with a source-summary fallback](docs/diagrams/legal-architecture.png)
 
-This shows the optional Atlas path using our actual OpenAI and Python components. The default local retriever remains available. Regenerate the graphic with `node scripts/render_legal_architecture.mjs`.
+This shows the optional Atlas path using our actual OpenAI and Python components. The default local retriever remains available. Regenerate the graphic with `node backend/scripts/render_legal_architecture.mjs`.
 
 ### 4. Responder dashboard and related-report matching
 
@@ -145,7 +158,7 @@ Results exclude the current case and unrelated organizations. Responders can adj
 
 ### System architecture
 
-The illustrated flows above are maintained as [editable SVG and PNG assets](docs/diagrams). Regenerate them with `node scripts/render_readme_diagrams.mjs` after installing the project dependencies.
+The illustrated flows above are maintained as [editable SVG and PNG assets](docs/diagrams). Regenerate them with `node backend/scripts/render_readme_diagrams.mjs` after installing the project dependencies.
 
 ```mermaid
 flowchart TB
@@ -237,7 +250,7 @@ Atlas Vector Search is an optional adapter for related reports, with 768-dimensi
 git clone https://github.com/Preetham-p06/HerVoice_HackOHIO_26.git
 cd HerVoice_HackOHIO_26
 cp .env.example .env
-./scripts/dev.sh
+./backend/scripts/dev.sh
 ```
 
 The script installs missing dependencies and starts both services. Open [http://localhost:3000](http://localhost:3000). Stop with Ctrl+C. The no-key demo needs no MongoDB, Clerk, AWS, or avatar-service account.
@@ -271,17 +284,17 @@ Restart the development services after changing configuration. Keys stay server-
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r services/api/requirements.lock
+.venv/bin/pip install -r backend/api/requirements.lock
 npm ci
 
 # Terminal 1
-.venv/bin/uvicorn services.api.main:app --env-file .env --reload --host 127.0.0.1 --port 8000
+.venv/bin/uvicorn backend.api.main:app --env-file .env --reload --host 127.0.0.1 --port 8000
 
 # Terminal 2
 npm run dev
 ```
 
-For standalone frontend startup, supply web variables through its environment or `apps/web/.env.local`. The combined script loads the root `.env` for both processes.
+For standalone frontend startup, supply web variables through its environment or `frontend/.env.local`. The combined script loads the root `.env` for both processes.
 
 A container configuration is also provided:
 
@@ -315,12 +328,9 @@ CI checks types, lint, backend behavior, generated-contract drift, the productio
 
 | Path | Contents |
 | --- | --- |
-| `apps/web` | Frontend, same-origin gateway, avatar, and static assets. |
-| `services/api` | API, storage, authorization, codec, AI adapters, retrieval, and jobs. |
-| `services/worker` | Portable worker contract and operational notes. |
-| `packages/api-client` | Generated OpenAPI snapshot and TypeScript input models. |
-| `fixtures` | Reviewed source registry and synthetic fixtures. |
-| `tests` | Backend tests and browser journeys. |
+| `frontend` | Next.js app, Maya avatar, static assets, and API gateway. |
+| `backend` | Python API, worker notes, fixtures, tests, scripts, and generated API contracts. |
+| `docs` | Architecture notes, setup guides, diagrams, screenshots, and presentation/demo assets. |
 
 - [MongoDB authority workflow, X monitoring, and Atlas legal retrieval](docs/authority-atlas.md)
 - [Architecture and deployment limits](docs/architecture.md)
