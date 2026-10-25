@@ -43,7 +43,7 @@ A successful ping does not verify Vector Search, database write permissions, or 
 
 1. Restart both services after completing the live configuration. Sign in as an authorized responder in the configured organization.
 2. Create and receive at least two synthetic reports with similar physical/behavioral descriptions, plus one different description. Prepared-only reports are excluded. Existing SQLite demo cases are not automatically migrated to MongoDB.
-3. Run `.venv/bin/python -m scripts.index_cases YOUR_CLERK_ORG`. Confirm `case_similarity` is queryable in Atlas and that `case_vectors` contains the organization’s records.
+3. Run `.venv/bin/python -m backend.scripts.index_cases YOUR_CLERK_ORG`. Confirm `case_similarity` is queryable in Atlas and that `case_vectors` contains the organization’s records.
 4. Open a received case and select **Find Match**. Confirm that the displayed search method identifies Atlas cosine similarity, results exclude the source case, and the similar description is ranked above the unrelated one.
 5. Change the maximum results and minimum similarity. Confirm the result count stays within the limit and every score meets the threshold; an empty result is valid at a high threshold.
 6. Verify a responder from another organization cannot access the case or see it in matching results. Refresh the dashboard to confirm case data persists.
@@ -94,7 +94,7 @@ MONITOR_SCHEDULER=external
 
 Keep your existing OpenAI image/speech settings. The optional fixed HTTPS feed adapter remains available when `SOCIAL_PROVIDER` is not `x` and `SOCIAL_FEED_URL`, `SOCIAL_FEED_TOKEN`, and `SOCIAL_FEED_ORG` are supplied.
 
-Live responder access requires a server-managed membership, not just a Clerk account. Use `scripts/add_membership.py` with the configured environment as described in the architecture guide. Do not switch the shared running demo to live until identity, organization keys, and database access are ready.
+Live responder access requires a server-managed membership, not just a Clerk account. Use `backend/scripts/add_membership.py` with the configured environment as described in the architecture guide. Do not switch the shared running demo to live until identity, organization keys, and database access are ready.
 
 ## Create the indexes and load documents
 
@@ -102,13 +102,13 @@ Commands below load root `.env` themselves. Run from the repository root:
 
 ```bash
 # Organization-approved received cases; sends matching text to OpenAI.
-.venv/bin/python -m scripts.index_cases YOUR_CLERK_ORG
+.venv/bin/python -m backend.scripts.index_cases YOUR_CLERK_ORG
 
 # Embed the existing reviewed national/Ohio registry into Atlas.
-.venv/bin/python -m scripts.index_legal --registry
+.venv/bin/python -m backend.scripts.index_legal --registry
 
 # Or ingest an explicitly reviewed official PDF with a metadata file.
-.venv/bin/python -m scripts.index_legal --pdf /path/to/document.pdf --metadata /path/to/document.json
+.venv/bin/python -m backend.scripts.index_legal --pdf /path/to/document.pdf --metadata /path/to/document.json
 ```
 
 PDF metadata example (fill in actual source and review dates):
@@ -135,13 +135,13 @@ The current source collection is still a small U.S./Ohio corpus. Enabling Atlas 
 With `MONITOR_SCHEDULER=external`, the API does not start its internal monitor loop. Configure a scheduler to invoke this command every minute:
 
 ```bash
-cd /absolute/path/to/HerVoice_HackOHIO_26 && .venv/bin/python -m scripts.scan_feed
+cd /absolute/path/to/HerVoice_HackOHIO_26 && .venv/bin/python -m backend.scripts.scan_feed
 ```
 
 Example crontab (replace paths; no keys in the crontab):
 
 ```cron
-* * * * * cd /absolute/path/to/HerVoice_HackOHIO_26 && .venv/bin/python -m scripts.scan_feed >> /var/log/hervoice-monitor.log 2>&1
+* * * * * cd /absolute/path/to/HerVoice_HackOHIO_26 && .venv/bin/python -m backend.scripts.scan_feed >> /var/log/hervoice-monitor.log 2>&1
 ```
 
 The command purges expired memory, drains retries, fetches one X page (up to 10 posts), and processes queued images. Mongo claims prevent duplicate active processing and expire after worker interruption. Transient intake failures retry up to three attempts; invalid or terminal payloads discard image bytes. X pagination advances only after all attachments in a page have been handled. Failed X polls preserve the cursor and store a sanitized `lastError`; cron exits unsuccessfully for operator alerting. Quotas, rate limits, downtime exceeding the recent-search window, and high feed volume can delay or omit collection. Adjust operations and API access before relying on it.

@@ -30,7 +30,7 @@ LSB transport is not encryption; AES-GCM is server-readable encryption. No end-t
 
 ## Providers and jobs
 
-`providers.py` contains Gemini JSON output/support and ElevenLabs adapters. Models/voice IDs are explicit configuration, not historical assumptions. Writing/support failures are 503 responses and never become a demo success in live mode. Support instructions preserve autonomy, do not diagnose or invent resource contacts, and forbid dispatch promises. Demo behavior is deterministic and labeled.
+`providers.py` contains Gemini JSON docs/output/support and ElevenLabs adapters. Models/voice IDs are explicit configuration, not historical assumptions. Writing/support failures are 503 responses and never become a demo success in live mode. Support instructions preserve autonomy, do not diagnose or invent resource contacts, and forbid dispatch promises. Demo behavior is deterministic and labeled.
 
 `jobs.py` uses a bounded two-thread executor, durable metadata, random IDs, owner scope, status/progress, cancellation, one bounded attempt, expiry, temporary-directory cleanup and sanitized failures. Nova Canvas uses Bedrock InvokeModel; S3 uses private objects with SSE and authenticated API reads. Optional media processing discovers FFmpeg on PATH and uses configured Rhubarb with unique directories and timeouts. A dedicated external queue/worker is an operational extension; interrupted jobs do not auto-recover.
 
@@ -41,7 +41,7 @@ Provider contracts checked against official documentation on 18 October 2026:
 - [Gemini GenerateContent](https://ai.google.dev/api/generate-content)
 - [Clerk manual JWT verification](https://clerk.com/docs/guides/sessions/manual-jwt-verification)
 - [Clerk session tokens](https://clerk.com/docs/guides/sessions/session-tokens)
-- [Boto3 Bedrock InvokeModel](https://docs.aws.amazon.com/boto3/latest/reference/services/bedrock-runtime/client/invoke_model.html)
+- [Boto3 Bedrock InvokeModel](https://docs.aws.amazon.com/boto3/latest/reference/backend/bedrock-runtime/client/invoke_model.html)
 - [ElevenLabs Create speech](https://elevenlabs.io/docs/api-reference/text-to-speech/convert)
 
 These references support the adapter design; they do not establish that configured live calls were tested.
