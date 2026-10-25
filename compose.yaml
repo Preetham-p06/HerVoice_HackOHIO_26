@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: services/api/Dockerfile
+      dockerfile: backend/api/Dockerfile
     environment:
       APP_MODE: demo
       DATA_DIR: /app/.data
@@ -19,7 +19,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: apps/web/Dockerfile
+      dockerfile: frontend/Dockerfile
     environment:
       API_URL: http://api:8000
     ports:
