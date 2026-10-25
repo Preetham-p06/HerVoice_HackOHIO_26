@@ -5504,3 +5504,6 @@ html[data-covering="true"] body::after {
  .case-command .match-result { padding:16px; }
  .case-command .case-map-heading { flex-direction:column; align-items:flex-start; }
 }
+
+/* Keep helper text readable against the dark floating help button. */
+.private-shell button.help-launcher > span > small { color: #fff !important; }
