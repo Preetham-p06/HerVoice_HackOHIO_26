@@ -2,21 +2,21 @@
   "name": "hervoice",
   "private": true,
   "workspaces": [
-    "apps/web"
+    "frontend"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace apps/web",
-    "build": "npm run build --workspace apps/web",
-    "typecheck": "npm run typecheck --workspace apps/web",
-    "test": ".venv/bin/python -m pytest tests -q",
-    "dev:all": ".venv/bin/python scripts/dev.py",
-    "contracts": ".venv/bin/python scripts/contracts.py",
+    "dev": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend",
+    "typecheck": "npm run typecheck --workspace frontend",
+    "test": ".venv/bin/python -m pytest backend/tests -q",
+    "dev:all": ".venv/bin/python backend/scripts/dev.py",
+    "contracts": ".venv/bin/python backend/scripts/contracts.py",
     "test:e2e": "playwright test",
-    "format": "prettier --write apps/web package.json",
-    "lint": ".venv/bin/ruff check services tests scripts --select F",
-    "demo:start": ".venv/bin/python scripts/demo_service.py start",
-    "demo:stop": ".venv/bin/python scripts/demo_service.py stop",
-    "demo:status": ".venv/bin/python scripts/demo_service.py status"
+    "format": "prettier --write frontend package.json",
+    "lint": ".venv/bin/ruff check backend/api backend/tests backend/scripts --select F",
+    "demo:start": ".venv/bin/python backend/scripts/demo_service.py start",
+    "demo:stop": ".venv/bin/python backend/scripts/demo_service.py stop",
+    "demo:status": ".venv/bin/python backend/scripts/demo_service.py status"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
