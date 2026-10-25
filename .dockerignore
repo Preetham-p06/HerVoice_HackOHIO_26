@@ -1,3 +1,4 @@
+# Exclude local dependencies, build output, and secrets from Docker contexts.
 .git
 node_modules
 **/.next
