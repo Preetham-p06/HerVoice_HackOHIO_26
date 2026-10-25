@@ -125,6 +125,10 @@ HerVoice turns an approved support message into an encrypted payload inside an o
 
 The codec uses least-significant-bit pixel encoding with an `HV01` frame, payload length, SHA-256 digest, nonce, and AES-GCM ciphertext. It checks capacity, preserves UTF-8 content, and rejects damaged or unauthorized payloads.
 
+![HerVoice codec: encrypt the approved message, pack the HV01 frame, embed bits in PNG pixels, and verify the recovered message](docs/diagrams/codec-flow.png)
+
+[View the SVG diagram](docs/diagrams/codec-flow.svg). Regenerate it with `node backend/scripts/render_codec_diagram.mjs`.
+
 The encryption is server-readable, not end-to-end. Resizing, screenshots, JPEG conversion, and social-platform recompression can destroy the payload. A read-only X hashtag connector is implemented and requires account-backed verification. Public publishing and Instagram/Telegram/Slack monitoring are not connected; the demo feed preserves original PNG bytes to demonstrate the full flow. See [authority and Atlas setup](docs/authority-atlas.md).
 
 ### 2. Maya: an animated AI support companion
