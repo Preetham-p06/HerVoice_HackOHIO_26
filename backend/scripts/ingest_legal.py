@@ -3,8 +3,8 @@
 import argparse, json, sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from services.api.legal import ingest_pdf, REGISTRY, registry
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from backend.api.legal import ingest_pdf, REGISTRY, registry
 
 p = argparse.ArgumentParser()
 p.add_argument("--pdf", required=True)

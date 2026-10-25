@@ -1,4 +1,4 @@
-/** Rebuild the legal retrieval architecture: node scripts/render_legal_architecture.mjs */
+/** Rebuild the legal retrieval architecture: node backend/scripts/render_legal_architecture.mjs */
 import { writeFile } from 'node:fs/promises';
 import sharp from 'sharp';
 import React from 'react';

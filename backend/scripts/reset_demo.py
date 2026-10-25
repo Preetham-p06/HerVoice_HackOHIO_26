@@ -9,7 +9,7 @@ p.add_argument("--confirm", action="store_true", required=True)
 p.parse_args()
 if os.getenv("APP_MODE", "demo") != "demo":
     raise SystemExit("Refusing reset outside demo mode")
-root = Path(__file__).resolve().parents[1] / ".data"
+root = Path(__file__).resolve().parents[2] / ".data"
 if root.is_symlink():
     raise SystemExit("Refusing symlink target")
 if root.exists():

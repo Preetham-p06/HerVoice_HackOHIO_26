@@ -1,5 +1,5 @@
 """Explicit admin operation: embed authorized cases into the configured Atlas index.
-Run only with approved live credentials and organization ID: python -m scripts.index_cases ORG
+Run only with approved live credentials and organization ID: python -m backend.scripts.index_cases ORG
 """
 
 import json
@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 os.environ["MONITOR_SCHEDULER"] = "external"
-from services.api.main import MODE, store
-from services.api.matching import index_case, DIMENSIONS
+from backend.api.main import MODE, store
+from backend.api.matching import index_case, DIMENSIONS
 
 if __name__ == "__main__":
     if MODE != "live" or len(sys.argv) != 2:

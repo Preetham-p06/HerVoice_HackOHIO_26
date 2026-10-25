@@ -4,8 +4,8 @@ os.environ["DATA_DIR"] = tempfile.mkdtemp(prefix="hervoice-test-")
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
-from services.api.main import app
-from services.api.codec import encode, decode, cover
+from backend.api.main import app
+from backend.api.codec import encode, decode, cover
 
 
 @pytest.fixture
@@ -230,7 +230,7 @@ def test_exact_codec_capacity_and_header():
 
 
 def test_at_rest_payload_encryption():
-    from services.api.store import CaseStore
+    from backend.api.store import CaseStore
 
     s = object.__new__(CaseStore)
     s.mode = "live"
@@ -259,7 +259,7 @@ def json_load(v):
 
 
 def test_live_auth_signature_and_membership(client, monkeypatch):
-    import services.api.main as main
+    import backend.api.main as main
     import jwt, time
     from cryptography.hazmat.primitives.asymmetric import rsa
     from types import SimpleNamespace
@@ -306,7 +306,7 @@ def test_live_auth_signature_and_membership(client, monkeypatch):
 
 
 def test_legal_retrieval_filters_and_provenance():
-    from services.api.legal import retrieve, vector
+    from backend.api.legal import retrieve, vector
 
     doc = {
         "id": "test",
@@ -351,7 +351,7 @@ def test_cover_job_owner_and_result(client):
 
 
 def test_us_default_and_state_scope(client):
-    from services.api.legal import retrieve
+    from backend.api.legal import retrieve
 
     response = client.post(
         "/v1/legal", json={"question": "domestic violence protection support"}
@@ -384,7 +384,7 @@ def test_nested_data_directory_startup(tmp_path):
 
     target = tmp_path / "new" / "nested" / "data"
     result = subprocess.run(
-        [sys.executable, "-c", "import services.api.main"],
+        [sys.executable, "-c", "import backend.api.main"],
         env=dict(os.environ, APP_MODE="demo", DATA_DIR=str(target)),
         capture_output=True,
         text=True,
@@ -482,7 +482,7 @@ def test_prepared_post_requires_owner_and_submits_once(client):
 
 
 def test_brief_generation_receives_all_optional_fields(client, monkeypatch):
-    import services.api.main as main
+    import backend.api.main as main
     from types import SimpleNamespace
     monkeypatch.setattr(main.providers,"enabled",lambda:True)
     def generate(system, contents):
@@ -521,7 +521,7 @@ def test_receipt_owned_signal_is_idempotent_and_scanner_receives(client):
 
 
 def test_analysis_saved_without_automatic_priority_change(client, monkeypatch):
-    import services.api.main as main
+    import backend.api.main as main
     cid,_=request(client)
     signin(client)
     monkeypatch.setattr(main,"interpret",lambda c:{"summary":"Synthetic advisory summary","severity":"high","method":"Synthetic AI fixture"})
@@ -551,7 +551,7 @@ def test_queue_returns_location_and_reviewed_severity(client):
 
 
 def test_voice_input_requires_session_and_validates_upload(client, monkeypatch):
-    import services.api.openai_provider as provider
+    import backend.api.openai_provider as provider
     assert client.post("/v1/support/transcribe",files={"file":("voice.webm",b"synthetic","audio/webm")}).status_code==401
     assert client.post("/v1/support/session").status_code==200
     assert client.post("/v1/support/transcribe",files={"file":("image.png",b"fake","image/png")}).status_code==422
@@ -570,7 +570,7 @@ def test_bundled_companion_glb_has_rig_face_targets_and_attribution():
     import json
     import struct
     from pathlib import Path
-    data = Path("apps/web/public/models/maya-reference.glb").read_bytes()
+    data = Path("frontend/public/models/maya-reference.glb").read_bytes()
     magic, version, length = struct.unpack_from("<III", data)
     assert magic == 0x46546C67 and version == 2 and length == len(data)
     json_length, chunk_type = struct.unpack_from("<II", data, 12)
@@ -581,12 +581,12 @@ def test_bundled_companion_glb_has_rig_face_targets_and_attribution():
     assert document["skins"] and document["images"]
     targets = {name for mesh in document["meshes"] for name in mesh.get("extras", {}).get("targetNames", [])}
     assert {"jawOpen", "mouthSmileLeft", "viseme_aa", "eyeBlinkLeft", "eyeBlinkRight"} <= targets
-    assert "CC BY-NC" in Path("apps/web/public/models/maya-reference.LICENSE.txt").read_text()
+    assert "CC BY-NC" in Path("frontend/public/models/maya-reference.LICENSE.txt").read_text()
     assert all("uri" not in buffer for buffer in document["buffers"])
 
 
 def test_late_reply_cannot_restore_revoked_or_replaced_memory(client, monkeypatch):
-    import services.api.main as main
+    import backend.api.main as main
     client.post("/v1/support/session")
     client.put("/v1/support/memory", json={"enabled": True})
     def reply_after_revoke(_body):
@@ -602,7 +602,7 @@ def test_late_reply_cannot_restore_revoked_or_replaced_memory(client, monkeypatc
 
 def test_legal_provider_failure_keeps_retrieved_sources(client, monkeypatch):
     from fastapi import HTTPException
-    from services.api import main
+    from backend.api import main
     monkeypatch.setenv("LEGAL_PROVIDER", "local")
     monkeypatch.setattr(main.providers, "enabled", lambda: True)
     def unavailable(*args, **kwargs):

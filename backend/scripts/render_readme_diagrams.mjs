@@ -1,4 +1,4 @@
-/** Rebuild README diagrams: node scripts/render_readme_diagrams.mjs */
+/** Rebuild README diagrams: node backend/scripts/render_readme_diagrams.mjs */
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as icons from 'lucide-react';

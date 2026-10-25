@@ -1,7 +1,7 @@
 import json
 import pytest
 from fastapi import HTTPException
-from services.api import openai_provider, providers
+from backend.api import openai_provider, providers
 
 
 def test_openai_responses_preserves_history_and_disables_storage(monkeypatch):

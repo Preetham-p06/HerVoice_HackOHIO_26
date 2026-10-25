@@ -1,5 +1,5 @@
-from services.api.analysis import match, decompose
-from services.api.memory import ConversationMemory
+from backend.api.analysis import match, decompose
+from backend.api.memory import ConversationMemory
 import sqlite3
 import threading
 
@@ -59,7 +59,7 @@ def test_person_description_is_used_when_supplied():
 
 
 def test_semantic_match_scope_threshold_and_prepared_exclusion(monkeypatch):
-    from services.api import matching
+    from backend.api import matching
     monkeypatch.setattr(matching,"cached_embedding",lambda model,org,text:[1.,0.] if text=="same" else [0.,1.])
     source={"id":"one","org":"a","narrative":"same"}
     cases=[source,{"id":"two","org":"a","alias":"Two","narrative":"same"},{"id":"three","org":"b","alias":"Three","narrative":"same"},{"id":"four","org":"a","alias":"Four","narrative":"same","status":"prepared"}]

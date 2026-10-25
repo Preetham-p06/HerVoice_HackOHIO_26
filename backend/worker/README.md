@@ -1,6 +1,6 @@
 # Media and enhancement processing
 
-`services/api/jobs.py` runs a bounded two-thread executor with durable job metadata (SQLite demo; MongoDB live). This keeps local setup to two services. Jobs have random IDs, owner scope, expiry, progress, sanitized failure, cancellation and one attempt. No automatic retries incur provider charges. Running jobs become unavailable if the process stops; they are not resumed automatically. A production queue service is a documented remaining operational task.
+`backend/api/jobs.py` runs a bounded two-thread executor with durable job metadata (SQLite demo; MongoDB live). This keeps local setup to two services. Jobs have random IDs, owner scope, expiry, progress, sanitized failure, cancellation and one attempt. No automatic retries incur provider charges. Running jobs become unavailable if the process stops; they are not resumed automatically. A production queue service is a documented remaining operational task.
 
 Media processing uses unique temporary directories, `ffmpeg` discovered on PATH, and optional `RHUBARB_PATH`. Both subprocesses have 30-second timeouts, captured output, no shell interpolation and temporary-directory cleanup. Text is available independently of audio. ElevenLabs requires its own key, voice and model; it does not require an unrelated provider key.
 

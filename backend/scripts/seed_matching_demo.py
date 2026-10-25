@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 os.environ['MONITOR_SCHEDULER'] = 'external'
-from services.api.main import MODE, store, save, now, event
+from backend.api.main import MODE, store, save, now, event
 
 PROFILES = [
     ('Cedar', 'Fair skin, tall, wears glasses. Short brown hair. Checks their partner’s phone and restricts contact with friends.', 'Safety planning', 'high'),

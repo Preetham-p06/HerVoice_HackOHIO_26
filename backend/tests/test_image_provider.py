@@ -3,7 +3,7 @@ import io
 import pytest
 from PIL import Image
 from fastapi import HTTPException
-from services.api import providers
+from backend.api import providers
 
 
 def test_gemini_image_normalizes_and_sends_only_prompt(monkeypatch):

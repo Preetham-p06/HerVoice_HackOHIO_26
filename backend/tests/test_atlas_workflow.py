@@ -3,8 +3,8 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 import pytest
 from fastapi import HTTPException
-from services.api import legal_atlas, legal, matching
-from services.api.monitor import MongoMonitor
+from backend.api import legal_atlas, legal, matching
+from backend.api.monitor import MongoMonitor
 
 
 def document(state=None):
@@ -118,7 +118,7 @@ def test_atlas_answer_preserves_source_provenance(monkeypatch):
 def test_x_monitor_pagination_and_non_png_rejection(monkeypatch):
     import httpx
     import json
-    from services.api import x_monitor
+    from backend.api import x_monitor
     monkeypatch.setenv("X_BEARER_TOKEN", "test-only-token")
     requests = []
     def handle(request):
@@ -145,7 +145,7 @@ def test_x_monitor_pagination_and_non_png_rejection(monkeypatch):
 
 def test_x_monitor_rejects_untrusted_media_hosts_without_advancing(monkeypatch):
     import httpx
-    from services.api import x_monitor
+    from backend.api import x_monitor
     monkeypatch.setenv("X_BEARER_TOKEN", "test-only-token")
     def handle(request):
         assert request.url.host == "api.x.com"

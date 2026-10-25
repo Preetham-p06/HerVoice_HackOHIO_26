@@ -359,7 +359,7 @@ test("highlighted note opens the five-page hackathon demo directly", async ({
   await expect(
     page.getByRole("heading", { name: "Live dashboard", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("5 sec", { exact: true })).toBeVisible();
+  await expect(page.getByText("New posts and case changes refresh automatically every 5 seconds.", { exact: true })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-app-ready", "true");
 });
 

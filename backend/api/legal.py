@@ -8,7 +8,7 @@ from datetime import date
 from urllib.parse import urlparse
 from pypdf import PdfReader
 
-REGISTRY = Path(__file__).parents[2] / "fixtures/legal-registry.json"
+REGISTRY = Path(__file__).parents[2] / "backend/fixtures/legal-registry.json"
 DIM = 128
 
 

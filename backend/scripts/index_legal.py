@@ -6,8 +6,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.operations import SearchIndexModel
-from services.api.legal import registry, ingest_pdf
-from services.api.legal_atlas import index_document, index_definition
+from backend.api.legal import registry, ingest_pdf
+from backend.api.legal_atlas import index_document, index_definition
 
 
 def main():

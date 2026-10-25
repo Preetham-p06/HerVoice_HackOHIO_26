@@ -4,7 +4,7 @@ import signal, subprocess, sys, time
 from pathlib import Path
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / ".env")
 children = []
 
@@ -30,7 +30,7 @@ try:
                 sys.executable,
                 "-m",
                 "uvicorn",
-                "services.api.main:app",
+                "backend.api.main:app",
                 "--host",
                 "127.0.0.1",
                 "--port",

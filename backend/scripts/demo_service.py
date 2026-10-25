@@ -8,7 +8,7 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 STATE = ROOT / '.data/demo-service.json'
 LOGS = ROOT / '.data/demo-logs'
 
@@ -52,7 +52,7 @@ def main():
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     commands = {
-        'api': [sys.executable, '-m', 'uvicorn', 'services.api.main:app', '--host', '127.0.0.1', '--port', '8000'],
+        'api': [sys.executable, '-m', 'uvicorn', 'backend.api.main:app', '--host', '127.0.0.1', '--port', '8000'],
         'web': ['npm', 'run', 'dev'],
     }
     try:
